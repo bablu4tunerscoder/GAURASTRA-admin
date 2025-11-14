@@ -1,0 +1,62 @@
+.leads-page {
+  display: flex;
+}
+
+.leads-content {
+  flex-grow: 1;
+  padding: 2rem;
+  margin-left: 250px; // Adjust if your sidebar width is different
+  
+  h1 {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+  }
+
+  .error-message {
+    color: #d9534f;
+  }
+}
+
+.leads-table-container {
+  overflow-x: auto;
+}
+
+.leads-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f7f7f7;
+    font-weight: 600;
+  }
+
+  tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+}
+// ... (your existing styles for .leads-table, etc.)
+
+/* ✅ Add these styles for the status badge */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  
+  &.used {
+    background-color: #28a745; // Green
+  }
+  
+  &.not-used {
+    background-color: #6c757d; // Grey
+  }
+}

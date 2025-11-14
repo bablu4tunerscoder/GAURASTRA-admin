@@ -1,0 +1,96 @@
+.offer-banner-form {
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 25px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border-radius: 12px;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+     font-size: 20px;
+    font-weight: bold;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+
+    &:hover {
+      background: #0056b3;
+    }
+  }
+
+  .error-message {
+    color: red;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .banner-preview {
+    margin-top: 25px;
+    text-align: center;
+
+    h4 {
+      margin-bottom: 10px;
+    }
+
+    .banner-box {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .banner-button {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+        &:hover {
+          background-color: #0056b3;
+        }
+      }
+    }
+  }
+}
