@@ -1,0 +1,239 @@
+.product-options {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    margin-bottom: 5px;
+    font-size: 18px;
+    color: #333;
+  }
+
+  p {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+
+    > span:first-child {
+      flex: 0 0 150px;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    > span:nth-child(2) {
+      flex: 1;
+      padding: 0 10px;
+    }
+  }
+
+  .tags-input {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    padding: 5px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      font-size: 13px;
+
+      button {
+        margin-left: 5px;
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 0;
+      }
+    }
+
+    input {
+      flex: 1;
+      min-width: 100px;
+      border: none;
+      outline: none;
+      padding: 5px;
+    }
+  }
+
+  .size-input-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+  
+    select,
+    input,
+    button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      transition: border-color 0.2s ease;
+      outline: none;
+    }
+  
+    select,
+    input[type="text"] {
+      flex: 1;
+      min-width: 150px;
+    }
+  
+    input[type="number"] {
+      width: 100px;
+    }
+  
+    input:focus,
+    select:focus {
+      border-color: #007bff;
+    }
+  
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      white-space: nowrap;
+  
+      &:hover {
+        background-color: #0056b3;
+      }
+    }
+  }
+  
+
+  .actions {
+    display: flex;
+    gap: 5px;
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 4px;
+      background: #f0f0f0;
+      cursor: pointer;
+      color: #555;
+
+      &:hover {
+        background: #e0e0e0;
+      }
+
+      &.save {
+        color: #4caf50;
+      }
+
+      &.cancel {
+        color: #f44336;
+      }
+
+      &.edit {
+        color: #2196f3;
+      }
+
+      &.delete {
+        color: #f44336;
+      }
+    }
+  }
+
+  .add-option {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      background: #0d8bf2;
+    }
+  }
+
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 400px;
+      max-width: 90%;
+
+      h3 {
+        margin-bottom: 15px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+
+        button {
+          padding: 8px 15px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+
+          &:first-child {
+            background: #4caf50;
+            color: white;
+          }
+
+          &:last-child {
+            background: #f44336;
+            color: white;
+          }
+        }
+      }
+    }
+  }
+}
