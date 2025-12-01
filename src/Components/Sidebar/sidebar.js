@@ -64,10 +64,7 @@ const Sidebar = () => {
     },
     { title: "Order Management", category: "SALE", path: "/OrderList" },
     { title: "Coupon Leads", category: "SALE", path: "/leads" },
-    { title: "Add Product", category: "OFFLINE-ADMIN", path: "/AddProduct" },
-    { title: "Offline Product ", category: "OFFLINE-ADMIN", path: "/OffProductTable" },
-    { title: "Create Worker ", category: "OFFLINE-ADMIN", path: "/create-worker" },
-    { title: "All Workers", category: "OFFLINE-ADMIN", path: "/all-workers" }, // ✅ ADD THIS NEW LINK
+ // ✅ ADD THIS NEW LINK
   ];
 
   return (

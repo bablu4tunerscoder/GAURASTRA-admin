@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./offlineProduct.scss";
-import Sidebar from "../../Components/Sidebar/sidebar";
 import imgg from "../../assets/placehold.png";
 import { useNavigate } from "react-router-dom";
+import OfflineSidebar from "../components/OfflineSidebar";
 
 const OfflineProductTable = () => {
     const [products, setProducts] = useState([]);
@@ -50,7 +50,7 @@ const OfflineProductTable = () => {
 
     return (
         <div className="offline-layout">
-            <Sidebar />
+      <OfflineSidebar/>
             <div className="offline-container">
 
                 <div className="offline-header">

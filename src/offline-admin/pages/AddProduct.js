@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./AddProduct.scss";
-import Sidebar from "../../Components/Sidebar/sidebar";
+import OfflineSidebar from "../components/OfflineSidebar";
 
 const AddProduct = () => {
   const [title, setTitle] = useState("");
@@ -72,7 +72,7 @@ const AddProduct = () => {
 
   return (
     <div className="Offline-addproduct">
-      <Sidebar/>
+      <OfflineSidebar/>
     <div className="add-product-container">
       <h1 className="heading">Add New Product</h1>
 

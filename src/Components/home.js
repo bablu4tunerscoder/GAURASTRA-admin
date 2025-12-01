@@ -1,39 +1,46 @@
-import React, { useState } from "react";
+import React from "react";
 import "./Home.scss";
-import NewProduct from "../product/newproduct";
+import { useNavigate } from "react-router-dom";
 
 const HomeComponent = () => {
-  const [chunaTab, setChunaTab] = useState("online");
+  const navigate = useNavigate();
 
   return (
     <div className="home-wrapper">
+
       {/* FIXED NAVBAR */}
       <header className="top-navbar" role="banner">
         <div className="brand">4Tuners Admin</div>
-
-        <nav className="tabs" role="navigation" aria-label="Admin tabs">
-          <button
-            aria-pressed={chunaTab === "online"}
-            className={`tab-btn ${chunaTab === "online" ? "active" : ""}`}
-            onClick={() => setChunaTab("online")}
-          >
-            Online Admin
-          </button>
-
-          <button
-            aria-pressed={chunaTab === "offline"}
-            className={`tab-btn ${chunaTab === "offline" ? "active" : ""}`}
-            onClick={() => setChunaTab("offline")}
-          >
-            Offline Admin
-          </button>
-        </nav>
       </header>
 
-      {/* CONTENT BELOW NAVBAR */}
-      <div className="content-area">
-        {chunaTab === "online" && <NewProduct />}
-        {chunaTab === "offline" && <h2 style={{ padding: "20px" }}>Offline Page Coming Soon...</h2>}
+      {/* CARDS SECTION */}
+      <div className="dashboard-cards">
+
+        {/* ONLINE ADMIN CARD */}
+        <div
+          className="admin-card"
+          onClick={() => navigate("/NewProduct")}
+        >
+          <div className="icon-circle">
+            <i className="fas fa-globe"></i>
+          </div>
+          <h2>Online Admin</h2>
+          <p>Manage online products, categories, banners & offers</p>
+          <button className="card-btn">Open Online Admin</button>
+        </div>
+
+        {/* OFFLINE ADMIN CARD */}
+        <div className="admin-card"
+                  onClick={() => navigate("/AddProduct")}
+>
+          <div className="icon-circle offline">
+            <i className="fas fa-store"></i>
+          </div>
+          <h2>Offline Admin</h2>
+          <p>Manage offline stock, orders & store operations</p>
+          <button className="card-btn">Open Offline Admin</button>
+        </div>
+
       </div>
     </div>
   );

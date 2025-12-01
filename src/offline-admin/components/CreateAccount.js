@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./createWorker.scss";
-import Sidebar from "../../Components/Sidebar/sidebar";
+import OfflineSidebar from "./OfflineSidebar";
 
 const CreateWorkerAccount = () => {
   const [workerName, setWorkerName] = useState("");
@@ -38,7 +38,7 @@ const CreateWorkerAccount = () => {
 
   return (
     <div className="create-worker=layout">
-        <Sidebar/>
+      <OfflineSidebar/>
     <div className="create-worker-container">
       <h2>Create Worker Login</h2>
 

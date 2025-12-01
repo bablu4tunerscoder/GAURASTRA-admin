@@ -50,8 +50,8 @@ function App() {
           <Route path="/category" element={<CategoryList />} />
           <Route path="/Coupons" element={<CouponsList />} />
           <Route path="/sub_category" element={<SubCategoryList />} />
-          <Route path="/" element={<NewProduct />} />
-          {/* <Route path="/" element={<HomeComponent />} /> */}
+          <Route path="/NewProduct" element={<NewProduct />} />
+          <Route path="/" element={<HomeComponent />} />
           <Route path="/OrderList" element={<OrderList />} />
           <Route path="/LandingEditor" element={<LandingEditor />} />
           <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />

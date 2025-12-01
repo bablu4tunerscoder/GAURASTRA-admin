@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./workerList.scss";
-import Sidebar from "../../Components/Sidebar/sidebar";
+import OfflineSidebar from "./OfflineSidebar";
 
 const WorkerList = () => {
   const [workers, setWorkers] = useState([]);
@@ -41,7 +41,7 @@ const WorkerList = () => {
 
   return (
     <div className="worker-layout">
-        <Sidebar/>
+      <OfflineSidebar/>
     <div className="worker-list-container">
       <h2>All Workers</h2>
 
