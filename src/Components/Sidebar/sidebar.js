@@ -63,7 +63,8 @@ const Sidebar = () => {
       path: "/OfferBannerHistory",
     },
     { title: "Order Management", category: "SALE", path: "/OrderList" },
-    { title: "Coupon Leads", category: "SALE", path: "/leads" }, // ✅ ADD THIS NEW LINK
+    { title: "Coupon Leads", category: "SALE", path: "/leads" },
+ // ✅ ADD THIS NEW LINK
   ];
 
   return (
@@ -82,7 +83,7 @@ const Sidebar = () => {
             .map((item, index) => (
               <React.Fragment key={index}>
                 {index === 0 ||
-                menuItems[index - 1].category !== item.category ? (
+                  menuItems[index - 1].category !== item.category ? (
                   <div className="sidebar-header">
                     <h2>{item.category}</h2>
                   </div>

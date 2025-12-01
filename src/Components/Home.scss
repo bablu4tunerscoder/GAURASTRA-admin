@@ -1,0 +1,87 @@
+.brand{
+  text-align: center;
+  font-size: 30px;
+  align-items: center;
+  font-weight: 800;
+  padding: 10px;
+}
+.dashboard-cards {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+.admin-card {
+  width: 340px;
+  background: #ffffff;
+  padding: 35px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.admin-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* ICON CIRCLE */
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  background: #0f172a;
+  color: white;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
+}
+
+.icon-circle.offline {
+  background: #475569;
+}
+
+.admin-card h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.admin-card p {
+  color: #475569;
+  font-size: 15px;
+  margin-bottom: 25px;
+}
+
+.card-btn {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: none;
+  background: #0f172a;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.card-btn:hover {
+  background: #1e293b;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .dashboard-cards {
+    flex-direction: column;
+    gap: 30px;
+    padding: 50px 20px;
+  }
+}

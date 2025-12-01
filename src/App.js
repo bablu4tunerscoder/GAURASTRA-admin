@@ -21,6 +21,11 @@ import OfferBannerForm from "./Components/OfferBannerForm";
 import OfferBannerHistory from "./Components/OfferBannerHistory";
 import DownloadQR from "./product/DownloadQR";
 import LeadsList from "./Components/LeadsList";
+import AddProduct from "./offline-admin/pages/AddProduct";
+import OfflineProductTable from "./offline-admin/pages/OfflineProductTable";
+import CreateWorkerAccount from "./offline-admin/components/CreateAccount";
+import WorkerList from "./offline-admin/components/WorkerList";
+import HomeComponent from "./Components/home";
 
 function App() {
   return (
@@ -45,10 +50,15 @@ function App() {
           <Route path="/category" element={<CategoryList />} />
           <Route path="/Coupons" element={<CouponsList />} />
           <Route path="/sub_category" element={<SubCategoryList />} />
-          <Route path="/" element={<NewProduct />} />
+          <Route path="/NewProduct" element={<NewProduct />} />
+          <Route path="/" element={<HomeComponent />} />
           <Route path="/OrderList" element={<OrderList />} />
           <Route path="/LandingEditor" element={<LandingEditor />} />
           <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
+          <Route path="/AddProduct" element={<AddProduct />} />
+          <Route path="/OffProductTable" element={<OfflineProductTable />} />
+          <Route path="/create-worker" element={<CreateWorkerAccount />} />
+          <Route path="/all-workers" element={<WorkerList />} />
 
           {/* ✅ ADD THIS NEW ROUTE */}
           <Route path="/leads" element={<LeadsList />} />
