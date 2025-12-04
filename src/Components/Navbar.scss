@@ -1,0 +1,41 @@
+.top-navbar {
+  width: 100%;
+  padding: 12px 25px;
+  background: #131720;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  height: 60px;
+}
+
+.brand {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 20px;
+
+  button {
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 8px;
+    transition: 0.2s;
+
+    &:hover {
+      background: #1e293b;
+      color: white;
+    }
+  }
+}

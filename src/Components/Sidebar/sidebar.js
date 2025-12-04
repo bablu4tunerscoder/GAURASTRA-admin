@@ -34,7 +34,7 @@ const Sidebar = () => {
   }, [isOpen]);
 
   const menuItems = [
-    { title: "Add Product", category: "QUICK LINKS", path: "/" },
+    { title: "Add Product", category: "QUICK LINKS", path: "/NewProduct" },
     { title: "Categories", category: "QUICK LINKS", path: "/category" },
     { title: "Subcategories", category: "QUICK LINKS", path: "/sub_category" },
     { title: "create coupon", category: "QUICK LINKS", path: "/Coupons" },

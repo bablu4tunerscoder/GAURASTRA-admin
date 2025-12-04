@@ -1,47 +1,64 @@
 import React from "react";
 import "./Home.scss";
-import { useNavigate } from "react-router-dom";
 
 const HomeComponent = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="home-wrapper">
+    <div className="dashboard-container">
 
-      {/* FIXED NAVBAR */}
-      <header className="top-navbar" role="banner">
-        <div className="brand">4Tuners Admin</div>
-      </header>
+      <h1 className="dashboard-title">Welcome to 4Tuners Admin Panel</h1>
 
-      {/* CARDS SECTION */}
-      <div className="dashboard-cards">
-
-        {/* ONLINE ADMIN CARD */}
-        <div
-          className="admin-card"
-          onClick={() => navigate("/NewProduct")}
-        >
-          <div className="icon-circle">
-            <i className="fas fa-globe"></i>
-          </div>
-          <h2>Online Admin</h2>
-          <p>Manage online products, categories, banners & offers</p>
-          <button className="card-btn">Open Online Admin</button>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h3>Total Orders Today</h3>
+          <p>3</p>
         </div>
 
-        {/* OFFLINE ADMIN CARD */}
-        <div className="admin-card"
-                  onClick={() => navigate("/AddProduct")}
->
-          <div className="icon-circle offline">
-            <i className="fas fa-store"></i>
-          </div>
-          <h2>Offline Admin</h2>
-          <p>Manage offline stock, orders & store operations</p>
-          <button className="card-btn">Open Offline Admin</button>
+        <div className="stat-card">
+          <h3>Total Sales Today</h3>
+          <p>₹1200</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Total Items Sold</h3>
+          <p>3</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Top Selling Product</h3>
+          <p>Baby T-Shirt (Green, M)</p>
+        </div>
+      </div>
+
+      <div className="section-title">Today's Orders</div>
+
+      <div className="orders-list">
+
+        <div className="order-card">
+          <h4>Order ID: 69302772769c95</h4>
+          <p><strong>Name:</strong> Vel odio qui dolor a</p>
+          <p><strong>Amount:</strong> ₹400</p>
+          <p><strong>Payment:</strong> Card</p>
+          <p><strong>Date:</strong> 2025-12-03</p>
+        </div>
+
+        <div className="order-card">
+          <h4>Order ID: 69302736769c95</h4>
+          <p><strong>Name:</strong> Vel odio qui dolor a</p>
+          <p><strong>Amount:</strong> ₹400</p>
+          <p><strong>Payment:</strong> Card</p>
+          <p><strong>Date:</strong> 2025-12-03</p>
+        </div>
+
+        <div className="order-card">
+          <h4>Order ID: 6930270c769c95</h4>
+          <p><strong>Name:</strong> Vel odio qui dolor a</p>
+          <p><strong>Amount:</strong> ₹400</p>
+          <p><strong>Payment:</strong> Card</p>
+          <p><strong>Date:</strong> 2025-12-03</p>
         </div>
 
       </div>
+
     </div>
   );
 };

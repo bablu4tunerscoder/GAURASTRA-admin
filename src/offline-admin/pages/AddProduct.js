@@ -1,13 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
+import { createOfflineProduct, updateOfflineProduct } from "../../Redux/Slices/offlineProductSlice";
 import "./AddProduct.scss";
-import OfflineSidebar from "../components/OfflineSidebar";
 
 const AddProduct = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const productToEdit = location.state?.product;
+
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [images, setImages] = useState([]);
   const [active, setActive] = useState(true);
+const productId = productToEdit?._id || productToEdit?.id;
 
   const [variants, setVariants] = useState([
     {
@@ -15,10 +23,35 @@ const AddProduct = () => {
       size: "",
       stock: "",
       actual_price: "",
-      offer_price: "",
+      offer: "",
       offer_type: "percentage"
     }
   ]);
+
+  useEffect(() => {
+    if (productToEdit) {
+      setTitle(productToEdit.title);
+      setDetails(productToEdit.details);
+      setImages(productToEdit.images || []);
+      setActive(productToEdit.active);
+      setVariants(productToEdit.variants?.map(v => ({
+        color: v.color || "",
+        size: v.size || "",
+        stock: v.stock || "",
+        actual_price: v.actual_price || "",
+        offer: v.offer || "",
+        offer_type: v.offer_type || "percentage"
+      })) || [{
+        color: "",
+        size: "",
+        stock: "",
+        actual_price: "",
+        offer: "",
+        offer_type: "percentage"
+      }]);
+    }
+  }, [productToEdit]);
+
 
   // ADD IMAGE URL
   const addImageUrl = () => {
@@ -37,7 +70,7 @@ const AddProduct = () => {
         size: "",
         stock: "",
         actual_price: "",
-        offer_price: "",
+        offer: "",
         offer_type: "percentage"
       }
     ]);
@@ -55,26 +88,67 @@ const AddProduct = () => {
     setVariants(updated);
   };
 
-  // SUBMIT
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const formattedVariants = variants.map(v => ({
+      ...v,
+      stock: Number(v.stock),
+      actual_price: Number(v.actual_price),
+      offer: Number(v.offer)
+    }));
 
     const finalData = {
       title,
       details,
       images,
       active,
-      variants,
+      variants: formattedVariants,
     };
 
-    console.log("Final Product Data:", finalData);
+    if (productToEdit) {
+      // UPDATE PRODUCT
+dispatch(updateOfflineProduct({ id: productId, updateData: finalData }))
+        .unwrap()
+        .then(() => {
+          alert("Product Updated Successfully!");
+          navigate("/OfflineProducts"); // back to table
+        })
+        .catch(err => alert("Error: " + err));
+    } else {
+      dispatch(createOfflineProduct(finalData))
+        .unwrap()
+        .then((res) => {
+          alert("Product Created Successfully!");
+          console.log("Response:", res);
+
+          // form reset
+          setTitle("");
+          setDetails("");
+          setImages([]);
+          setVariants([
+            {
+              color: "",
+              size: "",
+              stock: "",
+              actual_price: "",
+              offer: "",
+              offer_type: "percentage",
+            },
+          ]);
+        })
+        .catch(err => alert("Error: " + err));
+    }
   };
+useEffect(() => {
+  console.log("Editing product:", productToEdit);
+  console.log("Product ID:", productToEdit?._id);
+}, [productToEdit]);
+
 
   return (
-    <div className="Offline-addproduct">
-      <OfflineSidebar/>
     <div className="add-product-container">
-      <h1 className="heading">Add New Product</h1>
+      <h1 className="heading">{productToEdit ? "Edit Product" : "Add New Product"}</h1>
 
       <div className="form-box">
         <form onSubmit={handleSubmit}>
@@ -125,12 +199,13 @@ const AddProduct = () => {
           <label>Status</label>
           <select
             className="input"
-            value={active}
+            value={active ? "true" : "false"}
             onChange={(e) => setActive(e.target.value === "true")}
           >
             <option value="true">Active</option>
             <option value="false">Inactive</option>
           </select>
+
 
           {/* VARIANTS */}
           <div className="variant-header">
@@ -179,8 +254,8 @@ const AddProduct = () => {
                   type="number"
                   className="input"
                   placeholder="Offer Price"
-                  value={v.offer_price}
-                  onChange={(e) => handleVariantChange(idx, "offer_price", e.target.value)}
+                  value={v.offer}
+                  onChange={(e) => handleVariantChange(idx, "offer", e.target.value)}
                 />
 
                 <select
@@ -206,12 +281,11 @@ const AddProduct = () => {
           </button>
 
           {/* SAVE */}
-          <button className="btn-primary">Save Product</button>
+          <button className="btn-primary" type="submit">{productToEdit ? "Update Product" : "Save Product"}</button>
 
         </form>
       </div>
     </div>
-        </div>
   );
 };
 

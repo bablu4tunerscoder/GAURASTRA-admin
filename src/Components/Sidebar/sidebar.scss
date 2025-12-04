@@ -10,6 +10,7 @@ $scrollbar-track: #f0f0f0;
     position: absolute;
     z-index: 2;
 }
+
 .menu-toggle {
     display: none;
     background: none;
@@ -26,19 +27,20 @@ $scrollbar-track: #f0f0f0;
 
 .sidebar {
     position: fixed;
-    top: 0;
+    top: 60;
     left: 0;
-    width: 271px;
- height: 100vh;
-     background-color: $page-bg;
+    width: 260px;
+    height: 100vh;
+    background-color: $page-bg;
     overflow-y: auto;
-  z-index: 999;
+    z-index: 999;
 
-    h2{
+    h2 {
         margin-bottom: 0;
     }
+
     &::-webkit-scrollbar {
-        display: none; 
+        display: none;
     }
 
     &-header {
@@ -66,19 +68,19 @@ $scrollbar-track: #f0f0f0;
         display: block;
         border-radius: 5px;
         transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
-    
+
         &:hover {
             background-color: lighten($hover-bg, 10%);
             transform: translateX(5px);
         }
-    
-        &.active { 
-            background-color: $hover-bg;  
+
+        &.active {
+            background-color: $hover-bg;
             color: white;
             font-weight: bold;
         }
     }
-    
+
 
     &-item {
         color: #eee;
@@ -116,14 +118,15 @@ $scrollbar-track: #f0f0f0;
         margin-left: 0;
         width: 100%;
     }
-.sidebar {
-    transform: translateX(-100%);
-    opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
 
-    &.open {
-      transform: translateX(0);
-      opacity: 1;
+    .sidebar {
+        transform: translateX(-100%);
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+
+        &.open {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
-  }
 }
