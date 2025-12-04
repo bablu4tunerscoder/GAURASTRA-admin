@@ -1,0 +1,154 @@
+.dash-page {
+  padding: 20px;
+  font-family: "Inter", sans-serif;
+  color: #1f2937;
+  background: #f5f7fb;
+  min-height: 100vh;
+
+  .dash-title {
+    font-size: 24px;
+    margin-bottom: 18px;
+  }
+
+  .dash-loading,
+  .dash-error {
+    padding: 14px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(31, 41, 55, 0.06);
+  }
+
+  .dash-top-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+
+    .card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+      .card-title {
+        font-size: 13px;
+        color: #6b7280;
+      }
+      .card-value {
+        margin-top: 8px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .dash-section {
+    margin-top: 18px;
+    background: transparent;
+
+    h2 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .orders-table-wrapper {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.04);
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+      th, td {
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 13px;
+      }
+      thead {
+        th {
+          background: #f3f4f6;
+          font-weight: 600;
+          border-bottom: 1px solid #e6e9ef;
+        }
+      }
+      tbody {
+        tr {
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .order-item {
+          font-size: 13px;
+          color: #374151;
+        }
+        .no-data {
+          text-align: center;
+          padding: 18px;
+          color: #6b7280;
+        }
+      }
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+
+      .inventory-card {
+        background: #fff;
+        padding: 12px;
+        border-radius: 10px;
+        min-height: 80px;
+        ul {
+          padding-left: 18px;
+          li {
+            margin-bottom: 6px;
+            font-size: 13px;
+          }
+        }
+        .no-data {
+          color: #6b7280;
+        }
+      }
+    }
+  }
+
+  .small-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+
+    .small-card {
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      .sc-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .sc-body {
+        font-size: 13px;
+        color: #374151;
+        div {
+          margin-bottom: 6px;
+        }
+      }
+    }
+  }
+
+  .dash-footer {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .refresh-btn {
+      background: #111827;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  }
+}
