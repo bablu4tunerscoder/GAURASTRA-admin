@@ -2,7 +2,6 @@ import React from "react";
 import { Provider } from "react-redux";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import store from "./Redux/Store";
-
 import NewProduct from "./product/newproduct";
 import ProductTable from "./product/product";
 import OrderList from "./Order/OrderList";
@@ -26,44 +25,54 @@ import OfflineProductTable from "./offline-admin/pages/OfflineProductTable";
 import CreateWorkerAccount from "./offline-admin/components/CreateAccount";
 import WorkerList from "./offline-admin/components/WorkerList";
 import HomeComponent from "./Components/home";
+import Navbar from "./Components/Navbar";
+import "./App.css";
+import Sidebar from "./Components/Sidebar/sidebar";
+import OfflineLayout from "./Components/OfflineLayout";
+import OnlineLayout from "./Components/OnlineLayout";
+import Dashboard from "./offline-admin/components/Dashboard";
 
 function App() {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <Routes>
-          {/* Blog Routes */}
-          <Route path="/blogs" element={<BlogList />}></Route>
-          <Route path="/blog/description" element={<BlogDescription />}></Route>
-          <Route path="/blog/edit/:id" element={<EditBlog />}></Route>
-          <Route path="/blog/create" element={<CreateBlog />}></Route>
+        <Navbar />
+        <div className="page-wrapper">
+          <Routes>
+            {/* Blog Routes */}
+            <Route path="/blogs" element={<BlogList />}></Route>
+            <Route path="/blog/description" element={<OnlineLayout><BlogDescription /></OnlineLayout>}></Route>
+            <Route path="/blog/edit/:id" element={<EditBlog />}></Route>
+            <Route path="/blog/create" element={<CreateBlog />}></Route>
+            <Route path="/sidebar" element={<Sidebar />} ></Route>
+            {/* User Routes */}
+            <Route path="/users" element={<UsersList />} />
+            <Route path="/users/:id" element={<UserDetails />} />
 
-          {/* User Routes */}
-          <Route path="/users" element={<UsersList />} />
-          <Route path="/users/:id" element={<UserDetails />} />
+            {/* Main Routes */}
+            <Route path="/DownloadQR" element={<DownloadQR />} />
+            <Route path="/products" element={<ProductTable />} />
+            <Route path="/OfferBanner" element={<OfferBannerForm />} />
+            <Route path="/OfferBannerHistory" element={<OfferBannerHistory />} />
+            <Route path="/category" element={<CategoryList />} />
+            <Route path="/Coupons" element={<CouponsList />} />
+            <Route path="/sub_category" element={<SubCategoryList />} />
+            <Route path="/NewProduct" element={<OnlineLayout><NewProduct /></OnlineLayout>} />
+            <Route path="/" element={<OnlineLayout><HomeComponent /></OnlineLayout>} />
+            <Route path="/OrderList" element={<OrderList />} />
+            <Route path="/LandingEditor" element={<LandingEditor />} />
+            <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
+            <Route path="/Dashboard" element={<OfflineLayout><Dashboard /></OfflineLayout>} />
+            <Route path="/AddProduct" element={<OfflineLayout><AddProduct /></OfflineLayout>} />
+            <Route path="/OffProductTable" element={<OfflineLayout><OfflineProductTable /></OfflineLayout>} />
+            <Route path="/create-worker" element={<OfflineLayout><CreateWorkerAccount /></OfflineLayout>} />
+            <Route path="/all-workers" element={<OfflineLayout><WorkerList /></OfflineLayout>} />
 
-          {/* Main Routes */}
-          <Route path="/DownloadQR" element={<DownloadQR />} />
-          <Route path="/products" element={<ProductTable />} />
-          <Route path="/OfferBanner" element={<OfferBannerForm />} />
-          <Route path="/OfferBannerHistory" element={<OfferBannerHistory />} />
-          <Route path="/category" element={<CategoryList />} />
-          <Route path="/Coupons" element={<CouponsList />} />
-          <Route path="/sub_category" element={<SubCategoryList />} />
-          <Route path="/NewProduct" element={<NewProduct />} />
-          <Route path="/" element={<HomeComponent />} />
-          <Route path="/OrderList" element={<OrderList />} />
-          <Route path="/LandingEditor" element={<LandingEditor />} />
-          <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
-          <Route path="/AddProduct" element={<AddProduct />} />
-          <Route path="/OffProductTable" element={<OfflineProductTable />} />
-          <Route path="/create-worker" element={<CreateWorkerAccount />} />
-          <Route path="/all-workers" element={<WorkerList />} />
+            {/* ✅ ADD THIS NEW ROUTE */}
+            <Route path="/leads" element={<LeadsList />} />
 
-          {/* ✅ ADD THIS NEW ROUTE */}
-          <Route path="/leads" element={<LeadsList />} />
-
-        </Routes>
+          </Routes>
+        </div>
       </BrowserRouter>
     </Provider>
   );

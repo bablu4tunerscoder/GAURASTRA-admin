@@ -16,7 +16,6 @@ import Pricing from "./Pricing";
 import Categories from "./Categories";
 import ProductOptions from "./ProductOptions";
 import ProductInfo from "./ProductInfo";
-import Sidebar from "../Components/Sidebar/sidebar";
 import SeoSection from "./SeoSection";
 import ProductList from "./ProductList";
 import { useNavigate } from "react-router-dom";
@@ -107,9 +106,6 @@ console.log("firsdmjmt",productsToSubmit)
   return (
     <>
       <div className="app-container">
-        <div className="sidebar-container">
-          <Sidebar />
-        </div>
         <div className="main-container" style={{ display: "flex" }}>
           <div className="content-wrapper">
             <div className="left-section">

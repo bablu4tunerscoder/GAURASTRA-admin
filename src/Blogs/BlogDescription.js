@@ -22,8 +22,7 @@ function BlogDescription() {
   }
 
   return (
-    <div>
-      <Sidebar />
+    
       <div className="min-h-[90vh] mb-8 pt-12 md:px-20 flex flex-col items-center justify-center text-gray-800">
         <div className="w-full max-w-3xl bg-white p-8 rounded-lg shadow-lg">
           {/* Blog Title */}
@@ -84,7 +83,7 @@ function BlogDescription() {
           </div>
         </div>
       </div>
-    </div>
+
   );
 }
 

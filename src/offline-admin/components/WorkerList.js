@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import "./workerList.scss";
-import OfflineSidebar from "./OfflineSidebar";
 
 const WorkerList = () => {
   const [workers, setWorkers] = useState([]);
@@ -40,8 +39,6 @@ const WorkerList = () => {
   );
 
   return (
-    <div className="worker-layout">
-      <OfflineSidebar/>
     <div className="worker-list-container">
       <h2>All Workers</h2>
 
@@ -97,8 +94,6 @@ const WorkerList = () => {
         </tbody>
       </table>
     </div>
-        </div>
-
         </div>
   );
 };
