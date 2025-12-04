@@ -10,6 +10,9 @@ import landingReducer from "./Slices/landingSlice";
 import couponsReducer from "./Slices/couponSlice";
 import offerBannerReducer from "./Slices/offerBannerSlice";
 import leadReducer from "./Slices/leadSlice"; // ✅ 1. Import the new reducer
+import offlineProductReducer from "./Slices/offlineProductSlice";
+import offlineUserReducer from "./Slices/offlineUserSlice";
+import dashboardReducer from "./Slices/dashboardSlice";
 
 const store = configureStore({
   reducer: {
@@ -23,7 +26,12 @@ const store = configureStore({
     landing: landingReducer,
     coupon: couponsReducer,
     offerBanner: offerBannerReducer,
-    leads: leadReducer, // ✅ 2. Add it to the store
+    leads: leadReducer,
+    offlineProducts: offlineProductReducer,
+    offlineUser: offlineUserReducer,
+    dashboard: dashboardReducer,
+
+    // ✅ 2. Add it to the store
   },
 });
 
