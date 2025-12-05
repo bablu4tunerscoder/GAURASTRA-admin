@@ -15,7 +15,7 @@ const AddProduct = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [images, setImages] = useState([]);
   const [active, setActive] = useState(true);
-const productId = productToEdit?._id || productToEdit?.id;
+  const productUniqueId = productToEdit?.unique_id;
 
   const [variants, setVariants] = useState([
     {
@@ -40,14 +40,16 @@ const productId = productToEdit?._id || productToEdit?.id;
         stock: v.stock || "",
         actual_price: v.actual_price || "",
         offer: v.offer || "",
-        offer_type: v.offer_type || "percentage"
+        offer_type: v.offer_type || "percentage",
+        qrcode_url: v.qrcode_url || ""
       })) || [{
         color: "",
         size: "",
         stock: "",
         actual_price: "",
         offer: "",
-        offer_type: "percentage"
+        offer_type: "percentage",
+        qrcode_url: ""
       }]);
     }
   }, [productToEdit]);
@@ -108,11 +110,11 @@ const productId = productToEdit?._id || productToEdit?.id;
 
     if (productToEdit) {
       // UPDATE PRODUCT
-dispatch(updateOfflineProduct({ id: productId, updateData: finalData }))
+      dispatch(updateOfflineProduct({ unique_id: productUniqueId, updateData: finalData }))
         .unwrap()
         .then(() => {
           alert("Product Updated Successfully!");
-          navigate("/OfflineProducts"); // back to table
+          navigate("/OffProductTable"); // back to table
         })
         .catch(err => alert("Error: " + err));
     } else {
@@ -140,11 +142,29 @@ dispatch(updateOfflineProduct({ id: productId, updateData: finalData }))
         .catch(err => alert("Error: " + err));
     }
   };
-useEffect(() => {
-  console.log("Editing product:", productToEdit);
-  console.log("Product ID:", productToEdit?._id);
-}, [productToEdit]);
+  useEffect(() => {
+    console.log("Editing product:", productToEdit);
+    console.log("Product ID:", productToEdit?._id);
+  }, [productToEdit]);
 
+const handlePrintQR = (index) => {
+  const qrImage = document.getElementById(`qr-${index}`).src;
+
+  const printWindow = window.open("", "_blank", "width=400,height=400");
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print QR</title>
+      </head>
+      <body style="display:flex;justify-content:center;align-items:center;height:100vh;">
+        <img src="${qrImage}" style="width:200px;height:200px;object-fit:contain;" />
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+  printWindow.print();
+};
 
   return (
     <div className="add-product-container">
@@ -211,70 +231,99 @@ useEffect(() => {
           <div className="variant-header">
             <h2>Product Variants</h2>
           </div>
-
           {variants.map((v, idx) => (
             <div key={idx} className="variant-box">
 
-              <div className="grid-3">
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="Color"
-                  value={v.color}
-                  onChange={(e) => handleVariantChange(idx, "color", e.target.value)}
-                />
+              {/* LEFT SIDE INPUTS */}
+              <div>
+                <div className="grid-3">
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Color"
+                    value={v.color}
+                    onChange={(e) => handleVariantChange(idx, "color", e.target.value)}
+                  />
 
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="Size"
-                  value={v.size}
-                  onChange={(e) => handleVariantChange(idx, "size", e.target.value)}
-                />
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Size"
+                    value={v.size}
+                    onChange={(e) => handleVariantChange(idx, "size", e.target.value)}
+                  />
 
-                <input
-                  type="number"
-                  className="input"
-                  placeholder="Stock"
-                  value={v.stock}
-                  onChange={(e) => handleVariantChange(idx, "stock", e.target.value)}
-                />
+                  <input
+                    type="number"
+                    className="input"
+                    placeholder="Stock"
+                    value={v.stock}
+                    onChange={(e) => handleVariantChange(idx, "stock", e.target.value)}
+                  />
+                </div>
+
+                <div className="grid-3">
+                  <input
+                    type="number"
+                    className="input"
+                    placeholder="Actual Price"
+                    value={v.actual_price}
+                    onChange={(e) => handleVariantChange(idx, "actual_price", e.target.value)}
+                  />
+
+                  <input
+                    type="number"
+                    className="input"
+                    placeholder="Offer Price"
+                    value={v.offer}
+                    onChange={(e) => handleVariantChange(idx, "offer", e.target.value)}
+                  />
+
+                  <select
+                    className="input"
+                    value={v.offer_type}
+                    onChange={(e) => handleVariantChange(idx, "offer_type", e.target.value)}
+                  >
+                    <option value="percentage">Percentage</option>
+                    <option value="flat">Flat</option>
+                  </select>
+                </div>
+
+                {variants.length > 1 && (
+                  <button
+                    className="btn-danger"
+                    type="button"
+                    onClick={() => removeVariant(idx)}
+                  >
+                    Remove Variant
+                  </button>
+                )}
               </div>
+              <div className="qr-box">
+                {v.qrcode_url ? (
+                  <>
+                    <img
+                      id={`qr-${idx}`}
+                      src={v.qrcode_url}
+                      alt="QR Code"
+                      className="qr-img"
+                    />
 
-              <div className="grid-3">
-                <input
-                  type="number"
-                  className="input"
-                  placeholder="Actual Price"
-                  value={v.actual_price}
-                  onChange={(e) => handleVariantChange(idx, "actual_price", e.target.value)}
-                />
-
-                <input
-                  type="number"
-                  className="input"
-                  placeholder="Offer Price"
-                  value={v.offer}
-                  onChange={(e) => handleVariantChange(idx, "offer", e.target.value)}
-                />
-
-                <select
-                  className="input"
-                  value={v.offer_type}
-                  onChange={(e) => handleVariantChange(idx, "offer_type", e.target.value)}
-                >
-                  <option value="percentage">Percentage</option>
-                  <option value="flat">Flat</option>
-                </select>
+                    <button
+                      type="button"
+                      className="print-btn"
+                      onClick={() => handlePrintQR(idx)}
+                    >
+                      Print QR
+                    </button>
+                  </>
+                ) : (
+                  <p>No QR Available</p>
+                )}
               </div>
-
-              {variants.length > 1 && (
-                <button className="btn-danger" type="button" onClick={() => removeVariant(idx)}>
-                  Remove Variant
-                </button>
-              )}
             </div>
           ))}
+
 
           <button type="button" className="btn-outline" onClick={addVariant}>
             + Add Variant

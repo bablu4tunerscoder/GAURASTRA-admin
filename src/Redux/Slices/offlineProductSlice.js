@@ -52,10 +52,10 @@ export const fetchOfflineProductById = createAsyncThunk(
 // ================================
 export const updateOfflineProduct = createAsyncThunk(
   "offlineProducts/update",
-  async ({ id, updateData }, { rejectWithValue }) => {
+  async ({ unique_id, updateData }, { rejectWithValue }) => {
     try {
       const { data } = await axios.put(
-        `${BASE_URL}/api/offline/products/update/${id}`,
+        `${BASE_URL}/api/offline/products/update/${unique_id}`,
         updateData
       );
       return data;

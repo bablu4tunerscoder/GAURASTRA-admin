@@ -1,41 +1,23 @@
 import React, { useEffect, useState } from "react";
 import "./workerList.scss";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllWorkers, deleteWorkerById } from "../../Redux/Slices/offlineUserSlice";
+import { useNavigate } from "react-router-dom";
 
 const WorkerList = () => {
-  const [workers, setWorkers] = useState([]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { workers, loading } = useSelector((state) => state.offlineUser);
+
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const dummyData = [
-      {
-        _id: "1",
-        workerName: "Sandeep Sharma",
-        workerId: "worker101",
-        role: "Worker",
-        createdAt: "2025-01-05",
-      },
-      {
-        _id: "2",
-        workerName: "Aman Gupta",
-        workerId: "worker102",
-        role: "Worker",
-        createdAt: "2025-02-20",
-      },
-      {
-        _id: "3",
-        workerName: "Rohan Singh",
-        workerId: "worker103",
-        role: "Worker",
-        createdAt: "2025-03-10",
-      },
-    ];
+    dispatch(getAllWorkers());
+  }, [dispatch]);
 
-    setWorkers(dummyData);
-  }, []);
-
-  const filteredWorkers = workers.filter((w) =>
-    w.workerName.toLowerCase().includes(search.toLowerCase()) ||
-    w.workerId.toLowerCase().includes(search.toLowerCase())
+  const filteredWorkers = workers?.filter((w) =>
+    w.name.toLowerCase().includes(search.toLowerCase()) ||
+    w.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -45,56 +27,74 @@ const WorkerList = () => {
       <div className="top-bar">
         <input
           type="text"
-          placeholder="Search by name or user ID..."
+          placeholder="Search by name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="search-box"
         />
       </div>
-<div className="table-wrapper">
 
-      <table className="worker-table">
-        <thead>
-          <tr>
-            <th>S.No</th>
-            <th>Worker Name</th>
-            <th>User ID</th>
-            <th>Role</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredWorkers.length > 0 ? (
-            filteredWorkers.map((worker, index) => (
-              <tr key={worker._id}>
-                <td>{index + 1}</td>
-                <td>{worker.workerName}</td>
-                <td>{worker.workerId}</td>
-                <td>{worker.role}</td>
-                <td>{worker.createdAt}</td>
-                <td className="action-btns">
-                  <button className="edit-btn">
-                    <i className="fa-solid fa-pen"></i>
-                  </button>
-                  <button className="delete-btn">
-                    <i className="fa-solid fa-trash"></i>
-                  </button>
-                </td>
+      <div className="table-wrapper">
+        {loading ? (
+          <p className="loading-text">Loading workers...</p>
+        ) : (
+          <table className="worker-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Worker Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Created At</th>
+                <th>Actions</th>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" className="no-data">
-                No workers found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            </thead>
+
+            <tbody>
+              {filteredWorkers && filteredWorkers.length > 0 ? (
+                filteredWorkers.map((worker, index) => (
+                  <tr key={worker._id}>
+                    <td>{index + 1}</td>
+                    <td>{worker.name}</td>
+                    <td>{worker.email}</td>
+                    <td>{worker.role}</td>
+                    <td>{worker.createdAt?.split("T")[0]}</td>
+
+                    <td className="action-btns">
+                      <button
+                        className="edit-btn"
+                        onClick={() => navigate("/create-worker", { state: worker })}
+                      >
+                        <i className="fa-solid fa-pen"></i>
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => {
+                          const confirmDelete = window.confirm(
+                            "Are you sure you want to delete this worker?"
+                          );
+                          if (confirmDelete) {
+                            dispatch(deleteWorkerById(worker._id));
+                          }
+                        }}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="no-data">
+                    No workers found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
-        </div>
   );
 };
 

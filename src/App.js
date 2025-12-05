@@ -1,6 +1,6 @@
 import React from "react";
 import { Provider } from "react-redux";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import store from "./Redux/Store";
 import NewProduct from "./product/newproduct";
 import ProductTable from "./product/product";
@@ -40,6 +40,7 @@ function App() {
         <div className="page-wrapper">
           <Routes>
             {/* Blog Routes */}
+              <Route path="/" element={<Navigate to="/OnlineAdmin" replace />} />
             <Route path="/blogs" element={<BlogList />}></Route>
             <Route path="/blog/description" element={<OnlineLayout><BlogDescription /></OnlineLayout>}></Route>
             <Route path="/blog/edit/:id" element={<EditBlog />}></Route>
@@ -58,11 +59,11 @@ function App() {
             <Route path="/Coupons" element={<CouponsList />} />
             <Route path="/sub_category" element={<SubCategoryList />} />
             <Route path="/NewProduct" element={<OnlineLayout><NewProduct /></OnlineLayout>} />
-            <Route path="/" element={<OnlineLayout><HomeComponent /></OnlineLayout>} />
+            <Route path="/OnlineAdmin" element={<OnlineLayout><HomeComponent /></OnlineLayout>} />
             <Route path="/OrderList" element={<OrderList />} />
             <Route path="/LandingEditor" element={<LandingEditor />} />
             <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
-            <Route path="/Dashboard" element={<OfflineLayout><Dashboard /></OfflineLayout>} />
+            <Route path="/OfflineAdmin" element={<OfflineLayout><Dashboard /></OfflineLayout>} />
             <Route path="/AddProduct" element={<OfflineLayout><AddProduct /></OfflineLayout>} />
             <Route path="/OffProductTable" element={<OfflineLayout><OfflineProductTable /></OfflineLayout>} />
             <Route path="/create-worker" element={<OfflineLayout><CreateWorkerAccount /></OfflineLayout>} />

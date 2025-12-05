@@ -25,7 +25,7 @@ const Dashboard = () => {
 
   return (
     <div className="dash-page">
-      <h1 className="dash-title">Store Dashboard</h1>
+      <h1 className="dash-title">Offline Store Dashboard</h1>
 
       {loading && <div className="dash-loading">Loading dashboard...</div>}
       {error && <div className="dash-error">Error: {error}</div>}

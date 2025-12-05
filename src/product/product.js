@@ -49,7 +49,7 @@ const ProductTable = () => {
     localStorage.setItem("ProductId", id);
     await dispatch(fetchProductById(id));
     dispatch(setEditMode(true));
-    navigate("/");
+    navigate("/NewProduct");
   }
 
   const handleSelectProduct = (id) => {
@@ -88,7 +88,7 @@ const ProductTable = () => {
 
   const handleNewProductClick = () => {
     dispatch(setEditMode(false));
-    navigate("/");
+    navigate("/NewProduct");
   };
   return (
     <div className="dashsidebar" style={{ display: "flex" }}>

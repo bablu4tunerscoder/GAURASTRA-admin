@@ -21,7 +21,7 @@ const OfflineSidebar = () => {
   }, [isOpen]);
 
   const offlineMenu = [
-    { title: "Dashboard", path: "/Dashboard" },
+    { title: "Dashboard", path: "/OfflineAdmin" },
     { title: "Add Offline Product", path: "/AddProduct" },
     { title: "Offline Product List", path: "/OffProductTable" },
     { title: "Create Worker", path: "/create-worker" },
