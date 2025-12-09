@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { createOfflineProduct, updateOfflineProduct } from "../../Redux/Slices/offlineProductSlice";
+import { createOfflineProduct, updateOfflineProduct, uploadOfflineImage } from "../../Redux/Slices/offlineProductSlice";
 import "./AddProduct.scss";
 
 const AddProduct = () => {
@@ -82,6 +82,9 @@ const AddProduct = () => {
   const removeVariant = (index) => {
     setVariants(variants.filter((_, i) => i !== index));
   };
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   // HANDLE VARIANT CHANGE
   const handleVariantChange = (index, field, value) => {
@@ -122,7 +125,7 @@ const AddProduct = () => {
         .unwrap()
         .then((res) => {
           alert("Product Created Successfully!");
-          console.log("Response:", res);
+          navigate("/OffProductTable");
 
           // form reset
           setTitle("");
@@ -147,11 +150,11 @@ const AddProduct = () => {
     console.log("Product ID:", productToEdit?._id);
   }, [productToEdit]);
 
-const handlePrintQR = (index) => {
-  const qrImage = document.getElementById(`qr-${index}`).src;
+  const handlePrintQR = (index) => {
+    const qrImage = document.getElementById(`qr-${index}`).src;
 
-  const printWindow = window.open("", "_blank", "width=400,height=400");
-  printWindow.document.write(`
+    const printWindow = window.open("", "_blank", "width=400,height=400");
+    printWindow.document.write(`
     <html>
       <head>
         <title>Print QR</title>
@@ -162,9 +165,33 @@ const handlePrintQR = (index) => {
     </html>
   `);
 
-  printWindow.document.close();
-  printWindow.print();
-};
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const result = await dispatch(uploadOfflineImage(file)).unwrap();
+      console.log("UPLOAD RESULT:", result);
+
+      const imageURL = result.data?.url;
+
+      if (!imageURL) {
+        alert("Image upload API did not return a URL!");
+        return;
+      }
+
+      setImages(prev => [...prev, imageURL]);
+      alert("Image uploaded!");
+
+    } catch (err) {
+      alert("Upload failed: " + err);
+    }
+  };
+
 
   return (
     <div className="add-product-container">
@@ -173,7 +200,6 @@ const handlePrintQR = (index) => {
       <div className="form-box">
         <form onSubmit={handleSubmit}>
 
-          {/* PRODUCT TITLE */}
           <label>Product Title</label>
           <input
             type="text"
@@ -193,28 +219,32 @@ const handlePrintQR = (index) => {
             onChange={(e) => setDetails(e.target.value)}
           />
 
-          {/* IMAGE URL */}
-          <label>Product Images (URL)</label>
-          <div className="image-url-box">
-            <input
-              type="text"
-              className="input"
-              placeholder="Enter image URL"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
-            <button type="button" className="btn-outline" onClick={addImageUrl}>
-              Add
-            </button>
-          </div>
+          <label>Upload Product Images</label>
+          <input
+            type="file"
+            className="input"
+            accept="image/*"
+            onChange={(e) => handleImageUpload(e)}
+          />
+
 
           {/* PREVIEW GRID */}
           <div className="image-preview-grid">
             {images.map((img, idx) => (
-              <img key={idx} src={img} className="preview-img" alt="" />
+              <div key={idx} className="preview-wrapper">
+                <img src={img} className="preview-img" alt="" />
+
+                <button
+                  type="button"
+                  className="remove-img-btn"
+                  onClick={() => removeImage(idx)}
+                >
+                  ✕
+                </button>
+              </div>
             ))}
           </div>
-
+          
           {/* STATUS */}
           <label>Status</label>
           <select
@@ -228,7 +258,7 @@ const handlePrintQR = (index) => {
 
 
           {/* VARIANTS */}
-          <div className="variant-header">
+          <div className="variant-headerr">
             <h2>Product Variants</h2>
           </div>
           {variants.map((v, idx) => (
@@ -300,7 +330,7 @@ const handlePrintQR = (index) => {
                 )}
               </div>
               <div className="qr-box">
-                {v.qrcode_url ? (
+                {v.qrcode_url && (
                   <>
                     <img
                       id={`qr-${idx}`}
@@ -317,8 +347,6 @@ const handlePrintQR = (index) => {
                       Print QR
                     </button>
                   </>
-                ) : (
-                  <p>No QR Available</p>
                 )}
               </div>
             </div>

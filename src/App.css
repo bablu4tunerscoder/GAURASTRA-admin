@@ -11,3 +11,31 @@
   padding: 20px;
   margin-left: 260px; 
 }
+
+@media (max-width: 768px) {
+
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .content-area {
+    margin-left: 0 !important;  
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .page-wrapper {
+    padding-top: 50px;
+  }
+
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .content-area {
+    margin-left: 0 !important;
+    padding: 12px;
+  }
+}

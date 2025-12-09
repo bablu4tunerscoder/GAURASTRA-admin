@@ -120,4 +120,57 @@
       }
     }
   }
-  
+  @media (max-width: 480px) {
+  .layout {
+    flex-direction: column;
+
+    .sidebar {
+      width: 100%;     
+      flex-shrink: 0;
+    }
+
+    .user-container {
+      margin-left: 0 !important;      
+      padding: 12px !important;
+      width: 100%;
+      overflow-x: hidden;
+
+      .user-header {
+        padding: 5px;
+        margin-bottom: 10px;
+
+        h1 {
+          font-size: 18px !important;
+          margin-bottom: 10px;
+        }
+      }
+
+      .table-container {
+        overflow-x: auto;             
+        width: 100%;
+      }
+
+      .user-table {
+        width: 600px;                 
+        font-size: 13px;
+
+        th,
+        td {
+          padding: 8px;
+          font-size: 12px;
+        }
+
+        .view-btn {
+          padding: 4px 6px;
+          font-size: 11px;
+        }
+      }
+
+      .error-message,
+      .info-message {
+        font-size: 14px;
+        padding: 8px;
+      }
+    }
+  }
+}

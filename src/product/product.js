@@ -126,7 +126,6 @@ const ProductTable = () => {
             <select
               value={genderFilter}
               onChange={(e) => setGenderFilter(e.target.value)}
-              style={{ marginLeft: "10px" }}
             >
               <option value="">All Genders</option>
               <option value="Men">Men</option>
@@ -140,7 +139,6 @@ const ProductTable = () => {
                 setGenderFilter("");
                 setSearchQuery("");
               }}
-              style={{ marginLeft: "10px" }}
               className="btn-filter-gh"
             >
               Clear All

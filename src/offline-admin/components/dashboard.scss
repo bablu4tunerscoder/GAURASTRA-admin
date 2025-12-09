@@ -1,14 +1,15 @@
 .dash-page {
   padding: 20px;
   font-family: "Inter", sans-serif;
-  color: #e4e4e4;
+  color: #2d2d2d; // dark text
+  background: #f7f7fc; // soft light background
   min-height: 100vh;
 
   .dash-title {
     font-size: 26px;
     font-weight: 700;
     margin-bottom: 20px;
-    color: #FF6A00; // primary orange
+    color: #6C63FF; // soft lavender
   }
 
   // Loading & Error
@@ -16,19 +17,20 @@
   .dash-error {
     padding: 14px;
     border-radius: 10px;
-    box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.3);
     font-weight: 600;
-    color: #fff;
+    box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.08);
   }
 
   .dash-loading {
-    background: #1f2a40;
-    border-left: 5px solid #FF6A00;
+    background: #e9e7ff;
+    border-left: 5px solid #6C63FF;
+    color: #4b46c2;
   }
 
   .dash-error {
-    background: #431f1f;
+    background: #ffe9e9;
     border-left: 5px solid #ff3b30;
+    color: #a12222;
   }
 
   // TOP CARDS
@@ -39,27 +41,27 @@
     margin-bottom: 20px;
 
     .card {
-      background: #131720;
+      background: #ffffff;
       padding: 20px;
       border-radius: 14px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
       transition: all 0.3s ease;
 
       &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.13);
       }
 
       .card-title {
         font-size: 14px;
-        color: #aaa;
+        color: #7b7b7b;
       }
 
       .card-value {
         margin-top: 10px;
         font-size: 26px;
         font-weight: 700;
-        color: #FF6A00; // orange highlight
+        color: #6C63FF; // highlight purple
       }
     }
   }
@@ -71,15 +73,15 @@
     h2 {
       font-size: 20px;
       font-weight: 700;
-      color: #FF6A00;
+      color: #6C63FF;
       margin-bottom: 12px;
     }
 
     .orders-table-wrapper {
-      background: #131720;
+      background: #ffffff;
       border-radius: 14px;
       padding: 15px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     }
 
     .orders-table {
@@ -90,34 +92,34 @@
       td {
         padding: 12px 14px;
         font-size: 14px;
-        color: #e4e4e4;
+        color: #2d2d2d;
       }
 
       thead th {
-        background: #1f2430;
-        color: #FF6A00;
+        background: #ebe9ff;
+        color: #6C63FF;
         font-weight: 600;
-        border-bottom: 1px solid #2a2f3e;
+        border-bottom: 1px solid #dedcff;
       }
 
       tbody tr {
-        border-bottom: 1px solid #2a2f3e;
+        border-bottom: 1px solid #e5e5e5;
         transition: all 0.2s ease;
 
         &:hover {
-          background: rgba(255, 106, 0, 0.1);
+          background: rgba(108, 99, 255, 0.06);
         }
       }
 
       .order-item {
         font-size: 13px;
-        color: #dcdcdc;
+        color: #5b5b5b;
       }
 
       .no-data {
         text-align: center;
         padding: 18px;
-        color: #aaa;
+        color: #9c9c9c;
         font-weight: 500;
       }
     }
@@ -129,16 +131,16 @@
       gap: 16px;
 
       .inventory-card {
-        background: #131720;
+        background: #ffffff;
         padding: 14px;
         border-radius: 14px;
         min-height: 90px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 
         h3 {
           margin-bottom: 10px;
           font-size: 16px;
-          color: #FF6A00;
+          color: #6C63FF;
           font-weight: 600;
         }
 
@@ -152,7 +154,7 @@
         }
 
         .no-data {
-          color: #aaa;
+          color: #9c9c9c;
         }
       }
     }
@@ -166,26 +168,26 @@
     margin-top: 16px;
 
     .small-card {
-      background: #131720;
+      background: #ffffff;
       padding: 14px;
       border-radius: 14px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
       transition: all 0.3s ease;
 
       &:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.13);
       }
 
       .sc-title {
         font-weight: 700;
-        color: #FF6A00;
+        color: #6C63FF;
         margin-bottom: 8px;
       }
 
       .sc-body {
         font-size: 14px;
-        color: #e4e4e4;
+        color: #3a3a3a;
 
         div {
           margin-bottom: 6px;
@@ -202,23 +204,93 @@
     align-items: center;
 
     small {
-      color: #aaa;
+      color: #8a8a8a;
     }
 
     .refresh-btn {
-      background: #FF6A00;
+      background: #6C63FF;
       color: white;
       padding: 8px 14px;
       border-radius: 8px;
       border: none;
       cursor: pointer;
       font-weight: 600;
-      box-shadow: 0 4px 12px rgba(255, 106, 0, 0.5);
+      box-shadow: 0 4px 12px rgba(108, 99, 255, 0.35);
       transition: all 0.3s ease;
 
       &:hover {
-        background: darken(#FF6A00, 10%);
+        background: #584ff2;
         transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+/* 📌 Tablet (up to 768px) */
+@media (max-width: 768px) {
+  .dash-page {
+    padding: 15px;
+
+    .dash-title {
+      font-size: 22px;
+    }
+
+    .dash-top-cards {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .inventory-grid {
+      grid-template-columns: 1fr; // 2 → 1 column
+    }
+
+    .orders-table {
+      th, td {
+        padding: 8px;
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+/* 📌 Mobile (up to 480px) */
+@media (max-width: 480px) {
+  .dash-page {
+    padding: 10px;
+
+    .dash-title {
+      font-size: 20px;
+      text-align: center;
+    }
+
+    .dash-top-cards {
+      grid-template-columns: 1fr; // one card at a time
+    }
+
+    .small-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .inventory-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .orders-table-wrapper {
+      padding: 10px;
+      overflow-x: auto;
+    }
+
+    /* Scrollable responsive table */
+    .orders-table {
+      width: 600px; // keeps table readable on mobile
+    }
+
+    .dash-footer {
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+
+      .refresh-btn {
+        width: 100%;
       }
     }
   }

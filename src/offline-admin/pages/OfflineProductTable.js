@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOfflineProducts, deleteOfflineProduct, updateOfflineProduct } from "../../Redux/Slices/offlineProductSlice";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaChevronRight, FaChevronDown } from "react-icons/fa";
+
 
 const OfflineProductTable = () => {
     const dispatch = useDispatch();
@@ -63,7 +65,7 @@ const OfflineProductTable = () => {
             updateData
         })).then(() => {
             setTimeout(() => {
-                window.location.reload();   // 🔥 Page reload after update
+                window.location.reload();
             }, 500);
         });
     };
@@ -75,14 +77,13 @@ const OfflineProductTable = () => {
         dispatch(fetchOfflineProducts());
     }, [dispatch]);
 
-    // ───────── FILTER LOGIC ─────────
-    const filteredProducts = products.filter((product) => {
-        const matchSearch = product.title
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase());
+    const filteredProducts = (products || []).filter((product) => {
+        if (!product || !product.title) return false;
 
-        return matchSearch;
+        return product.title.toLowerCase().includes(searchQuery.toLowerCase());
     });
+
+
     const handleDelete = (id) => {
         if (window.confirm("Are you sure want to delete this product?")) {
             dispatch(deleteOfflineProduct(id));
@@ -144,30 +145,38 @@ const OfflineProductTable = () => {
                 <table className="offline-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Original Price</th>
+                            <th>Product Name</th>
+                            <th>Total Stock</th>
                             <th>Discounted Price</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredProducts.map((product) => {
-                            const primaryImage = product.images?.[0] || imgg;
                             const firstVariant = product.variants?.[0] || {};
 
                             return (
                                 <>
-                                    {/* MAIN ROW */}
                                     <tr key={product._id} onClick={() => toggleRow(product._id, product.variants)}>
-                                        <td className="name-col">
-                                            <img src={primaryImage} alt="img" className="prod-img" />
+                                        <td data-label="Product Name" className="name-col arrow-col">
+                                            <span className="arrow-icon">
+                                                {expandedRow === product._id ? (
+                                                    <FaChevronDown />
+                                                ) : (
+                                                    <FaChevronRight />
+                                                )}
+                                            </span>
                                             <span>{product.title}</span>
                                         </td>
 
-                                        <td>₹{firstVariant.actual_price || "N/A"}</td>
-                                        <td>₹{firstVariant.discounted_price || "N/A"}</td>
 
-                                        <td>
+                                        <td data-label="Total Stock">₹{firstVariant.stock || "N/A"}</td>
+                                        <td data-label="Discounted Price">₹{firstVariant.discounted_price || "N/A"}</td>
+                                        <td data-label="Status">{product.active ? "Active" : "Inactive"}</td>
+
+
+                                        <td data-label="Actions">
                                             <div className="action-box">
                                                 <FaEdit
                                                     className="icon-edit"
@@ -191,107 +200,101 @@ const OfflineProductTable = () => {
                                     {expandedRow === product._id && (
                                         <tr className="variant-row">
                                             <td colSpan="4">
+                                                <div className="variant-header">
+                                                    <span>Color</span>
+                                                    <span>Size</span>
+                                                    <span>Stock</span>
+                                                    <span>Actual Price</span>
+                                                    <span>Offer</span>
+                                                    <span>Offer Type</span>
+                                                    <span>QR</span>
+                                                </div>
                                                 {editableVariants[product._id]?.map((v, idx) => (
-                                                    <div key={idx} className="variant-box">
+                                                    <div key={idx} className="variant-box-row">
 
-                                                        {/* LEFT SIDE FORM (Two Rows of 3 Inputs) */}
-                                                        <div className="variant-left">
+                                                        <div className="variant-inline">
+                                                            <input
+                                                                type="text"
+                                                                className="input"
+                                                                placeholder="Color"
+                                                                value={v.color}
+                                                                onChange={(e) =>
+                                                                    handleVariantChange(product._id, idx, "color", e.target.value)
+                                                                }
+                                                            />
 
-                                                            <div className="grid-3">
-                                                                <input
-                                                                    type="text"
-                                                                    className="input"
-                                                                    placeholder="Color"
-                                                                    value={v.color}
-                                                                    onChange={(e) =>
-                                                                        handleVariantChange(product._id, idx, "color", e.target.value)
-                                                                    }
-                                                                />
+                                                            <input
+                                                                type="text"
+                                                                className="input"
+                                                                placeholder="Size"
+                                                                value={v.size}
+                                                                onChange={(e) =>
+                                                                    handleVariantChange(product._id, idx, "size", e.target.value)
+                                                                }
+                                                            />
 
-                                                                <input
-                                                                    type="text"
-                                                                    className="input"
-                                                                    placeholder="Size"
-                                                                    value={v.size}
-                                                                    onChange={(e) =>
-                                                                        handleVariantChange(product._id, idx, "size", e.target.value)
-                                                                    }
-                                                                />
+                                                            <input
+                                                                type="number"
+                                                                className="input"
+                                                                placeholder="Stock"
+                                                                value={v.stock}
+                                                                onChange={(e) =>
+                                                                    handleVariantChange(product._id, idx, "stock", e.target.value)
+                                                                }
+                                                            />
 
-                                                                <input
-                                                                    type="number"
-                                                                    className="input"
-                                                                    placeholder="Stock"
-                                                                    value={v.stock}
-                                                                    onChange={(e) =>
-                                                                        handleVariantChange(product._id, idx, "stock", e.target.value)
-                                                                    }
-                                                                />
-                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                className="input"
+                                                                placeholder="Actual Price"
+                                                                value={v.actual_price}
+                                                                onChange={(e) =>
+                                                                    handleVariantChange(product._id, idx, "actual_price", e.target.value)
+                                                                }
+                                                            />
 
-                                                            <div className="grid-3">
-                                                                <input
-                                                                    type="number"
-                                                                    className="input"
-                                                                    placeholder="Actual Price"
-                                                                    value={v.actual_price}
-                                                                    onChange={(e) =>
-                                                                        handleVariantChange(product._id, idx, "actual_price", e.target.value)
-                                                                    }
-                                                                />
+                                                            <input
+                                                                type="number"
+                                                                className="input"
+                                                                placeholder="Offer"
+                                                                value={v.offer}
+                                                                onChange={(e) =>
+                                                                    handleVariantChange(product._id, idx, "offer", e.target.value)
+                                                                }
+                                                            />
 
-                                                                <input
-                                                                    type="number"
-                                                                    className="input"
-                                                                    placeholder="Offer"
-                                                                    value={v.offer}
-                                                                    onChange={(e) =>
-                                                                        handleVariantChange(product._id, idx, "offer", e.target.value)
-                                                                    }
-                                                                />
+                                                            {/* OFFER TYPE = ₹ / % */}
+                                                            <select
+                                                                className="input"
+                                                                value={v.offer_type}
+                                                                onChange={(e) =>
+                                                                    handleVariantChange(product._id, idx, "offer_type", e.target.value)
+                                                                }
+                                                            >
+                                                                <option value="percentage">%</option>
+                                                                <option value="flat">₹</option>
+                                                            </select>
 
-                                                                <select
-                                                                    className="input"
-                                                                    value={v.offer_type}
-                                                                    onChange={(e) =>
-                                                                        handleVariantChange(product._id, idx, "offer_type", e.target.value)
-                                                                    }
-                                                                >
-                                                                    <option value="percentage">Percentage</option>
-                                                                    <option value="flat">Flat</option>
-                                                                </select>
-                                                            </div>
+                                                            {/* PRINT ICON */}
+                                                            <span
+                                                                className="print-icon"
+                                                                onClick={() => handlePrintQR(v.qrcode_url)}
+                                                            >
+                                                                🖨️
+                                                            </span>
+
+                                                            {/* UPDATE BUTTON */}
+                                                            <button
+                                                                className="btn-update"
+                                                                onClick={() => handleSave(product)}
+                                                            >
+                                                                Update
+                                                            </button>
 
                                                         </div>
 
-                                                        {/* RIGHT SIDE QR BOX */}
-                                                        <div className="qr-section">
-                                                            {v.qrcode_url ? (
-                                                                <>
-                                                                    <img src={v.qrcode_url} alt="QR" className="qr-img" />
-                                                                    <button
-                                                                        type="button"
-                                                                        className="print-btn"
-                                                                        onClick={() => handlePrintQR(v.qrcode_url)}
-                                                                    >
-                                                                        Print QR
-                                                                    </button>
-                                                                </>
-                                                            ) : (
-                                                                <p>No QR</p>
-                                                            )}
-                                                        </div>
                                                     </div>
-
                                                 ))}
-
-                                                {/* SAVE BUTTON */}
-                                                <button
-                                                    className="btn-save"
-                                                    onClick={() => handleSave(product)}
-                                                >
-                                                    Save Changes
-                                                </button>
                                             </td>
                                         </tr>
                                     )}

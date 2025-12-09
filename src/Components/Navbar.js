@@ -8,7 +8,6 @@ const Navbar = () => {
 
   const [activeTab, setActiveTab] = useState("online");
 
-  // जब URL change हो (navigation), तो state update करें सिर्फ offline routes में
   useEffect(() => {
     if (location.pathname.startsWith("/OfflineAdmin")) {
       setActiveTab("offline");
@@ -29,7 +28,7 @@ const Navbar = () => {
 
   return (
     <header className="top-navbar">
-      <div className="brand">4Tuners Admin</div>
+      <div className="brand">Gaurastra Admin</div>
 
 <nav className="nav-tabs">
   <button

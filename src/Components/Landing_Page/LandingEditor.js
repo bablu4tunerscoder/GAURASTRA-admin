@@ -67,8 +67,6 @@ const LandingEditor = () => {
   };
 
   return (
-    <div>
-      <Sidebar/>
       <div className="admin-landing-editor">
         <h2>Landing Page Content Editor</h2>
         <form onSubmit={handleSubmit}>
@@ -110,7 +108,6 @@ const LandingEditor = () => {
         {error && <p style={{ color: "red" }}>{error}</p>}
         {success && <p style={{ color: "green" }}>Content saved successfully!</p>}
       </div>
-    </div>
   );
 };
 

@@ -128,5 +128,32 @@ $scrollbar-track: #f0f0f0;
             transform: translateX(0);
             opacity: 1;
         }
+
+        width: 220px;
+
+        &-header {
+            font-size: 10px;
+            padding: 5px 12px;
+        }
+
+        &-menu li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-link {
+            font-size: 14px; 
+            padding: 6px 8px;
+        }
+
+        h2 {
+            font-size: 13px !important;
+            text-align: left;
+
+        }
+
+        &-item {
+            font-size: 13px;
+            padding: 5px 7px;
+        }
     }
 }

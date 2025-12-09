@@ -113,7 +113,7 @@ const [latestWorker, setLatestWorker] = useState(null);
     // 🚫 Validate password rules
     if (!validatePassword(password)) return;
 
-    dispatch(updatePasswordById({ id: editData._id, password }));
+dispatch(updatePasswordById({ id: editData._id, newPassword: password }));
   };
 
   useEffect(() => {
@@ -136,9 +136,6 @@ const [latestWorker, setLatestWorker] = useState(null);
   }, [error]);
 
   return (
-    <div className="create-worker-layout">
-      <OfflineSidebar />
-
       <div className="create-worker-container">
         <h2>{editData ? "Change Worker Password" : "Create Worker Login"}</h2>
 
@@ -197,7 +194,6 @@ const [latestWorker, setLatestWorker] = useState(null);
               : "Create Worker"}
           </button>
         </form>
-      </div>
       {latestWorker && (
   <div className="worker-created-preview">
     <h3>🎉 Worker Created Preview</h3>
@@ -210,7 +206,6 @@ const [latestWorker, setLatestWorker] = useState(null);
     </p>
   </div>
 )}
-
     </div>
   );
 };

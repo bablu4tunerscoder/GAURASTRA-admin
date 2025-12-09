@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLeads } from "../Redux/Slices/leadSlice";
-import Sidebar from "./Sidebar/sidebar";
 import "./LeadsList.scss";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -45,8 +44,6 @@ const LeadsList = () => {
   };
 
   return (
-    <div className="leads-page">
-      <Sidebar />
       <main className="leads-content">
         <h1>Coupon Leads</h1>
 
@@ -91,7 +88,6 @@ const LeadsList = () => {
           </div>
         )}
       </main>
-    </div>
   );
 };
 

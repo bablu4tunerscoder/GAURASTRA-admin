@@ -79,6 +79,27 @@ export const deleteOfflineProduct = createAsyncThunk(
     }
   }
 );
+export const uploadOfflineImage = createAsyncThunk(
+  "offlineProducts/uploadImage",
+  async (file, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const { data } = await axios.post(
+        `${BASE_URL}/api/offline/upload-image`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      return data; // return image URL
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Image upload failed");
+    }
+  }
+);
 
 const offlineProductSlice = createSlice({
   name: "offlineProducts",

@@ -255,7 +255,6 @@
  
 @media (max-width: 768px) {
   .product-table-container-gh {
-    margin-top: 15%;
     margin-left: 0;
     padding: 10px;
   }
@@ -299,7 +298,6 @@
  
   .btn-filter-gh,
   .btn-manage-view-gh {
-    width: 100%;
     justify-content: center;
   }
  
@@ -308,4 +306,102 @@
   }
 }
  
- 
+ @media (max-width: 480px) {
+  .product-table-container-gh {
+    margin-left: 0 !important;
+    padding: 10px !important;
+    width: 100% !important;
+  overflow-x: auto !important;
+  }
+
+  .table-header-gh {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+
+    h3 {
+      font-size: 22px !important;
+      text-align: center;
+    }
+  }
+
+  .header-left-gh h3 span {
+    font-size: 20px !important;
+  }
+
+  /* Buttons full-width */
+  .header-right-gh {
+    width: 100%;
+    display: flex;
+    flex-direction: column !important;
+    gap: 10px;
+  }
+
+  .btn-more-actions-gh,
+  .btn-new-product-gh {
+    width: 100% !important;
+    font-size: 14px !important;
+    padding: 10px !important;
+  }
+
+  /* Filter row vertical */
+  .header-row-gh {
+    flex-direction: column !important;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .filter-options-gh,
+  .filter-search-gh {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .filter-options-gh select,
+  .filter-search-gh input {
+    width: 100% !important;
+  }
+
+  .btn-filter-gh,
+  .btn-manage-view-gh {
+    width: 100% !important;
+    justify-content: center;
+  }
+
+  .manage-view-dropdown-gh .dropdown-content-gh {
+    width: 100%;
+    left: 0;
+  }
+
+  .product-table-gh {
+    display: block;
+    width: 600px !important;  
+    overflow-x: scroll;
+    font-size: 12px !important;
+
+    th,
+    td {
+      padding: 8px !important;
+      font-size: 12px !important;
+    }
+
+    .action-buttons-gh button {
+      padding: 4px 6px !important;
+      font-size: 11px !important;
+    }
+  }
+
+  .product-image-gh {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .product-info-gh {
+    font-size: 12px !important;
+  }
+   .header-right-gh .btn-new-product-gh {
+         margin-left: 0px; 
+    }
+}

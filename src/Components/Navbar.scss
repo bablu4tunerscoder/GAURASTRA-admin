@@ -46,8 +46,50 @@
   }
 
   button.active.offline {
-    background: #FF6A00; 
+    background: #6C63FF; 
     color: white;
     font-weight: 600;
     box-shadow: 0 0   }
+}
+@media (max-width: 768px) {
+  .top-navbar {
+    padding: 10px 18px;
+    height: 55px;
+  }
+
+  .brand {
+    font-size: 22px;
+  }
+
+  .nav-tabs {
+    gap: 12px;
+
+    button {
+      font-size: 14px;
+      padding: 6px 12px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .top-navbar {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .brand {
+    font-size: 20px;
+    text-wrap: nowrap;
+  }
+
+  .nav-tabs {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    button {
+      font-size: 10px;
+      padding: 8px 10px;
+    }
+  }
 }

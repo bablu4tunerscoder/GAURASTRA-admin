@@ -1,7 +1,7 @@
-$primary: #FF6A00; 
-$dark-bg: #fff; 
-$card-bg: #fff;
-$border: #ccc; 
+$primary: #6C63FF; 
+$dark-bg: #ffffff; 
+$card-bg: #ffffff;
+$border: #cfcfff; 
 $text-dark: #1e293b; 
 $text-light: #1e293b; 
 
@@ -29,13 +29,13 @@ $text-light: #1e293b;
   border: none;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(255,106,0,0.4);
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4);
   transition: 0.3s;
 
   &:hover {
     background: darken($primary, 5%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255,106,0,0.5);
+    box-shadow: 0 6px 16px rgba(108, 99, 255, 0.5);
   }
 }
 
@@ -60,7 +60,7 @@ $text-light: #1e293b;
   background: $card-bg;
   padding: 30px;
   border-radius: 14px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
   color: $text-light;
 }
 
@@ -71,7 +71,7 @@ label {
   display: block;
 }
 
-/* -------- Inputs & Selects -------- */
+/* Inputs / selects */
 .input,
 .textarea,
 select {
@@ -81,13 +81,13 @@ select {
   border: 1px solid $border;
   margin-top: 6px;
   font-size: 15px;
-  background: white; /* Background now light */
+  background: white;
   color: $text-dark;
   transition: 0.3s;
 
   &:focus {
     border-color: $primary;
-    box-shadow: 0 0 8px rgba(255,106,0,0.4);
+    box-shadow: 0 0 8px rgba(108,99,255,0.3);
     outline: none;
   }
 }
@@ -110,6 +110,7 @@ select {
   border: 1px solid $border;
 }
 
+/* Grid */
 .image-preview-grid {
   margin-top: 10px;
   display: grid;
@@ -124,25 +125,27 @@ select {
   margin-bottom: 12px;
 }
 
+/* Variant box */
 .variant-box {
   background: $card-bg;
-  border: 1px solid rgba(255,106,0,0.3);
+  border: 1px solid rgba(108, 99, 255, 0.3);
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
   display: grid;
-  grid-template-columns: 1fr 150px; 
+  grid-template-columns: 1fr 150px;
   gap: 20px;
-  box-shadow: 0 2px 10px rgba(255,106,0,0.15);
+  box-shadow: 0 2px 10px rgba(108, 99, 255, 0.15);
 }
 
-.variant-header h2 {
+.variant-headerr h2 {
   font-size: 20px;
   font-weight: 700;
   color: $primary;
   margin: 15px 0;
 }
 
+/* Buttons */
 .btn-primary {
   width: 100%;
   background: $primary;
@@ -154,13 +157,13 @@ select {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255,106,0,0.4);
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4);
   transition: 0.3s;
 
   &:hover {
     background: darken($primary, 5%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255,106,0,0.5);
+    box-shadow: 0 6px 16px rgba(108, 99, 255, 0.5);
   }
 }
 
@@ -172,11 +175,11 @@ select {
   color: $primary;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(255,106,0,0.2);
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.2);
   transition: 0.3s;
 
   &:hover {
-    background: rgba(255,106,0,0.1);
+    background: rgba(108, 99, 255, 0.1);
   }
 }
 
@@ -194,5 +197,104 @@ select {
     background: darken(#ef4444,5%);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(239,68,68,0.5);
+  }
+}
+.image-preview-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.preview-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.remove-img-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: red;
+  color: #fff;
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: pointer;
+}
+@media (max-width: 1024px) {
+  .variant-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .heading {
+    font-size: 26px;
+    text-align: center;
+  }
+
+  .form-box {
+    padding: 20px;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .qr-img {
+    width: 110px;
+    height: 110px;
+  }
+
+  .variant-box {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .preview-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-img {
+    width: 95px;
+    height: 95px;
+  }
+
+  .preview-wrapper {
+    width: 70px;
+    height: 70px;
+  }
+
+  .btn-primary,
+  .btn-outline {
+    padding: 12px;
+    font-size: 14px;
+  }
+    .input,
+  .textarea,
+  select {
+    padding: 6px !important;
+    font-size: 10px !important;
+    border-radius: 8px;
   }
 }

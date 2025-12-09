@@ -55,14 +55,14 @@ function App() {
             <Route path="/products" element={<ProductTable />} />
             <Route path="/OfferBanner" element={<OfferBannerForm />} />
             <Route path="/OfferBannerHistory" element={<OfferBannerHistory />} />
-            <Route path="/category" element={<CategoryList />} />
+            <Route path="/category" element={<OnlineLayout><CategoryList /></OnlineLayout>} />
             <Route path="/Coupons" element={<CouponsList />} />
             <Route path="/sub_category" element={<SubCategoryList />} />
             <Route path="/NewProduct" element={<OnlineLayout><NewProduct /></OnlineLayout>} />
             <Route path="/OnlineAdmin" element={<OnlineLayout><HomeComponent /></OnlineLayout>} />
             <Route path="/OrderList" element={<OrderList />} />
-            <Route path="/LandingEditor" element={<LandingEditor />} />
-            <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
+            <Route path="/LandingEditor" element={<OnlineLayout><LandingEditor /></OnlineLayout>} />
+            <Route path="/lp-uploads-history" element={<OnlineLayout><LPUploadsHistory /></OnlineLayout>} />
             <Route path="/OfflineAdmin" element={<OfflineLayout><Dashboard /></OfflineLayout>} />
             <Route path="/AddProduct" element={<OfflineLayout><AddProduct /></OfflineLayout>} />
             <Route path="/OffProductTable" element={<OfflineLayout><OfflineProductTable /></OfflineLayout>} />
@@ -70,7 +70,7 @@ function App() {
             <Route path="/all-workers" element={<OfflineLayout><WorkerList /></OfflineLayout>} />
 
             {/* ✅ ADD THIS NEW ROUTE */}
-            <Route path="/leads" element={<LeadsList />} />
+            <Route path="/leads" element={<OnlineLayout><LeadsList /></OnlineLayout>} />
 
           </Routes>
         </div>

@@ -160,3 +160,62 @@
     }
   }
 }
+@media (max-width: 480px) {
+  .coupon-container {
+    margin-left: 0;
+    width: 100%;
+    padding: 0.75rem;
+
+    .coupon-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      h1 {
+        font-size: 1.25rem;
+        text-align: center;
+        width: 100%;
+      }
+
+      .coupon-button {
+        width: 100%;
+
+        .create-btn {
+          width: 100%;     /* Full width button */
+          padding: 0.65rem 1rem;
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    .table-container {
+      padding: 0.5rem;
+
+      .coupon-table {
+        th,
+        td {
+          padding: 0.4rem;
+          font-size: 0.75rem;
+          white-space: nowrap;
+        }
+
+        .edit-btn,
+        .delete-btn {
+          padding: 0.2rem 0.4rem;
+          font-size: 0.7rem;
+        }
+
+        .status-badge {
+          padding: 0.2rem 0.4rem;
+          font-size: 0.65rem;
+        }
+      }
+    }
+
+    .error-message,
+    .info-message {
+      font-size: 0.85rem;
+      padding: 0.7rem;
+    }
+  }
+}
