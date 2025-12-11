@@ -4,13 +4,16 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../Redux/Slices/userSlice";
+import { loginUser, useLoginUserMutation } from "../Redux/Slices/userSlice";
 import "./Login.scss";
 
 export default function Login() {
+
+    const [loginUser] = useLoginUserMutation();
+
     const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const { user } = useSelector((state) => state.user);
+    // const dispatch = useDispatch();
+    const user = useSelector((state) => state.user);
 
     const {
         register,
@@ -20,17 +23,14 @@ export default function Login() {
 
     const onSubmit = async (data) => {
         try {
-            dispatch(loginUser(data));
+            const res = await loginUser(data).unwrap();
+            toast.success(res.message || "Login successful!");
+            navigate("/OnlineAdmin");
         } catch (error) {
-            toast.error(error?.response?.data?.message || "Login failed");
+            console.log(error)
+            toast.error(error?.data?.message || "Login failed!");
         }
     };
-
-    useEffect(() => {
-        if (user) {
-            navigate("/OnlineAdmin");
-        }
-    }, [user, navigate]);
 
     return (
         <div className="login-page">

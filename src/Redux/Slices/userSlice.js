@@ -1,132 +1,75 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+// userSlice.js
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { BASE_URL } from "../../Components/Helper/axiosinstance";
 
-// 🔹 Async Thunk for Registering User
-export const registerUser = createAsyncThunk(
-  "user/registerUser",
-  async (
-    { userData, userRole, vendorData, deliveryData },
-    { rejectWithValue }
-  ) => {
-    try {
-      const formData = new FormData();
-      Object.entries(userData).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      formData.append("role", userRole);
-      if (userRole === "Vendor") {
-        console.log("Appending vendorData:", vendorData);
-        Object.entries(vendorData).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
-      }
-      const response = await axios.post(
-        `${BASE_URL}/api/auth/allRegister`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+// ------------------------------------------------
+// RTK QUERY API
+// ------------------------------------------------
+export const userApi = createApi({
+  reducerPath: "userApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: BASE_URL,
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("token");
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      return headers;
+    },
+  }),
 
-      if (response.data.status === "1") {
-        toast.success("Registration successful!");
-      } else {
-        toast.error(response.data.message || "Registration failed");
-        return rejectWithValue(response.data);
-      }
-      return response.data;
+  tagTypes: ["Users", "SingleUser"],
 
-      // toast.success("Registration successful!");
-      // return response.data;
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Registration failed");
-      return rejectWithValue(error.response?.data || "Registration failed");
-    }
-  }
-);
+  endpoints: (builder) => ({
+    // ---------------- LOGIN ----------------
+    loginUser: builder.mutation({
+      query: (data) => ({
+        url: "/api/auth/allLogins",
+        method: "POST",
+        body: data,
+      }),
 
-export const deliveryUser = createAsyncThunk(
-  "user/registerDeliveryUser",
-  async ({ userData, userRole, formData }, { rejectWithValue }) => {
-    try {
-      Object.entries(userData).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      formData.append("role", userRole);
-      const response = await axios.post(
-        `${BASE_URL}/api/auth/allRegister`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      transformResponse: (response) => {
+        toast.success(response.message || "Login successful!");
 
-      toast.success("Registration successful!");
-      return response.data;
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Registration failed");
-      return rejectWithValue(error.response?.data || "Registration failed");
-    }
-  }
-);
+        // save token
+        localStorage.setItem("user", JSON.stringify(response.data));
+        localStorage.setItem("token", response.data.token);
 
-// 🔹 Async Thunk for Logging in User
-export const loginUser = createAsyncThunk(
-  "user/loginUser",
-  async ({ email, password }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${BASE_URL}/api/auth/allLogins`, {
-        emailOrPhone: email,
-        password,
-      });
+        return response;
+      },
+    }),
 
-      toast.success(response.data.message || "Login successful!");
-      return response.data;
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed!");
-      return rejectWithValue(error.response?.data || "Login failed!");
-    }
-  }
-);
+    // ---------------- GET ALL USERS ----------------
+    getAllUsers: builder.query({
+      query: () => "/api/auth/users",
+      providesTags: ["Users"],
+    }),
 
-// 🔹 Async Thunk for Fetching All Users
-export const fetchAllUsers = createAsyncThunk(
-  "user/fetchAllUsers",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/auth/users`); // Assuming the API to get all users
-      return response.data;
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch users");
-      return rejectWithValue(error.response?.data || "Failed to fetch users");
-    }
-  }
-);
+    // ---------------- GET USER BY ID ----------------
+    getUserById: builder.query({
+      query: (id) => `/api/auth/users/${id}`,
+      providesTags: ["SingleUser"],
+    }),
+  }),
+});
 
-// 🔹 Async Thunk for Fetching a User by ID
-export const fetchUserById = createAsyncThunk(
-  "user/fetchUserById",
-  async (userId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/auth/users/${userId}`); // API to get a user by ID
-      return response.data;
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch user");
-      return rejectWithValue(error.response?.data || "Failed to fetch user");
-    }
-  }
-);
+export const {
+  useLoginUserMutation,
+  useGetAllUsersQuery,
+  useGetUserByIdQuery,
+} = userApi;
 
+// ------------------------------------------------
+// NORMAL REDUX SLICE (User state, logout etc.)
+// ------------------------------------------------
 const initialState = {
-  userData: null,
-  userRole: null,
-  allUsers:[],
-  singleUser:[],
-  vendorData: null,
-  token: null,
+  userData: JSON.parse(localStorage.getItem("user")) || null,
+  token: localStorage.getItem("token") || null,
+
+  allUsers: [],
+  singleUser: null,
+
   isLoading: false,
   error: null,
 };
@@ -134,16 +77,8 @@ const initialState = {
 const userSlice = createSlice({
   name: "user",
   initialState,
+
   reducers: {
-    setUserData: (state, action) => {
-      state.userData = action.payload;
-    },
-    setUserRole: (state, action) => {
-      state.userRole = action.payload;
-    },
-    setVendorData: (state, action) => {
-      state.vendorData = action.payload;
-    },
     logout: (state) => {
       state.userData = null;
       state.token = null;
@@ -152,79 +87,112 @@ const userSlice = createSlice({
       toast.success("Logged out successfully!");
     },
   },
+
+  // ------------------------------------------------
+  // EXTRA REDUCERS — handling RTK Query responses
+  // ------------------------------------------------
   extraReducers: (builder) => {
+    // ---------------- LOGIN ----------------
     builder
-      .addCase(registerUser.pending, (state) => {
+      .addMatcher(userApi.endpoints.loginUser.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.userData = action.payload.userData;
-        state.userRole = action.payload.userRole;
-        state.vendorData = action.payload.vendorData;
-      })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload?.message || "Something went wrong!";
-      })
-      .addCase(deliveryUser.pending, (state) => {
+      .addMatcher(
+        userApi.endpoints.loginUser.matchFulfilled,
+        (state, { payload }) => {
+
+          state.isLoading = false;
+          state.userData = payload.data;
+          state.token = payload.data.token;
+        }
+      )
+      .addMatcher(
+        userApi.endpoints.loginUser.matchRejected,
+        (state, { error }) => {
+          state.isLoading = false;
+          state.error = error?.data?.message || "Login failed";
+        }
+      );
+
+    // ---------------- GET ALL USERS ----------------
+    builder
+      .addMatcher(userApi.endpoints.getAllUsers.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(deliveryUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.userData = action.payload.userData;
-        state.userRole = action.payload.userRole;
-      })
-      .addCase(deliveryUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload?.message || "Something went wrong!";
-      })
-      .addCase(loginUser.pending, (state) => {
+      .addMatcher(
+        userApi.endpoints.getAllUsers.matchFulfilled,
+        (state, { payload }) => {
+          state.isLoading = false;
+          state.allUsers = payload || [];
+        }
+      )
+      .addMatcher(
+        userApi.endpoints.getAllUsers.matchRejected,
+        (state, { error }) => {
+          state.isLoading = false;
+          state.error = error?.data?.message || "Failed to fetch users";
+        }
+      );
+
+    // ---------------- GET SINGLE USER ----------------
+    builder
+      .addMatcher(userApi.endpoints.getUserById.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.userData = action.payload.data;
-        state.token = action.payload.data.token;
-        localStorage.setItem("user", JSON.stringify(action.payload.data));
-        localStorage.setItem("token", action.payload.data.token);
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload?.message || "Something went wrong!";
-      })
-      // New case for fetching all users
-      .addCase(fetchAllUsers.pending, (state) => {
+      .addMatcher(
+        userApi.endpoints.getUserById.matchFulfilled,
+        (state, { payload }) => {
+          state.isLoading = false;
+          state.singleUser = payload;
+        }
+      )
+      .addMatcher(
+        userApi.endpoints.getUserById.matchRejected,
+        (state, { error }) => {
+          state.isLoading = false;
+          state.error = error?.data?.message || "Failed to fetch user";
+        }
+      );
+
+    // ---------------- LOGIN (addMatcher) ----------------
+    builder
+      .addMatcher(userApi.endpoints.loginUser.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchAllUsers.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.allUsers = action.payload; // Assuming we want to store all users here
-      })
-      .addCase(fetchAllUsers.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload?.message || "Something went wrong!";
-      })
-      // New case for fetching a single user by ID
-      .addCase(fetchUserById.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchUserById.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.singleUser = action.payload; // Store the fetched user
-      })
-      .addCase(fetchUserById.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload?.message || "Something went wrong!";
-      });
+
+      .addMatcher(
+        userApi.endpoints.loginUser.matchFulfilled,
+        (state, { payload }) => {
+          state.isLoading = false;
+
+          // Save user to Redux state
+          state.userData = payload.data;
+          state.token = payload.data.token;
+
+          // Save to localStorage
+          localStorage.setItem("user", JSON.stringify(payload.data));
+          localStorage.setItem("token", payload.data.token);
+        }
+      )
+
+      .addMatcher(
+        userApi.endpoints.loginUser.matchRejected,
+        (state, { error }) => {
+          state.isLoading = false;
+          state.error = error?.data?.message || "Login failed";
+          toast.error(state.error);
+        }
+      );
+
   },
 });
 
-export const { setUserData, setUserRole, setVendorData, logout } =
-  userSlice.actions;
+// export actions
+export const { logout } = userSlice.actions;
+
+// export reducer
 export default userSlice.reducer;

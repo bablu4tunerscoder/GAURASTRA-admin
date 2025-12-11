@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Navbar.scss";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../Redux/Slices/userSlice";
 
 const Navbar = () => {
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch()
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,25 +31,45 @@ const Navbar = () => {
     navigate("/OfflineAdmin");
   };
 
+  const handleLogout = () => {
+    dispatch(logout())
+    navigate("/");
+  }
+
+  useEffect(() => {
+    if (!user.userData || !user.token || !user.userRole) {
+      // navigate("/")
+      // dispatch(logout())
+    }
+  }, [location.pathname]);
+
   return (
     <header className="top-navbar">
       <div className="brand">4Tuners Admin</div>
 
-<nav className="nav-tabs">
-  <button
-    className={activeTab === "online" ? "active online" : "online"}
-    onClick={handleOnline}
-  >
-    Online Admin
-  </button>
+      <nav className="nav-tabs">
+        <button
+          className="avtive online"
+          style={{ backgroundColor: "red", color: "white", fontWeight: 700 }}
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
 
-  <button
-    className={activeTab === "offline" ? "active offline" : "offline"}
-    onClick={handleOffline}
-  >
-    Offline Admin
-  </button>
-</nav>
+        <button
+          className={activeTab === "online" ? "active online" : "online"}
+          onClick={handleOnline}
+        >
+          Online Admin
+        </button>
+
+        <button
+          className={activeTab === "offline" ? "active offline" : "offline"}
+          onClick={handleOffline}
+        >
+          Offline Admin
+        </button>
+      </nav>
 
     </header>
   );

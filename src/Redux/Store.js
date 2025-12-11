@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import userReducer from "./Slices/userSlice";
+import userReducer, { userApi } from "./Slices/userSlice";   // ⬅ RTK Query API included
 import mediaReducer from "./Slices/mediaSlice";
 import categoryReducer from "./Slices/categorySlice";
 import subcategoryReducer from "./Slices/subcategorySlice";
@@ -9,7 +9,7 @@ import OrderSliceReducer from "./Slices/orderSlice";
 import landingReducer from "./Slices/landingSlice";
 import couponsReducer from "./Slices/couponSlice";
 import offerBannerReducer from "./Slices/offerBannerSlice";
-import leadReducer from "./Slices/leadSlice"; // ✅ 1. Import the new reducer
+import leadReducer from "./Slices/leadSlice";
 import offlineProductReducer from "./Slices/offlineProductSlice";
 import offlineUserReducer from "./Slices/offlineUserSlice";
 import dashboardReducer from "./Slices/dashboardSlice";
@@ -31,8 +31,12 @@ const store = configureStore({
     offlineUser: offlineUserReducer,
     dashboard: dashboardReducer,
 
-    // ✅ 2. Add it to the store
+    // ⬇️ Add RTK Query API Reducer
+    [userApi.reducerPath]: userApi.reducer,
   },
+
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(userApi.middleware),  // ⬅ Add RTK Query middleware
 });
 
 export default store;
