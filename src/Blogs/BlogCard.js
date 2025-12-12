@@ -1,15 +1,15 @@
 import { useNavigate } from "react-router-dom";
-import { BASE_URL  } from "../Components/Helper/axiosinstance";
+import { BASE_URL } from "../Components/Helper/axiosinstance";
 
 function BlogCard({ data }) {
   const navigate = useNavigate();
-  const url = data.thumbnail.secure_url.replace(/\\/g, '/').replace(/^\/+/, ''); 
+  const url = data.thumbnail.secure_url.replace(/\\/g, '/').replace(/^\/+/, '');
 
 
   return (
     <div
       onClick={() => navigate("/blog/description/", { state: { ...data } })}
-      className="w-[20rem] h-[450px] shadow-lg rounded-lg cursor-pointer group overflow-hidden bg-white hover:scale-105 transition-transform duration-300"
+      className="w-[20rem] shadow-lg rounded-lg cursor-pointer group overflow-hidden bg-white hover:scale-105 transition-transform duration-300"
     >
       <div className="overflow-hidden relative">
         <img

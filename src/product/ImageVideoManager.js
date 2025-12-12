@@ -60,13 +60,13 @@ const ImageVideoManager = () => {
   }, [images, isEditMode, dispatch, initialImagesLoaded]);
 
   // Helper function to get complete image URL
-const getMediaUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http") || url.startsWith("blob:")) {
-    return url;
-  }
-  return `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
-};
+  const getMediaUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob:")) {
+      return url;
+    }
+    return `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
 
   // Combine uploaded URLs with existing images
   const displayImages = React.useMemo(() => {
@@ -87,13 +87,13 @@ const getMediaUrl = (url) => {
       return [
         ...(coverImage
           ? [
-              {
-                url: getMediaUrl(coverImage.image_url),
-                type: "image",
-                id: coverImage.image_id,
-                isCover: true,
-              },
-            ]
+            {
+              url: getMediaUrl(coverImage.image_url),
+              type: "image",
+              id: coverImage.image_id,
+              isCover: true,
+            },
+          ]
           : []),
         ...otherImages.map((img) => ({
           url: getMediaUrl(img.image_url),
@@ -111,7 +111,7 @@ const getMediaUrl = (url) => {
   const handleDragStart = (index) => {
     setDraggingIndex(index);
   };
-console.log("first",uploadedUrls)
+  // console.log("first",uploadedUrls)
   // const handleDropOnMain = (index) => {
   //   if (index === null || index === 0) return;
   //   const newList = [...displayImages];
@@ -120,14 +120,14 @@ console.log("first",uploadedUrls)
   // };
 
   const handleDrop = (fromIndex, toIndex) => {
-  if (fromIndex === null || toIndex === null || fromIndex === toIndex) return;
+    if (fromIndex === null || toIndex === null || fromIndex === toIndex) return;
 
-  const newList = [...displayImages];
-  const movedItem = newList.splice(fromIndex, 1)[0]; // Remove dragged item
-  newList.splice(toIndex, 0, movedItem); // Insert at dropped position
+    const newList = [...displayImages];
+    const movedItem = newList.splice(fromIndex, 1)[0]; // Remove dragged item
+    newList.splice(toIndex, 0, movedItem); // Insert at dropped position
 
-  dispatch(reorderMedia(newList));
-};
+    dispatch(reorderMedia(newList));
+  };
 
 
   const handleRemove = (index) => {
@@ -140,18 +140,18 @@ console.log("first",uploadedUrls)
   };
 
   const handleFileUpload = (event) => {
-  const files = Array.from(event.target.files);
-  if (files.length === 0) return;
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
-  const totalFiles = displayImages.length + files.length;
-  if (totalFiles > 8) {
-    setErrorMessage("You can upload up to 8 media files only.");
-    return;
-  }
+    const totalFiles = displayImages.length + files.length;
+    if (totalFiles > 8) {
+      setErrorMessage("You can upload up to 8 media files only.");
+      return;
+    }
 
-  setErrorMessage("");
-  dispatch(uploadMedia(files));
-};
+    setErrorMessage("");
+    dispatch(uploadMedia(files));
+  };
 
 
   const handleSaveImages = async () => {
@@ -252,24 +252,24 @@ console.log("first",uploadedUrls)
           )}
         </div> */}
         <div className="main-image">
-  {displayImages?.[0]?.url ? (
-    <img
-      src={displayImages[0].url}
-      alt="Main"
-      className="media-content"
-      onError={(e) => {
-        e.target.src = coverimg;
-      }}
-    />
-  ) : (
-    <img src={coverimg} alt="Placeholder" className="media-content" />
-  )}
-</div>
+          {displayImages?.[0]?.url ? (
+            <img
+              src={displayImages[0].url}
+              alt="Main"
+              className="media-content"
+              onError={(e) => {
+                e.target.src = coverimg;
+              }}
+            />
+          ) : (
+            <img src={coverimg} alt="Placeholder" className="media-content" />
+          )}
+        </div>
 
 
         <div className="media-container">
-          
-{/* {displayImages?.length > 1 ? (
+
+          {/* {displayImages?.length > 1 ? (
   displayImages.slice(1).map((media, index) => (
     <div
       key={media.id || index}
@@ -314,45 +314,45 @@ console.log("first",uploadedUrls)
     <img src={placeimg} alt="Placeholder" className="media-content" />
   </div>
 )} */}
-{displayImages.map((media, index) => (
-  <div
-    key={media.id || index}
-    className="media-item"
-    draggable
-    onDragStart={() => handleDragStart(index)}
-    onDragOver={(e) => e.preventDefault()}
-    onDrop={() => handleDrop(draggingIndex, index)}
-  >
-    {media.type === "video" ? (
-      <video className="media-content" controls>
-        <source src={media.url} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-    ) : (
-      <img
-        src={media.url}
-        alt="uploaded"
-        className="media-content"
-        onError={(e) => {
-          e.target.src = placeimg;
-        }}
-      />
-    )}
-    <div className="overlay">
-      <FaArrowsAlt className="drag-icon" />
-      <FaTimes
-        className="remove-icon"
-        onClick={() => {
-          if (isEditMode && media.id) {
-            handleDelete(media.id, index);
-          } else {
-            handleRemove(index);
-          }
-        }}
-      />
-    </div>
-  </div>
-))}
+          {displayImages.map((media, index) => (
+            <div
+              key={media.id || index}
+              className="media-item"
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => handleDrop(draggingIndex, index)}
+            >
+              {media.type === "video" ? (
+                <video className="media-content" controls>
+                  <source src={media.url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img
+                  src={media.url}
+                  alt="uploaded"
+                  className="media-content"
+                  onError={(e) => {
+                    e.target.src = placeimg;
+                  }}
+                />
+              )}
+              <div className="overlay">
+                <FaArrowsAlt className="drag-icon" />
+                <FaTimes
+                  className="remove-icon"
+                  onClick={() => {
+                    if (isEditMode && media.id) {
+                      handleDelete(media.id, index);
+                    } else {
+                      handleRemove(index);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          ))}
 
           {displayImages?.length < 8 && (
             <div className="upload-box">
@@ -360,7 +360,7 @@ console.log("first",uploadedUrls)
                 type="file"
                 id="fileInput"
                 // accept="image/*"
-                  accept="image/*,video/*"
+                accept="image/*,video/*"
                 multiple
                 onChange={handleFileUpload}
                 style={{ display: "none" }}
@@ -391,8 +391,8 @@ console.log("first",uploadedUrls)
               ? "Updating..."
               : "Update Images"
             : saving
-            ? "Saving..."
-            : "Save Images"}
+              ? "Saving..."
+              : "Save Images"}
         </button>
       </div>
     </div>

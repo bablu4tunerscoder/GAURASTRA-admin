@@ -36,12 +36,7 @@ const Navbar = () => {
     navigate("/");
   }
 
-  useEffect(() => {
-    if (!user.userData || !user.token || !user.userRole) {
-      // navigate("/")
-      // dispatch(logout())
-    }
-  }, [location.pathname]);
+
 
   return (
     <header className="top-navbar">

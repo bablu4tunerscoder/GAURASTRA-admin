@@ -1,10 +1,8 @@
-import React, { useEffect } from "react";
 import { Lock, LogIn, Phone } from "lucide-react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginUser, useLoginUserMutation } from "../Redux/Slices/userSlice";
+import { useLoginUserMutation } from "../Redux/Slices/userSlice";
 import "./Login.scss";
 
 export default function Login() {
@@ -12,8 +10,6 @@ export default function Login() {
     const [loginUser] = useLoginUserMutation();
 
     const navigate = useNavigate();
-    // const dispatch = useDispatch();
-    const user = useSelector((state) => state.user);
 
     const {
         register,
@@ -24,6 +20,7 @@ export default function Login() {
     const onSubmit = async (data) => {
         try {
             const res = await loginUser(data).unwrap();
+            console.log(res)
             toast.success(res.message || "Login successful!");
             navigate("/OnlineAdmin");
         } catch (error) {

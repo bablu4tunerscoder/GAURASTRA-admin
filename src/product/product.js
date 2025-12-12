@@ -65,34 +65,33 @@ const ProductTable = () => {
   };
 
   const filteredProducts = products.filter((product) => {
-  const matchSearch = product.product_name
-    ?.toLowerCase()
-    .includes(searchQuery.toLowerCase());
+    const matchSearch = product.product_name
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
 
-  const matchCategory =
-    selectedCategory === "All products"
-      ? true
-      : selectedCategory === "Ethnic Wear"
-      ? product.category?.category_name === "Ethnic Wear"
-      : selectedCategory === "Gaurastra products"
-      ? product.category?.category_name !== "Ethnic Wear"
-      : true;
+    const matchCategory =
+      selectedCategory === "All products"
+        ? true
+        : selectedCategory === "Ethnic Wear"
+          ? product.category?.category_name === "Ethnic Wear"
+          : selectedCategory === "Gaurastra products"
+            ? product.category?.category_name !== "Ethnic Wear"
+            : true;
 
-  const matchGender =
-    genderFilter === ""
-      ? true
-      : product.attributes?.gender === genderFilter;
+    const matchGender =
+      genderFilter === ""
+        ? true
+        : product.attributes?.gender === genderFilter;
 
-  return matchSearch && matchCategory && matchGender;
-});
+    return matchSearch && matchCategory && matchGender;
+  });
 
   const handleNewProductClick = () => {
     dispatch(setEditMode(false));
     navigate("/NewProduct");
   };
   return (
-    <div className="dashsidebar" style={{ display: "flex" }}>
-      <Sidebar />
+    <div className="content-area" style={{ display: "flex" }}>
       <div className="product-table-container-gh">
         <div className="table-header-gh">
           <div className="header-left-gh">
@@ -134,7 +133,7 @@ const ProductTable = () => {
             </select>
           </div>
           <div className="filter-search-gh">
-                        <button
+            <button
               onClick={() => {
                 setSelectedCategory("All products");
                 setGenderFilter("");

@@ -2,15 +2,10 @@
   display: flex;
   min-height: 100vh;
 
-  .sidebar {
-    width: 250px;
-    flex-shrink: 0;
-  }
-
   .category-container {
     flex-grow: 1;
-    padding: 20px;
-    margin-left: 270px;
+    // padding: 20px;
+    // margin-left: 270px;
 
     @media (max-width: 1024px) {
       margin-left: 250px;
@@ -27,14 +22,16 @@
     }
 
     .category-header {
-      text-align: center; /* Centering heading */
+      text-align: center;
+      /* Centering heading */
       margin-bottom: 20px;
       padding: 10px;
 
       h1 {
         font-size: 24px;
         font-weight: bold;
-        margin-bottom: 15px; /* Space between heading and button */
+        margin-bottom: 15px;
+        /* Space between heading and button */
 
         @media (max-width: 600px) {
           font-size: 20px;
@@ -44,6 +41,7 @@
       .category-button {
         display: flex;
         justify-content: end;
+
         .create-btn {
           background-color: #007bff;
           color: white;
@@ -91,7 +89,7 @@
         background-color: #f8f9fa;
         font-weight: bold;
       }
-      
+
 
       .edit-btn {
         background-color: #28a745;

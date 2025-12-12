@@ -1,7 +1,7 @@
 import axios from "axios";
 
-export const BASE_URL = "http://192.168.1.7:9090";
-// export const BASE_URL = "https://testbackend.gaurastra.com";
+// export const BASE_URL = "http://192.168.1.7:9090";
+export const BASE_URL = "https://testbackend.gaurastra.com";
 
 
 const axiosInstance = axios.create();

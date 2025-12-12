@@ -1,3 +1,4 @@
+// App.jsx
 import { Provider } from "react-redux";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
@@ -32,49 +33,56 @@ import UserDetails from "./User/UserDetails";
 import UsersList from "./User/UsersList";
 import { Toaster } from "react-hot-toast";
 import Login from "./auth/Login";
+import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
   return (
     <Provider store={store}>
       <Toaster />
       <BrowserRouter>
-
-        <Navbar />
         <div className="page-wrapper">
           <Routes>
+            {/* Public Route */}
             <Route path="/" element={<Login />} />
-            {/* Blog Routes */}
             <Route path="/online-admin" element={<Navigate to="/OnlineAdmin" replace />} />
-            <Route path="/blogs" element={<BlogList />}></Route>
-            <Route path="/blog/description" element={<OnlineLayout><BlogDescription /></OnlineLayout>}></Route>
-            <Route path="/blog/edit/:id" element={<EditBlog />}></Route>
-            <Route path="/blog/create" element={<CreateBlog />}></Route>
-            <Route path="/sidebar" element={<Sidebar />} ></Route>
-            {/* User Routes */}
-            <Route path="/users" element={<UsersList />} />
-            <Route path="/users/:id" element={<UserDetails />} />
 
-            {/* Main Routes */}
-            <Route path="/DownloadQR" element={<DownloadQR />} />
-            <Route path="/products" element={<ProductTable />} />
-            <Route path="/OfferBanner" element={<OfferBannerForm />} />
-            <Route path="/OfferBannerHistory" element={<OfferBannerHistory />} />
-            <Route path="/category" element={<CategoryList />} />
-            <Route path="/Coupons" element={<CouponsList />} />
-            <Route path="/sub_category" element={<SubCategoryList />} />
-            <Route path="/NewProduct" element={<OnlineLayout><NewProduct /></OnlineLayout>} />
-            <Route path="/OnlineAdmin" element={<OnlineLayout><HomeComponent /></OnlineLayout>} />
-            <Route path="/OrderList" element={<OrderList />} />
-            <Route path="/LandingEditor" element={<LandingEditor />} />
-            <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
-            <Route path="/OfflineAdmin" element={<OfflineLayout><Dashboard /></OfflineLayout>} />
-            <Route path="/AddProduct" element={<OfflineLayout><AddProduct /></OfflineLayout>} />
-            <Route path="/OffProductTable" element={<OfflineLayout><OfflineProductTable /></OfflineLayout>} />
-            <Route path="/create-worker" element={<OfflineLayout><CreateWorkerAccount /></OfflineLayout>} />
-            <Route path="/all-workers" element={<OfflineLayout><WorkerList /></OfflineLayout>} />
+            <Route element={<ProtectedRoute />}>
 
-            {/* ✅ ADD THIS NEW ROUTE */}
-            <Route path="/leads" element={<LeadsList />} />
+              {/* ---------------- ONLINE LAYOUT ---------------- */}
+              <Route element={<OnlineLayout />}>
+                <Route path="/OnlineAdmin" element={<HomeComponent />} />
+                <Route path="/NewProduct" element={<NewProduct />} />
+                <Route path="/blog/description" element={<BlogDescription />} />
+                {/* ---------------- PAGES WITHOUT SPECIFIC LAYOUT ---------------- */}
+                <Route path="/blogs" element={<BlogList />} />
+                <Route path="/users" element={<UsersList />} />
+                <Route path="/users/:id" element={<UserDetails />} />
+                <Route path="/DownloadQR" element={<DownloadQR />} />
+                <Route path="/products" element={<ProductTable />} />
+                <Route path="/OfferBanner" element={<OfferBannerForm />} />
+                <Route path="/OfferBannerHistory" element={<OfferBannerHistory />} />
+                <Route path="/category" element={<CategoryList />} />
+                <Route path="/Coupons" element={<CouponsList />} />
+                <Route path="/sub_category" element={<SubCategoryList />} />
+                <Route path="/OrderList" element={<OrderList />} />
+                <Route path="/LandingEditor" element={<LandingEditor />} />
+                <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
+                <Route path="/leads" element={<LeadsList />} />
+
+              </Route>
+
+              {/* ---------------- OFFLINE LAYOUT ---------------- */}
+              <Route element={<OfflineLayout />}>
+                <Route path="/OfflineAdmin" element={<Dashboard />} />
+                <Route path="/AddProduct" element={<AddProduct />} />
+                <Route path="/OffProductTable" element={<OfflineProductTable />} />
+                <Route path="/create-worker" element={<CreateWorkerAccount />} />
+                <Route path="/all-workers" element={<WorkerList />} />
+              </Route>
+
+
+
+            </Route>
 
           </Routes>
         </div>

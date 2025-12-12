@@ -1,123 +1,123 @@
 .layout {
-    display: flex;
-    min-height: 100vh;
-  
-    .sidebar {
-      width: 250px;
-      flex-shrink: 0;
+  display: flex;
+  min-height: 100vh;
+
+  .sidebar {
+    // width: 250px;
+    flex-shrink: 0;
+  }
+
+  .user-container {
+    flex-grow: 1;
+    padding: 20px;
+
+    @media (max-width: 1024px) {
+      margin-left: 250px;
     }
-  
-    .user-container {
-      flex-grow: 1;
-      padding: 20px;
-      margin-left: 270px;
-      
-      @media (max-width: 1024px) {
-        margin-left: 250px;
-      }
-  
-      @media (max-width: 768px) {
-        margin-left: 60px;
-        padding: 15px;
-      }
-  
-      @media (max-width: 600px) {
-        margin-left: 0;
-        padding: 10px;
-      }
-  
-      .user-header {
-        text-align: center; /* Centering heading */
-        margin-bottom: 20px;
-        padding: 10px;
-  
-        h1 {
-          font-size: 24px;
-          font-weight: bold;
-          margin-bottom: 15px; /* Space between heading and button */
-  
-          @media (max-width: 600px) {
-            font-size: 20px;
-          }
-        }
-      }
-  
-      .table-container {
-        max-width: 100%;
-        overflow-y: auto;
-      }
-  
-      .user-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 5px;
-        overflow: hidden;
-  
-        th,
-        td {
-          padding: 12px;
-          border: 1px solid #ddd;
-          text-align: left;
-          max-width: 200px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-  
-        th {
-          background-color: #f8f9fa;
-          font-weight: bold;
-        }
-        
-  
-        .view-btn {
-          background-color: #28a745;
-          color: white;
-          padding: 5px 10px;
-          margin-right: 5px;
-          border: none;
-          cursor: pointer;
-          border-radius: 3px;
-  
-          &:hover {
-            background-color: #218838;
-          }
-        }
-  
-        @media (max-width: 768px) {
-          display: block;
-          overflow-x: auto;
-          white-space: nowrap;
-        }
-  
+
+    @media (max-width: 768px) {
+      margin-left: 60px;
+      padding: 15px;
+    }
+
+    @media (max-width: 600px) {
+      margin-left: 0;
+      padding: 10px;
+    }
+
+    .user-header {
+      text-align: center;
+      /* Centering heading */
+      margin-bottom: 20px;
+      padding: 10px;
+
+      h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        /* Space between heading and button */
+
         @media (max-width: 600px) {
-          font-size: 14px;
-  
-          .edit-btn {
-            font-size: 12px;
-            padding: 4px 8px;
-          }
+          font-size: 20px;
         }
       }
-  
-      .error-message {
-        color: #dc3545;
-        font-size: 16px;
-        font-weight: bold;
-        margin-top: 10px;
-        padding: 10px;
-        text-align: center;
+    }
+
+    .table-container {
+      max-width: 100%;
+      overflow-y: auto;
+    }
+
+    .user-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 5px;
+      overflow: hidden;
+
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-  
-      .info-message {
-        color: #6c757d;
-        font-size: 16px;
+
+      th {
+        background-color: #f8f9fa;
         font-weight: bold;
-        margin-top: 10px;
-        padding: 10px;
-        text-align: center;
       }
+
+
+      .view-btn {
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        margin-right: 5px;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+
+        &:hover {
+          background-color: #218838;
+        }
+      }
+
+      @media (max-width: 768px) {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 600px) {
+        font-size: 14px;
+
+        .edit-btn {
+          font-size: 12px;
+          padding: 4px 8px;
+        }
+      }
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .info-message {
+      color: #6c757d;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 10px;
+      padding: 10px;
+      text-align: center;
     }
   }
-  
+}

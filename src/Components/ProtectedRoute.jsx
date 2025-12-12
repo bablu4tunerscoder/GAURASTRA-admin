@@ -5,6 +5,8 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     const { user } = useSelector((state) => state.auth);
     // Modify based on your store (auth or user slice)
 
+    console.log(user);
+
     if (!user || !user.isLoggedIn) {
         return <Navigate to="/login" replace />;
     }

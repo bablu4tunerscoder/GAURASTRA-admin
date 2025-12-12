@@ -1,24 +1,22 @@
-import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { clearMedia } from "../Redux/Slices/mediaSlice";
 import {
   addBulkProducts,
-  saveCurrentProduct,
-  resetCurrentProductMedia,
-  editCurrentProduct,
-  updateProductById,
   clearProductToEdit,
+  editCurrentProduct,
+  resetCurrentProductMedia,
+  saveCurrentProduct,
+  updateProductById,
 } from "../Redux/Slices/productSlice";
-import { clearMedia } from "../Redux/Slices/mediaSlice";
-import "./newproduct.scss";
-import ProductHeader from "./ProductHeader";
-import ImageVideoManager from "./ImageVideoManager";
-import Pricing from "./Pricing";
 import Categories from "./Categories";
-import ProductOptions from "./ProductOptions";
+import ImageVideoManager from "./ImageVideoManager";
+import "./newproduct.scss";
+import Pricing from "./Pricing";
 import ProductInfo from "./ProductInfo";
-import SeoSection from "./SeoSection";
 import ProductList from "./ProductList";
-import { useNavigate } from "react-router-dom";
+import ProductOptions from "./ProductOptions";
+import SeoSection from "./SeoSection";
 
 const NewProduct = () => {
   const dispatch = useDispatch();
@@ -88,7 +86,7 @@ const NewProduct = () => {
       alert("Subcategory is required!");
       return;
     }
-console.log("firsdmjmt",productsToSubmit)
+    console.log("firsdmjmt", productsToSubmit)
     dispatch(editCurrentProduct());
     dispatch(updateProductById({ product_id: productId })).then((response) => {
       if (response.meta.requestStatus === "fulfilled") {

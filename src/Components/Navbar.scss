@@ -9,8 +9,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 999;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 888;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   height: 60px;
 }
 
@@ -38,16 +38,18 @@
       color: white;
     }
   }
- button.active.online {
-    background: #3b82f6; 
+
+  button.active.online {
+    background: #3b82f6;
     color: white;
     font-weight: 600;
-    box-shadow: 0 0 10px rgba(59,130,246,0.4);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
   }
 
   button.active.offline {
-    background: #FF6A00; 
+    background: #FF6A00;
     color: white;
     font-weight: 600;
-    box-shadow: 0 0   }
+    box-shadow: 0 0
+  }
 }

@@ -48,7 +48,7 @@ const UsersList = () => {
               </thead>
 
               <tbody>
-                {allUsers.map((user, index) => (
+                {allUsers.map ? allUsers.map((user, index) => (
                   <tr key={user.user_id}>
                     <td>{index + 1}</td>
                     <td>{user.name}</td>
@@ -62,7 +62,8 @@ const UsersList = () => {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )) : <tr className="error-message"><td colSpan={4}>No User's Found</td>
+                </tr>}
               </tbody>
 
             </table>
