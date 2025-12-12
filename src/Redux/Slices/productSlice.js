@@ -1,92 +1,94 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createSlice } from "@reduxjs/toolkit";
 import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import baseQueryOnline from "./api/baseQuery"
+// ==================== RTK Query API ====================
+export const productApi = createApi({
+  reducerPath: "productApi",
+  baseQueryOnline,
+  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
+  tagTypes: ["Product", "ProductList"],
 
-export const fetchProducts = createAsyncThunk(
-  "product/fetchProducts",
-  async () => {
-    const response = await axios.get(`${BASE_URL}/api/Productes/ProductDetail`);
-    return response.data;
-  }
-);
+  endpoints: (builder) => ({
+    // Fetch all products
+    fetchProducts: builder.query({
+      query: () => "/api/Productes/ProductDetail",
+      transformResponse: (response) => response.data || [],
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ product_id }) => ({
+              type: "Product",
+              id: product_id,
+            })),
+            { type: "ProductList", id: "LIST" },
+          ]
+          : [{ type: "ProductList", id: "LIST" }],
+    }),
 
-export const addBulkProducts = createAsyncThunk(
-  "product/addBulkProducts",
-  async (_, { getState }) => {
-    const { productsToSubmit } = getState().product;
-    const response = await axios.post(
-      `${BASE_URL}/api/Productes/addBulk-products`,
-      { products: productsToSubmit },
-      { headers: { "Content-Type": "application/json" } }
-    );
-    return response.data;
-  }
-);
+    // Fetch product by ID
+    fetchProductById: builder.query({
+      query: (productId) => `/api/Productes/product/${productId}`,
+      transformResponse: (response) => response.data,
+      providesTags: (result, error, productId) => [
+        { type: "Product", id: productId },
+      ],
+    }),
 
-// Get Product By Id
-export const fetchProductById = createAsyncThunk(
-  "product/fetchProductDetailsById",
-  async (productId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/Productes/product/${productId}`
-      );
-      return response.data.data; // Assuming product details are under `data` field
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch product details"
-      );
-    }
-  }
-);
+    // Add bulk products
+    addBulkProducts: builder.mutation({
+      query: (products) => ({
+        url: "/api/Productes/addBulk-products",
+        method: "POST",
+        body: { products },
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: [{ type: "ProductList", id: "LIST" }],
+    }),
 
-// Update Product By ID
-export const updateProductById = createAsyncThunk(
-  "product/updateProductById",
-  async ({ product_id }, { rejectWithValue, getState }) => {
-    console.log("Product id from slice : ");
-    try {
-      const { productToUpdate } = getState().product;
-      console.log("Product to update : ", productToUpdate);
-      const response = await axios.put(
-        `${BASE_URL}/api/Productes/update-products/${product_id}`,
-        productToUpdate,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update product"
-      );
-    }
-  }
-);
+    // Update product by ID
+    updateProductById: builder.mutation({
+      query: ({ product_id, productData }) => ({
+        url: `/api/Productes/update-products/${product_id}`,
+        method: "PUT",
+        body: productData,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: (result, error, { product_id }) => [
+        { type: "Product", id: product_id },
+        { type: "ProductList", id: "LIST" },
+      ],
+    }),
 
-// Delete Product
-export const deleteProductById = createAsyncThunk(
-  "product/deleteById",
-  async (productId, { rejectWithValue }) => {
-    try {
-      const response = await axios.delete(
-        `${BASE_URL}/api/Productes/delete-products/${productId}`
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to delete product"
-      );
-    }
-  }
-);
+    // Delete product by ID
+    deleteProductById: builder.mutation({
+      query: (productId) => ({
+        url: `/api/Productes/delete-products/${productId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, productId) => [
+        { type: "Product", id: productId },
+        { type: "ProductList", id: "LIST" },
+      ],
+    }),
+  }),
+});
 
+// Export hooks for usage in components
+export const {
+  useFetchProductsQuery,
+  useLazyFetchProductsQuery,
+  useFetchProductByIdQuery,
+  useLazyFetchProductByIdQuery,
+  useAddBulkProductsMutation,
+  useUpdateProductByIdMutation,
+  useDeleteProductByIdMutation,
+} = productApi;
+
+// ==================== Local State Slice ====================
 const productSlice = createSlice({
   name: "product",
   initialState: {
-    products: [],
     productsToSubmit: [],
     productToUpdate: {},
     currentProduct: {
@@ -136,7 +138,7 @@ const productSlice = createSlice({
         quantity: 0,
       },
       mediaUrls: [],
-      images: [], // Add this to track images with IDs
+      images: [],
       cover_image: "",
       seo: {
         metaTitle: "",
@@ -145,17 +147,16 @@ const productSlice = createSlice({
       },
     },
     isEditMode: false,
-    status: "idle",
-    error: null,
   },
   reducers: {
-    // Create New Products
+    // ========== Create New Products ==========
     updateNewProduct: (state, action) => {
       state.currentProduct = {
         ...state.currentProduct,
         ...action.payload,
       };
     },
+
     saveCurrentProduct: (state) => {
       // Validate required fields
       if (
@@ -214,16 +215,19 @@ const productSlice = createSlice({
         },
       };
     },
+
     clearProductsToSubmit: (state) => {
       state.productsToSubmit = [];
     },
-    // Update New Products
+
+    // ========== Update Products ==========
     editProduct: (state, action) => {
       state.updateProduct = {
         ...state.updateProduct,
         ...action.payload,
       };
     },
+
     editCurrentProduct: (state) => {
       if (
         !state.updateProduct.product_name ||
@@ -247,11 +251,78 @@ const productSlice = createSlice({
         },
       };
 
-      // Reset
+      // Reset update product
       state.updateProduct = {
         product_name: "",
         description: "",
+        brand: "Gaurastra",
+        featuredSection: "All Products",
+        category_id: "",
+        category_name: "",
+        Subcategory_id: "",
+        Subcategory_name: "",
+        attributes: {},
+        pricing: {
+          sku: "",
+          original_price: 0,
+          discount_percent: null,
+          currency: "INR",
+        },
+        stock: {
+          quantity: 0,
+        },
+        mediaUrls: [],
+        images: [],
+        cover_image: "",
+        seo: {
+          metaTitle: "",
+          metaDescription: "",
+          keywords: [],
+        },
+      };
+    },
+
+    clearProductToEdit: (state) => {
+      state.productToUpdate = {};
+    },
+
+    setEditMode: (state, action) => {
+      state.isEditMode = action.payload;
+    },
+
+    resetCurrentProductMedia: (state) => {
+      state.updateProduct.mediaUrls = [];
+      state.updateProduct.cover_image = "";
+    },
+
+    // Set update product from API response
+    setUpdateProductFromApi: (state, action) => {
+      const data = action.payload;
+      state.updateProduct = {
+        ...data,
+        pricing: {
+          sku: data?.latest_pricing?.sku || "",
+          currency: data?.latest_pricing?.currency || "INR",
+          price_detail: {
+            original_price:
+              data?.latest_pricing?.price_detail?.original_price || 0,
+            discount_percent:
+              data?.latest_pricing?.price_detail?.discount_percent || 0,
+          },
+        },
+        stock: {
+          quantity: data?.stock_details?.[0]?.quantity || 0,
+        },
+      };
+    },
+
+    // Reset current product
+    resetCurrentProduct: (state) => {
+      state.currentProduct = {
+        product_name: "",
+        description: "",
         brand: "",
+        featuredSection: "All Products",
         category_id: "",
         category_name: "",
         Subcategory_id: "",
@@ -276,121 +347,41 @@ const productSlice = createSlice({
       };
     },
 
-    clearProductToEdit: (state) => {
-      state.productToUpdate = [];
+    // Reset update product
+    resetUpdateProduct: (state) => {
+      state.updateProduct = {
+        product_name: "",
+        description: "",
+        brand: "Gaurastra",
+        featuredSection: "All Products",
+        category_id: "",
+        category_name: "",
+        Subcategory_id: "",
+        Subcategory_name: "",
+        attributes: {},
+        pricing: {
+          sku: "",
+          original_price: 0,
+          discount_percent: null,
+          currency: "INR",
+        },
+        stock: {
+          quantity: 0,
+        },
+        mediaUrls: [],
+        images: [],
+        cover_image: "",
+        seo: {
+          metaTitle: "",
+          metaDescription: "",
+          keywords: [],
+        },
+      };
     },
-    setEditMode: (state, action) => {
-      state.isEditMode = action.payload;
-    },
-    resetCurrentProductMedia: (state) => {
-      state.updateProduct.mediaUrls = [];
-      state.updateProduct.cover_image = "";
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      // fetch all products
-      .addCase(fetchProducts.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.products = action.payload?.data || [];
-      })
-      .addCase(fetchProducts.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-      })
-      // Add Products In Bulk
-      .addCase(addBulkProducts.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(addBulkProducts.fulfilled, (state) => {
-        state.status = "succeeded";
-        state.productsToSubmit = [];
-      })
-      .addCase(addBulkProducts.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-      })
-      // Fetch Single Product
-      .addCase(fetchProductById.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchProductById.fulfilled, (state, action) => {
-        state.status = "succeeded";
-
-        const data = action.payload;
-
-        state.updateProduct = {
-          ...data,
-          pricing: {
-            sku: data?.latest_pricing?.sku || "",
-            currency: data?.latest_pricing?.currency || "INR",
-            price_detail: {
-              original_price:
-                data?.latest_pricing?.price_detail?.original_price || 0,
-              discount_percent:
-                data?.latest_pricing?.price_detail?.discount_percent || 0,
-            },
-          },
-          stock: {
-            quantity: data?.stock_details?.[0]?.quantity || 0,
-          },
-        };
-      })
-
-      .addCase(fetchProductById.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || "Failed to fetch product";
-      })
-
-      // 🔼 Update product by ID cases
-      .addCase(updateProductById.pending, (state) => {
-        state.loading = true;
-        state.success = false;
-        state.message = "";
-      })
-      .addCase(updateProductById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = true;
-        state.message = action.payload.message;
-        // Optional: Update the product in the list if needed
-        const index = state.products.findIndex(
-          (p) => p.product_id === action.meta.arg.product_id
-        );
-        if (index !== -1) {
-          state.products[index] = {
-            ...state.products[index],
-            ...action.meta.arg.updatedData,
-          };
-        }
-      })
-      .addCase(updateProductById.rejected, (state, action) => {
-        state.loading = false;
-        state.success = false;
-        state.message = action.payload || "Error updating product";
-      })
-
-      // Delete Product By Id
-      .addCase(deleteProductById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.success = false;
-      })
-      .addCase(deleteProductById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = true;
-        state.message = action.payload.message;
-      })
-      .addCase(deleteProductById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Something went wrong";
-        state.success = false;
-      });
   },
 });
 
+// Export actions
 export const {
   updateNewProduct,
   saveCurrentProduct,
@@ -400,5 +391,10 @@ export const {
   editCurrentProduct,
   editProduct,
   setEditMode,
+  setUpdateProductFromApi,
+  resetCurrentProduct,
+  resetUpdateProduct,
 } = productSlice.actions;
+
+// Export reducer
 export default productSlice.reducer;

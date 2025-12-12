@@ -52,9 +52,11 @@ function App() {
               <Route element={<OnlineLayout />}>
                 <Route path="/OnlineAdmin" element={<HomeComponent />} />
                 <Route path="/NewProduct" element={<NewProduct />} />
+                <Route path="/edit-product/:id" element={<NewProduct />} />
                 <Route path="/blog/description" element={<BlogDescription />} />
                 {/* ---------------- PAGES WITHOUT SPECIFIC LAYOUT ---------------- */}
                 <Route path="/blogs" element={<BlogList />} />
+                <Route path="/blog/edit/:id" element={<EditBlog />} />
                 <Route path="/users" element={<UsersList />} />
                 <Route path="/users/:id" element={<UserDetails />} />
                 <Route path="/DownloadQR" element={<DownloadQR />} />
@@ -79,8 +81,6 @@ function App() {
                 <Route path="/create-worker" element={<CreateWorkerAccount />} />
                 <Route path="/all-workers" element={<WorkerList />} />
               </Route>
-
-
 
             </Route>
 

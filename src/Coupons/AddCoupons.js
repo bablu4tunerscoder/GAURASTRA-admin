@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createCoupon } from "../Redux/Slices/couponSlice";
-import { fetchProducts } from "../Redux/Slices/productSlice";
 import "./CouponModal.scss";
+import { useFetchProductsQuery } from "../Redux/Slices/productSlice";
 
 const AddCoupons = ({ onClose }) => {
   const dispatch = useDispatch();
-  const { products } = useSelector((state) => state.product);
+  const { data: products = [], isLoading, isError } = useFetchProductsQuery();
+
 
   const [formData, setFormData] = useState({
     code: "",
@@ -21,9 +22,6 @@ const AddCoupons = ({ onClose }) => {
 
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

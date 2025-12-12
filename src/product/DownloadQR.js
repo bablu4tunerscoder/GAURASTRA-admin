@@ -1,19 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchProducts } from "../Redux/Slices/productSlice";
 import { QRCodeSVG } from "qrcode.react";
-import Sidebar from "../Components/Sidebar/sidebar";
+import { useState } from "react";
 import { FiDownload } from "react-icons/fi";
+import { useDispatch } from "react-redux";
+import Sidebar from "../Components/Sidebar/sidebar";
+import { useFetchProductsQuery } from "../Redux/Slices/productSlice";
 import "./DownloadQR.scss";
 
 const DownloadQR = () => {
   const dispatch = useDispatch();
-  const { products, status } = useSelector((state) => state.product);
+  const { data: products = [], isLoading, isError } = useFetchProductsQuery();
   const [downloadCounts, setDownloadCounts] = useState({});
 
-  useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
 
   // ✅ Sanitize product name for valid filename
   const sanitizeFileName = (name) => {
@@ -51,7 +48,7 @@ const DownloadQR = () => {
       <Sidebar />
       <div className="download-qr-container">
         <h2 className="title">Product QR Codes</h2>
-        {status === "loading" ? (
+        {isLoading ? (
           <p className="loading-text">Loading...</p>
         ) : (
           <div className="qr-grid">

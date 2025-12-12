@@ -1,34 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import {
-  fetchProducts,
+  useFetchProductsQuery,
+  useDeleteProductByIdMutation,
   setEditMode,
-  deleteProductById,
-  fetchProductById,
 } from "../Redux/Slices/productSlice";
 import "./product.scss";
 import { useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import Sidebar from "../Components/Sidebar/sidebar";
 import imgg from "../assets/placehold.png";
 
 const ProductTable = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { products, status, error } = useSelector((state) => state.product);
+  // RTK Query hooks
+  const { data: products = [], isLoading, isError, error } = useFetchProductsQuery();
+  const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductByIdMutation();
+
 
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All products");
   const [genderFilter, setGenderFilter] = useState("");
-  useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
 
-  if (status === "loading") return <p>Loading...</p>;
-  if (status === "failed") return <p>Error: {error}</p>;
+  if (isLoading) return <p>Loading...</p>;
+  if (isError) return <p>Error: {error?.data?.message || "Failed to load products"}</p>;
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -40,16 +38,19 @@ const ProductTable = () => {
 
   async function onProductDelete(id) {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      await dispatch(deleteProductById(id));
-      await dispatch(fetchProducts());
+      try {
+        await deleteProduct(id).unwrap();
+        // No need to manually refetch - RTK Query auto-refetches due to cache invalidation
+      } catch (err) {
+        console.error("Failed to delete product:", err);
+        alert("Failed to delete product. Please try again.");
+      }
     }
   }
 
-  async function handleEditClick(id) {
-    localStorage.setItem("ProductId", id);
-    await dispatch(fetchProductById(id));
+  function handleEditClick(id) {
     dispatch(setEditMode(true));
-    navigate("/NewProduct");
+    navigate(`/edit-product/${id}`);
   }
 
   const handleSelectProduct = (id) => {
@@ -90,8 +91,9 @@ const ProductTable = () => {
     dispatch(setEditMode(false));
     navigate("/NewProduct");
   };
+
   return (
-    <div className="content-area" style={{ display: "flex" }}>
+    <div style={{ display: "flex" }}>
       <div className="product-table-container-gh">
         <div className="table-header-gh">
           <div className="header-left-gh">
@@ -114,7 +116,7 @@ const ProductTable = () => {
             <select
               value={selectedCategory}
               onChange={(e) => {
-                setSelectedCategory(e.target.value)
+                setSelectedCategory(e.target.value);
                 setGenderFilter("");
               }}
             >
@@ -199,6 +201,7 @@ const ProductTable = () => {
                         onClick={() => {
                           handleEditClick(product.product_id);
                         }}
+                        disabled={isDeleting}
                       >
                         Edit
                       </button>
@@ -207,8 +210,9 @@ const ProductTable = () => {
                         onClick={() => {
                           onProductDelete(product.product_id);
                         }}
+                        disabled={isDeleting}
                       >
-                        Delete
+                        {isDeleting ? "Deleting..." : "Delete"}
                       </button>
                     </div>
                   </td>

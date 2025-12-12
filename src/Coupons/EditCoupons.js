@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCoupon } from "../Redux/Slices/couponSlice";
-import { fetchProducts } from "../Redux/Slices/productSlice";
+import { fetchProducts, useFetchProductsQuery } from "../Redux/Slices/productSlice";
 import { fetchCategories } from "../Redux/Slices/categorySlice";
 import { fetchSubcategories } from "../Redux/Slices/categorySlice";
 import "./CouponModal.scss";
 
 const EditCoupons = ({ coupon, onClose }) => {
   const dispatch = useDispatch();
-  const { products } = useSelector((state) => state.product);
+  const { data: products = [], isLoading, isError } = useFetchProductsQuery();
   const { categories } = useSelector((state) => state.category);
   const { subcategories } = useSelector((state) => state.category);
 
@@ -28,7 +28,6 @@ const EditCoupons = ({ coupon, onClose }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    dispatch(fetchProducts());
     dispatch(fetchCategories());
 
     // Fetch subcategories for each category in the coupon

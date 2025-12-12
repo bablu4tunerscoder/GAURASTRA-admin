@@ -6,7 +6,7 @@ import "./sidebar.scss";
 
 const Sidebar = () => {
   const dispatch = useDispatch();
-  const { permissions, role } = useSelector((state) => state.user?.userData);
+  const { permissions, role } = useSelector((state) => state?.user?.userData) || {};
 
   let menuItems = [
     { title: "Add Product", category: "QUICK LINKS", path: "/NewProduct" },

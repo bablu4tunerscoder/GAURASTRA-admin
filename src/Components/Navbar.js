@@ -32,9 +32,11 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logout())
-    navigate("/");
-  }
+    dispatch(logout());           // clear redux/user data
+    navigate("/");                // redirect to home/login
+    window.location.reload();     // force full reload
+  };
+
 
 
 

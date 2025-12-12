@@ -1,13 +1,15 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { clearMedia } from "../Redux/Slices/mediaSlice";
 import {
-  addBulkProducts,
+  useAddBulkProductsMutation,
+  useUpdateProductByIdMutation,
   clearProductToEdit,
   editCurrentProduct,
   resetCurrentProductMedia,
   saveCurrentProduct,
-  updateProductById,
+  clearProductsToSubmit,
+  useFetchProductByIdQuery,
 } from "../Redux/Slices/productSlice";
 import Categories from "./Categories";
 import ImageVideoManager from "./ImageVideoManager";
@@ -21,12 +23,18 @@ import SeoSection from "./SeoSection";
 const NewProduct = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { id: productId } = useParams()
 
-  const isEditMode = useSelector((state) => state.product.isEditMode);
-  const productId = localStorage.getItem("ProductId");
-
-  const { currentProduct, productsToSubmit, status, updateProduct } =
+  const { currentProduct, productsToSubmit, productToUpdate } =
     useSelector((state) => state.product);
+
+  // RTK Query mutations
+  const [addBulkProducts, { isLoading: isAdding }] = useAddBulkProductsMutation();
+  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductByIdMutation();
+  // RTK Query queries
+  const { data: productData, isLoading: isLoadingUpdate, isError } = useFetchProductByIdQuery(productId);
+
+
 
   const handleSaveCurrentProduct = () => {
     // Validate required fields
@@ -49,7 +57,7 @@ const NewProduct = () => {
     alert("Product saved locally. You can now add another product.");
   };
 
-  const handleSubmitAllProducts = () => {
+  const handleSubmitAllProducts = async () => {
     if (productsToSubmit.length === 0) {
       alert("No products to submit. Please add at least one product.");
       return;
@@ -60,19 +68,19 @@ const NewProduct = () => {
         `Are you sure you want to submit ${productsToSubmit.length} products?`
       )
     ) {
-      dispatch(addBulkProducts()).then((response) => {
-        if (response.meta.requestStatus === "fulfilled") {
-          alert("All products submitted successfully!");
-          navigate("/products"); // <-- Navigate to /products
-          window.location.reload(); //
-        } else {
-          alert("Error submitting products!");
-        }
-      });
+      try {
+        await addBulkProducts(productsToSubmit).unwrap();
+        alert("All products submitted successfully!");
+        dispatch(clearProductsToSubmit());
+        navigate("/products");
+      } catch (error) {
+        console.error("Error submitting products:", error);
+        alert("Error submitting products!");
+      }
     }
   };
 
-  const handleEditProduct = () => {
+  const handleEditProduct = async () => {
     // Validate required fields
     if (!updateProduct.product_name) {
       alert("Product name is required!");
@@ -86,20 +94,27 @@ const NewProduct = () => {
       alert("Subcategory is required!");
       return;
     }
-    console.log("firsdmjmt", productsToSubmit)
+
     dispatch(editCurrentProduct());
-    dispatch(updateProductById({ product_id: productId })).then((response) => {
-      if (response.meta.requestStatus === "fulfilled") {
-        alert("Product Updated successfully!");
-        navigate("/products");
-        dispatch(clearProductToEdit());
-      } else {
-        alert("Error Updating products!");
-      }
-    });
-    dispatch(clearMedia());
-    dispatch(resetCurrentProductMedia());
+
+    try {
+      await updateProduct({
+        product_id: productId,
+        productData: productToUpdate,
+      }).unwrap();
+
+      alert("Product Updated successfully!");
+      dispatch(clearProductToEdit());
+      dispatch(clearMedia());
+      dispatch(resetCurrentProductMedia());
+      navigate("/products");
+    } catch (error) {
+      console.error("Error updating product:", error);
+      alert("Error Updating product!");
+    }
   };
+
+  const isLoading = isAdding || isUpdating;
 
   return (
     <>
@@ -136,15 +151,15 @@ const NewProduct = () => {
           </div>
         </div>
       </div>
-      {isEditMode ? (
+      {productData ? (
         <>
           <div className="bottom-button-group">
             <button
               className="bottom-save-btn"
               onClick={handleEditProduct}
-              disabled={status === "loading"}
+              disabled={isLoading}
             >
-              {status === "loading" ? "Updating..." : "Update Product"}
+              {isUpdating ? "Updating..." : "Update Product"}
             </button>
           </div>
         </>
@@ -155,17 +170,17 @@ const NewProduct = () => {
             <button
               className="bottom-save-btn"
               onClick={handleSaveCurrentProduct}
-              disabled={status === "loading"}
+              disabled={isLoading}
             >
-              {status === "loading" ? "Saving..." : "Save Product"}
+              {isAdding ? "Saving..." : "Save Product"}
             </button>
             {productsToSubmit.length > 0 && (
               <button
                 className="bottom-submit-btn"
                 onClick={handleSubmitAllProducts}
-                disabled={status === "loading"}
+                disabled={isLoading}
               >
-                Submit All ({productsToSubmit.length})
+                {isAdding ? "Submitting..." : `Submit All (${productsToSubmit.length})`}
               </button>
             )}
           </div>
