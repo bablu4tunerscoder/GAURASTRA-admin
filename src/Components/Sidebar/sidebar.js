@@ -6,7 +6,8 @@ import "./sidebar.scss";
 
 const Sidebar = () => {
   const dispatch = useDispatch();
-  const { permissions, role } = useSelector((state) => state?.user?.userData) || {};
+  const { role, permissions } = useSelector((state) => state?.user?.userData?.user) || {};
+
 
   let menuItems = [
     { title: "Add Product", category: "QUICK LINKS", path: "/NewProduct" },
@@ -36,7 +37,7 @@ const Sidebar = () => {
   }
 
   return (
-    <div className="sidebar bg-[#131720] h-full overflow-y-auto pt-2">
+    <div className="bg-[#131720] h-full overflow-y-auto pt-2">
 
       <nav className="sidebar-nav">
         {menuItems.map((item, index) => (
@@ -44,7 +45,7 @@ const Sidebar = () => {
 
             {/* Category Header */}
             {index === 0 || menuItems[index - 1].category !== item.category ? (
-              <div className="px-4 py-2 text-[12px] font-medium text-white uppercase tracking-wide">
+              <div className="px-4 py-2 text-lg font-medium text-white uppercase tracking-wide">
                 <h2>{item.category}</h2>
               </div>
             ) : null}
@@ -56,9 +57,9 @@ const Sidebar = () => {
                   to={item.path}
                   className={({ isActive }) =>
                     `
-                block px-3 py-2 rounded-md font-semibold text-[15px]
-                text-white transition-all duration-200
-                ${isActive ? "bg-[#42454c] text-gray-300" : ""}
+                block px-2 py-2 rounded-md font-semibold text-md
+                 transition-all duration-200
+                ${isActive ? "bg-[#42454c] text-red-500" : "text-white"}
                 hover:bg-[#555861] hover:translate-x-1
               `
                   }

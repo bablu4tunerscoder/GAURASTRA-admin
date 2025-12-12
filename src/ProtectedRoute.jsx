@@ -8,7 +8,6 @@ const ProtectedRoute = () => {
     const location = useLocation();
     const user = useSelector((state) => state.user);
 
-
     const [isChecking, setIsChecking] = useState(true);
     const [shouldRedirect, setShouldRedirect] = useState(false);
 
@@ -23,6 +22,7 @@ const ProtectedRoute = () => {
             const token = user?.token;
 
 
+
             // If no user or token → logout + redirect
             if (!u || !token) {
                 dispatch(logout());
@@ -32,18 +32,18 @@ const ProtectedRoute = () => {
             }
 
             // Admin → full access
-            if (u.role === "Admin") {
+            if (u?.user?.role === "Admin") {
                 setIsChecking(false);
                 return;
             }
 
             // Employee → must be active + have permissions
-            if (u.role === "Employee") {
+            if (u.user?.role === "Employee") {
 
-                const isActive = u.status === "Active";
-                const hasPermissions = Array.isArray(u.permissions) && u?.permissions?.length > 0;
-
+                const isActive = u.user?.status === "Active";
+                const hasPermissions = Array.isArray(u.user?.permissions) && u?.user?.permissions?.length > 0;
                 if (!isActive || !hasPermissions) {
+                    console.log("not active or no permissions")
 
                     dispatch(logout());
                     setShouldRedirect(true);

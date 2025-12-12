@@ -90,14 +90,13 @@ const LPUploadsHistory = () => {
 
   return (
     <div>
-      <Sidebar/>
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-4" style={{textAlign : "center"}}>Landing Page Upload History</h2>
+        <h2 className="text-2xl font-bold mb-4" style={{ textAlign: "center" }}>Landing Page Upload History</h2>
 
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">Error: {error}</p>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{maxWidth:"70%", marginLeft:"18rem"}}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{ maxWidth: "70%", marginLeft: "18rem" }}>
           {content?.length > 0 ? (
             content.map((item, index) => (
               <div key={index} className="border rounded-lg shadow-md p-4">

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCategories, deleteCategory } from "../Redux/Slices/categorySlice"; 
-import "./CategoryList.scss";
-import Sidebar from "../Components/Sidebar/sidebar";
+import { fetchCategories, deleteCategory } from "../Redux/Slices/categorySlice";
 import AddCategory from "./AddCategory";
 import EditCategory from "./EditCategory";
 
@@ -29,50 +27,62 @@ const CategoryList = () => {
   };
 
   return (
-    <div className="layout">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="w-full">
 
       {/* Main Content */}
-      <div className="category-container">
-        <div className="category-header">
-          <h1>All Categories</h1>
-          <div className="category-button">
-          <button className="create-btn" onClick={() => setIsModalOpen(true)}>
+      <div className="bg-white shadow rounded-lg p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">All Categories</h1>
+
+          <button
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
+            onClick={() => setIsModalOpen(true)}
+          >
             Create Category
           </button>
-          </div>
         </div>
 
         {isLoading ? (
-          <p>Loading categories...</p>
+          <p className="text-gray-600">Loading categories...</p>
         ) : error ? (
-          <p className="error-message">{`Something Went Wrong`}</p>
+          <p className="text-red-600 font-medium">Something went wrong</p>
         ) : categories.length === 0 ? (
-          <p className="info-message">No Categories Found</p>
+          <p className="text-gray-600">No Categories Found</p>
         ) : (
-          <div className="table-container">
-            <table className="category-table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-2 border-gray-200 rounded-lg overflow-hidden">
               <thead>
-                <tr>
-                  <th>S.No</th>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Actions</th>
+                <tr className="bg-gray-100 text-left">
+                  <th className="px-4 py-3 font-medium text-gray-700">S.No</th>
+                  <th className="px-4 py-3 font-medium text-gray-700">Name</th>
+                  <th className="px-4 py-3 font-medium text-gray-700">Description</th>
+                  <th className="px-4 py-3 font-medium text-gray-700 text-center">Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {categories.map((category, index) => (
-                  <tr key={category.category_id}>
-                    <td>{index + 1}</td>
-                    <td>{category.category_name}</td>
-                    <td>{category.category_description}</td>
-                    <td>
-                      <button className="edit-btn" onClick={() => handleEdit(category)}>
+                  <tr
+                    key={category.category_id}
+                    className="border-t hover:bg-gray-50 transition"
+                  >
+                    <td className="px-4 py-3">{index + 1}</td>
+                    <td className="px-4 py-3 capitalize">{category.category_name}</td>
+                    <td className="px-4 py-3">{category.category_description}</td>
+
+                    <td className="px-4 py-3 flex justify-center gap-3">
+                      <button
+                        className="px-3 py-1  bg-blue-500 hover:bg-yellow-600 text-white rounded-md text-sm"
+                        onClick={() => handleEdit(category)}
+                      >
                         Edit
                       </button>
-                      <button className="delete-btn" onClick={() => handleDelete(category.category_id)}>
-                        Delete 
+
+                      <button
+                        className="px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded-md text-sm"
+                        onClick={() => handleDelete(category.category_id)}
+                      >
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -83,10 +93,8 @@ const CategoryList = () => {
         )}
       </div>
 
-      {/* Create Category Modal */}
+      {/* Modals */}
       {isModalOpen && <AddCategory onClose={() => setIsModalOpen(false)} />}
-
-      {/* Edit Category Modal */}
       {isEditModalOpen && (
         <EditCategory
           onClose={() => setIsEditModalOpen(false)}

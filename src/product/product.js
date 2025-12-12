@@ -93,136 +93,131 @@ const ProductTable = () => {
   };
 
   return (
-    <div style={{ display: "flex" }}>
-      <div className="product-table-container-gh">
-        <div className="table-header-gh">
-          <div className="header-left-gh">
-            <h3>
-              Products <span>{filteredProducts.length}</span>
-            </h3>
-          </div>
-          <div className="header-right-gh">
-            <button
-              className="btn-new-product-gh"
-              onClick={handleNewProductClick}
-            >
-              + New Product
-            </button>
-          </div>
+    <div className="w-full p-6">
+      <div className="flex flex-col gap-6">
+
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold">
+            Products <span className="text-gray-500">({filteredProducts.length})</span>
+          </h3>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+            onClick={handleNewProductClick}
+          >
+            + New Product
+          </button>
         </div>
 
-        <div className="header-row-gh">
-          <div className="filter-options-gh">
+        {/* Filters */}
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <div className="flex gap-2 items-center">
             <select
               value={selectedCategory}
               onChange={(e) => {
                 setSelectedCategory(e.target.value);
                 setGenderFilter("");
               }}
+              className="border border-gray-300 rounded-lg px-3 py-2"
             >
               <option>All products</option>
               <option>Ethnic Wear</option>
               <option>Gaurastra products</option>
             </select>
+
             <select
               value={genderFilter}
               onChange={(e) => setGenderFilter(e.target.value)}
-              style={{ marginLeft: "10px" }}
+              className="border border-gray-300 rounded-lg px-3 py-2"
             >
               <option value="">All Genders</option>
               <option value="Men">Men</option>
               <option value="Women">Women</option>
             </select>
           </div>
-          <div className="filter-search-gh">
+
+          <div className="flex gap-2 items-center">
             <button
               onClick={() => {
                 setSelectedCategory("All products");
                 setGenderFilter("");
                 setSearchQuery("");
               }}
-              style={{ marginLeft: "10px" }}
-              className="btn-filter-gh"
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-2 rounded-lg transition"
             >
               Clear All
             </button>
+
             <input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2"
             />
           </div>
         </div>
 
-        <table className="product-table-gh">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>SKU</th>
-              <th>Original Price</th>
-              <th>Discounted Price</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => {
-              const primaryImage =
-                product.images?.find((img) => img.is_primary)?.image_url ||
-                imgg;
+        {/* Table */}
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left text-gray-700 font-medium">Name</th>
+                <th className="px-4 py-2 text-left text-gray-700 font-medium">SKU</th>
+                <th className="px-4 py-2 text-left text-gray-700 font-medium">Original Price</th>
+                <th className="px-4 py-2 text-left text-gray-700 font-medium">Discounted Price</th>
+                <th className="px-4 py-2 text-left text-gray-700 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredProducts.map((product, index) => {
+                const primaryImage =
+                  product.images?.find((img) => img.is_primary)?.image_url || imgg;
 
-              return (
-                <tr key={product.id}>
-                  <td>
-                    <img
-                      src={primaryImage}
-                      alt={product.product_name}
-                      width="50"
-                    />
-                    <span>{product.product_name || "No Name"}</span>
-                  </td>
-                  <td>{product?.latest_pricing?.sku || "N/A"}</td>
-                  <td>
-                    ₹
-                    {product?.latest_pricing?.price_detail?.original_price?.toFixed(
-                      2
-                    ) || "0.00"}
-                  </td>
-                  <td>
-                    ₹
-                    {product?.latest_pricing?.price_detail?.discounted_price?.toFixed(
-                      2
-                    ) || "0.00"}
-                  </td>
-                  <td>
-                    <div className="action-buttons-gh">
+                return (
+                  <tr key={product.product_id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 flex items-center gap-2">
+                      <img
+                        src={primaryImage}
+                        alt={product.product_name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      <span>{product.product_name || "No Name"}</span>
+                    </td>
+                    <td className="px-4 py-2">{product?.latest_pricing?.sku || "N/A"}</td>
+                    <td className="px-4 py-2">
+                      ₹{product?.latest_pricing?.price_detail?.original_price?.toFixed(2) || "0.00"}
+                    </td>
+                    <td className="px-4 py-2">
+                      ₹{product?.latest_pricing?.price_detail?.discounted_price?.toFixed(2) || "0.00"}
+                    </td>
+                    <td className="px-4 py-2 flex gap-2">
                       <button
-                        className="edit-btn-gh"
-                        onClick={() => {
-                          handleEditClick(product.product_id);
-                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition disabled:opacity-50"
+                        onClick={() => handleEditClick(product.product_id)}
                         disabled={isDeleting}
                       >
                         Edit
                       </button>
                       <button
-                        className="delete-btn-gh"
-                        onClick={() => {
-                          onProductDelete(product.product_id);
-                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg transition disabled:opacity-50"
+                        onClick={() => onProductDelete(product.product_id)}
                         disabled={isDeleting}
                       >
                         {isDeleting ? "Deleting..." : "Delete"}
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
+
   );
 };
 

@@ -22,7 +22,6 @@ const UserDetails = () => {
 
   return (
     <div className="layout">
-      <Sidebar />
 
       <div className="user-details">
         <h1>User Details</h1>

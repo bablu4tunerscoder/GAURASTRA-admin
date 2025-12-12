@@ -44,20 +44,29 @@ const DownloadQR = () => {
   };
 
   return (
-    <div className="qr-page-layout">
-      <Sidebar />
-      <div className="download-qr-container">
-        <h2 className="title">Product QR Codes</h2>
+    <div className="min-h-screen p-6 bg-gray-100">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6">Product QR Codes</h2>
+
         {isLoading ? (
-          <p className="loading-text">Loading...</p>
+          <p className="text-gray-500">Loading...</p>
         ) : (
-          <div className="qr-grid">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {products.map((product) => (
-              <div key={product.product_id} className="qr-card">
-                <h3 className="product-name">{product.product_name}</h3>
+              <div
+                key={product.product_id}
+                className="bg-white rounded-xl shadow p-4 flex flex-col items-center"
+              >
+                <h3 className="font-medium text-lg text-center mb-4">
+                  {product.product_name}
+                </h3>
+
                 {product.qrCode ? (
                   <>
-                    <div id={`qr-${product.product_id}`} className="qr-box">
+                    <div
+                      id={`qr-${product.product_id}`}
+                      className="mb-4 p-2 border rounded-lg bg-gray-50"
+                    >
                       <QRCodeSVG
                         value={product.qrCode}
                         size={150}
@@ -66,17 +75,17 @@ const DownloadQR = () => {
                       />
                     </div>
                     <button
-                      className="download-btn"
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition"
                       onClick={() =>
                         downloadQR(product.product_id, product.product_name)
                       }
                     >
-                      <FiDownload size={16} style={{ marginRight: "6px" }} />
+                      <FiDownload size={16} />
                       Download QR
                     </button>
                   </>
                 ) : (
-                  <p className="no-qr">No QR Code Available</p>
+                  <p className="text-gray-400">No QR Code Available</p>
                 )}
               </div>
             ))}
@@ -84,6 +93,7 @@ const DownloadQR = () => {
         )}
       </div>
     </div>
+
   );
 };
 

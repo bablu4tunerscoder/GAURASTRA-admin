@@ -67,50 +67,102 @@ const LandingEditor = () => {
   };
 
   return (
-    <div>
-      <Sidebar/>
-      <div className="admin-landing-editor">
-        <h2>Landing Page Content Editor</h2>
-        <form onSubmit={handleSubmit}>
-          <label>Heading 1:</label>
-          <input
-            type="text"
-            value={heading1}
-            onChange={(e) => setHeading1(e.target.value)}
-          />
+    <div className="flex justify-center px-4">
+      <div className="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6 mt-6">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+          Landing Page Content Editor
+        </h2>
 
-          <label>Heading 2:</label>
-          <input
-            type="text"
-            value={heading2}
-            onChange={(e) => setHeading2(e.target.value)}
-          />
+        <form onSubmit={handleSubmit} className="space-y-5">
 
-          <label>Description:</label>
-          <textarea
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          {/* Heading 1 */}
+          <div className="flex flex-col gap-1">
+            <label className="font-medium text-gray-700">Heading 1:</label>
+            <input
+              type="text"
+              value={heading1}
+              onChange={(e) => setHeading1(e.target.value)}
+              className="border border-gray-300 rounded-lg p-2 outline-none focus:ring focus:ring-blue-300"
+            />
+          </div>
 
-          <label>Background Image (1920x1080):</label>
-          <input type="file" accept="image/*" onChange={handleImageChange} />
+          {/* Heading 2 */}
+          <div className="flex flex-col gap-1">
+            <label className="font-medium text-gray-700">Heading 2:</label>
+            <input
+              type="text"
+              value={heading2}
+              onChange={(e) => setHeading2(e.target.value)}
+              className="border border-gray-300 rounded-lg p-2 outline-none focus:ring focus:ring-blue-300"
+            />
+          </div>
 
-          {preview && <img src={preview} alt="Preview" className="preview-img" />}
+          {/* Description */}
+          <div className="flex flex-col gap-1">
+            <label className="font-medium text-gray-700">Description:</label>
+            <textarea
+              rows="3"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="border border-gray-300 rounded-lg p-2 outline-none focus:ring focus:ring-blue-300"
+            />
+          </div>
 
-          <button type="submit" disabled={!image || loading}>
+          {/* Background Image */}
+          <div className="flex flex-col gap-1">
+            <label className="font-medium text-gray-700">
+              Background Image <span className="text-sm text-gray-500">(1920×1080)</span>
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="border border-gray-300 rounded-lg p-2 bg-white"
+            />
+          </div>
+
+          {/* Preview Image */}
+          {preview && (
+            <div>
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full rounded-lg shadow-md border mb-2"
+              />
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={!image || loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-lg transition disabled:opacity-50"
+          >
             {loading ? "Saving..." : "Save Content"}
           </button>
         </form>
 
+        {/* Messages */}
         {imageError && (
-          <p style={{ color: "red" }}>Image must be at least 1920x1080 pixels!</p>
+          <p className="text-red-500 mt-3">
+            Image must be at least 1920×1080 pixels!
+          </p>
         )}
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>Content saved successfully!</p>}
+        {error && (
+          <p className="text-red-500 mt-3">
+            {error}
+          </p>
+        )}
+
+        {success && (
+          <p className="text-green-600 mt-3">
+            Content saved successfully!
+          </p>
+        )}
       </div>
     </div>
+
   );
 };
 

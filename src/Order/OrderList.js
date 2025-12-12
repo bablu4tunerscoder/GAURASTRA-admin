@@ -103,7 +103,6 @@ const OrderList = () => {
 
   return (
     <div>
-      <Sidebar />
       <div className="order-list">
         <h2>Order List</h2>
 
@@ -151,12 +150,11 @@ const OrderList = () => {
                         <td>₹{order?.total_order_amount?.toFixed(2)}</td>
                         <td>
                           <div
-                            className={`payment-status ${
-                              order?.payment?.payment_status?.toUpperCase() ===
-                              "SUCCESS"
+                            className={`payment-status ${order?.payment?.payment_status?.toUpperCase() ===
+                                "SUCCESS"
                                 ? "success"
                                 : "failed"
-                            }`}
+                              }`}
                           >
                             {order?.payment?.payment_status}
                           </div>

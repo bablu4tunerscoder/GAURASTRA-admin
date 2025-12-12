@@ -20,11 +20,9 @@ export default function Login() {
     const onSubmit = async (data) => {
         try {
             const res = await loginUser(data).unwrap();
-            console.log(res)
             toast.success(res.message || "Login successful!");
             navigate("/OnlineAdmin");
         } catch (error) {
-            console.log(error)
             toast.error(error?.data?.message || "Login failed!");
         }
     };

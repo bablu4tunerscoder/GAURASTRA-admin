@@ -1,38 +1,29 @@
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
-import Sidebar from "../Components/Sidebar/sidebar";
 import Navbar from "./Navbar";
+import Sidebar from "../Components/Sidebar/sidebar";
 
 const OnlineLayout = () => {
-
   return (
-    <div className="flex">
+    <div className="flex h-[100dvh]">
 
-      {/* Sidebar */}
-      <div
-        className={`
-          h-[calc(100vh-60px)] bg-[#131720]
-          transition-all duration-300 z-50
-          overflow-hidden
-        `}
-        style={{ backgroundColor: "#131720" }}
-      >
+      {/* Sidebar - scrollable independently */}
+      <div className="w-[300px] bg-[#131720] mt-[60px] flex-shrink-0 overflow-y-auto">
         <Sidebar onLinkClick={() => { }} />
       </div>
 
-      {/* Main Content Area → fills remaining width */}
-      <div className=" min-h-screeny"
-        style={{
-          flex: 1
-        }}
-      >
-        <Navbar />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
-        <div style={{
-          marginTop: "60px"
-        }}>
+        {/* Navbar - fixed inside main content */}
+        <div className="fixed top-0 left-[300px] right-0 h-[60px] z-50 bg-white shadow">
+          <Navbar />
+        </div>
+
+        {/* Scrollable Outlet */}
+        <div className="flex-1 mt-[60px] overflow-y-auto p-6">
           <Outlet />
         </div>
+
       </div>
     </div>
   );

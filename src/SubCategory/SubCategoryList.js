@@ -55,7 +55,6 @@ const SubCategoryList = () => {
 
   return (
     <div className="layout">
-      <Sidebar />
 
       <div className="subcategory-container">
         <h1 className="subcategory-title">All Sub Categories</h1>
