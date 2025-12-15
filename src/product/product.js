@@ -93,16 +93,15 @@ const ProductTable = () => {
   };
 
   return (
-    <div className="w-full p-6">
-      <div className="flex flex-col gap-6">
-
+    <div className="w-full">
+      <div className="bg-white shadow rounded-lg p-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">
             Products <span className="text-gray-500">({filteredProducts.length})</span>
-          </h3>
+          </h1>
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
             onClick={handleNewProductClick}
           >
             + New Product
@@ -110,7 +109,7 @@ const ProductTable = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <div className="flex gap-2 items-center">
             <select
               value={selectedCategory}
@@ -118,7 +117,7 @@ const ProductTable = () => {
                 setSelectedCategory(e.target.value);
                 setGenderFilter("");
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2"
+              className="border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option>All products</option>
               <option>Ethnic Wear</option>
@@ -128,7 +127,7 @@ const ProductTable = () => {
             <select
               value={genderFilter}
               onChange={(e) => setGenderFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2"
+              className="border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Genders</option>
               <option value="Men">Men</option>
@@ -143,7 +142,7 @@ const ProductTable = () => {
                 setGenderFilter("");
                 setSearchQuery("");
               }}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-2 rounded-lg transition"
+              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
             >
               Clear All
             </button>
@@ -153,31 +152,41 @@ const ProductTable = () => {
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2"
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto">
+          <table className="w-full rounded-lg overflow-hidden">
+            <thead className="bg-gray-600">
               <tr>
-                <th className="px-4 py-2 text-left text-gray-700 font-medium">Name</th>
-                <th className="px-4 py-2 text-left text-gray-700 font-medium">SKU</th>
-                <th className="px-4 py-2 text-left text-gray-700 font-medium">Original Price</th>
-                <th className="px-4 py-2 text-left text-gray-700 font-medium">Discounted Price</th>
-                <th className="px-4 py-2 text-left text-gray-700 font-medium">Actions</th>
+                <th className="px-4 py-3 text-white font-medium text-left">Product</th>
+                <th className="px-4 py-3 text-white font-medium text-left">SKU</th>
+                <th className="px-4 py-3 text-white font-medium text-left">
+                  Original Price
+                </th>
+                <th className="px-4 py-3 text-white font-medium text-left">
+                  Discounted Price
+                </th>
+                <th className="px-4 py-3 text-white font-medium text-center">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredProducts.map((product, index) => {
+
+            <tbody>
+              {filteredProducts.map((product) => {
                 const primaryImage =
                   product.images?.find((img) => img.is_primary)?.image_url || imgg;
 
                 return (
-                  <tr key={product.product_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 flex items-center gap-2">
+                  <tr
+                    key={product.product_id}
+                    className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
+                  >
+                    <td className="px-4 py-3 flex items-center gap-3">
                       <img
                         src={primaryImage}
                         alt={product.product_name}
@@ -185,23 +194,35 @@ const ProductTable = () => {
                       />
                       <span>{product.product_name || "No Name"}</span>
                     </td>
-                    <td className="px-4 py-2">{product?.latest_pricing?.sku || "N/A"}</td>
-                    <td className="px-4 py-2">
-                      ₹{product?.latest_pricing?.price_detail?.original_price?.toFixed(2) || "0.00"}
+
+                    <td className="px-4 py-3">
+                      {product?.latest_pricing?.sku || "N/A"}
                     </td>
-                    <td className="px-4 py-2">
-                      ₹{product?.latest_pricing?.price_detail?.discounted_price?.toFixed(2) || "0.00"}
+
+                    <td className="px-4 py-3">
+                      ₹
+                      {product?.latest_pricing?.price_detail?.original_price?.toFixed(
+                        2
+                      ) || "0.00"}
                     </td>
-                    <td className="px-4 py-2 flex gap-2">
+
+                    <td className="px-4 py-3">
+                      ₹
+                      {product?.latest_pricing?.price_detail?.discounted_price?.toFixed(
+                        2
+                      ) || "0.00"}
+                    </td>
+
+                    <td className="px-4 py-3 flex justify-center gap-2">
                       <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition disabled:opacity-50"
+                        className="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded hover:bg-blue-600 hover:border-blue-600 text-sm"
                         onClick={() => handleEditClick(product.product_id)}
                         disabled={isDeleting}
                       >
                         Edit
                       </button>
                       <button
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg transition disabled:opacity-50"
+                        className="px-3 py-1 bg-red-500 text-white border border-red-500 rounded hover:bg-red-600 hover:border-red-600 text-sm disabled:opacity-50"
                         onClick={() => onProductDelete(product.product_id)}
                         disabled={isDeleting}
                       >
@@ -214,9 +235,9 @@ const ProductTable = () => {
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
+
 
   );
 };

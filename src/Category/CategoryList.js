@@ -36,13 +36,9 @@ const CategoryList = () => {
 
   return (
     <div className="w-full">
-      {/* Main Content */}
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">
-            All Categories
-          </h1>
-
+          <h1 className="text-2xl font-semibold text-gray-800">All Categories</h1>
           <button
             className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
             onClick={() => setIsModalOpen(true)}
@@ -51,32 +47,21 @@ const CategoryList = () => {
           </button>
         </div>
 
-        {/* States */}
         {isLoading ? (
           <p className="text-gray-600">Loading categories...</p>
         ) : isError ? (
-          <p className="text-red-600 font-medium">
-            Something went wrong
-          </p>
+          <p className="text-red-600 font-medium">Something went wrong</p>
         ) : categories.length === 0 ? (
-          <p className="text-gray-600">No Categories Found</p>
+          <p className="text-gray-600 italic">No Categories Found</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-2 border-gray-200 rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="px-4 py-3 font-medium text-gray-700">
-                    S.No
-                  </th>
-                  <th className="px-4 py-3 font-medium text-gray-700">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 font-medium text-gray-700">
-                    Description
-                  </th>
-                  <th className="px-4 py-3 font-medium text-gray-700 text-center">
-                    Actions
-                  </th>
+            <table className="w-full rounded-lg overflow-hidden">
+              <thead className="bg-gray-600">
+                <tr>
+                  <th className="px-4 py-3 text-white font-medium text-left">S.No</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Name</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Description</th>
+                  <th className="px-4 py-3 text-white font-medium text-center">Actions</th>
                 </tr>
               </thead>
 
@@ -84,7 +69,7 @@ const CategoryList = () => {
                 {categories.map((category, index) => (
                   <tr
                     key={category.category_id}
-                    className="border-t hover:bg-gray-50 transition"
+                    className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
                   >
                     <td className="px-4 py-3">{index + 1}</td>
                     <td className="px-4 py-3 capitalize">
@@ -93,21 +78,17 @@ const CategoryList = () => {
                     <td className="px-4 py-3">
                       {category.category_description}
                     </td>
-
-                    <td className="px-4 py-3 flex justify-center gap-3">
+                    <td className="px-4 py-3 flex justify-center gap-2">
                       <button
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm"
+                        className="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded hover:bg-blue-600 hover:border-blue-600 text-sm"
                         onClick={() => handleEdit(category)}
                       >
                         Edit
                       </button>
-
                       <button
                         disabled={isDeleting}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-700 text-white rounded-md text-sm disabled:opacity-50"
-                        onClick={() =>
-                          handleDelete(category.category_id)
-                        }
+                        className="px-3 py-1 bg-red-500 text-white border border-red-500 rounded hover:bg-red-600 hover:border-red-600 text-sm disabled:opacity-50"
+                        onClick={() => handleDelete(category.category_id)}
                       >
                         {isDeleting ? "Deleting..." : "Delete"}
                       </button>
@@ -120,11 +101,7 @@ const CategoryList = () => {
         )}
       </div>
 
-      {/* Modals */}
-      {isModalOpen && (
-        <AddCategory onClose={() => setIsModalOpen(false)} />
-      )}
-
+      {isModalOpen && <AddCategory onClose={() => setIsModalOpen(false)} />}
       {isEditModalOpen && (
         <EditCategory
           onClose={() => setIsEditModalOpen(false)}
@@ -132,6 +109,7 @@ const CategoryList = () => {
         />
       )}
     </div>
+
   );
 };
 

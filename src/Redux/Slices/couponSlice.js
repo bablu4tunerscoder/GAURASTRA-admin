@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOnline from "./api/baseQuery";
 
 /* ===========================
    RTK QUERY API
@@ -8,33 +8,33 @@ import { BASE_URL } from "../../Components/Helper/axiosinstance";
 
 export const couponApi = createApi({
   reducerPath: "couponApi",
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
+  baseQuery: baseQueryOnline,
   tagTypes: ["Coupons"],
   endpoints: (builder) => ({
-    getCoupons: builder.query({
-      query: () => "/api/coupons/allCoupons",
+    getUserCoupons: builder.query({
+      query: () => "/api/coupons-user/allCoupons",
       transformResponse: (response) => response.data || [],
       providesTags: ["Coupons"],
     }),
-    createCoupon: builder.mutation({
+    createUserCoupon: builder.mutation({
       query: (couponData) => ({
-        url: "/api/coupons/create-coupon",
+        url: "/api/coupons-user/create-coupon",
         method: "POST",
         body: couponData,
       }),
       invalidatesTags: ["Coupons"],
     }),
-    updateCoupon: builder.mutation({
+    updateUserCoupon: builder.mutation({
       query: ({ id, ...couponData }) => ({
-        url: `/api/coupons/updateCoupon/${id}`,
+        url: `/api/coupons-user/updateCoupon/${id}`,
         method: "PUT",
         body: couponData,
       }),
       invalidatesTags: ["Coupons"],
     }),
-    deleteCoupon: builder.mutation({
+    deleteUserCoupon: builder.mutation({
       query: (id) => ({
-        url: `/api/coupons/deleteCoupons/${id}`,
+        url: `/api/coupons-user/deleteCoupons/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Coupons"],
@@ -57,61 +57,61 @@ const couponSlice = createSlice({
   extraReducers: (builder) => {
     // Get Coupons
     builder
-      .addMatcher(couponApi.endpoints.getCoupons.matchPending, (state) => {
+      .addMatcher(couponApi.endpoints.getUserCoupons.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addMatcher(couponApi.endpoints.getCoupons.matchFulfilled, (state, action) => {
+      .addMatcher(couponApi.endpoints.getUserCoupons.matchFulfilled, (state, action) => {
         state.isLoading = false;
         state.coupons = action.payload;
       })
-      .addMatcher(couponApi.endpoints.getCoupons.matchRejected, (state, action) => {
+      .addMatcher(couponApi.endpoints.getUserCoupons.matchRejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error?.message;
       });
 
     // Create Coupon
     builder
-      .addMatcher(couponApi.endpoints.createCoupon.matchPending, (state) => {
+      .addMatcher(couponApi.endpoints.createUserCoupon.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addMatcher(couponApi.endpoints.createCoupon.matchFulfilled, (state, action) => {
+      .addMatcher(couponApi.endpoints.createUserCoupon.matchFulfilled, (state, action) => {
         state.isLoading = false;
         state.coupons.unshift(action.payload);
       })
-      .addMatcher(couponApi.endpoints.createCoupon.matchRejected, (state, action) => {
+      .addMatcher(couponApi.endpoints.createUserCoupon.matchRejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error?.message;
       });
 
     // Update Coupon
     builder
-      .addMatcher(couponApi.endpoints.updateCoupon.matchPending, (state) => {
+      .addMatcher(couponApi.endpoints.updateUserCoupon.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addMatcher(couponApi.endpoints.updateCoupon.matchFulfilled, (state, action) => {
+      .addMatcher(couponApi.endpoints.updateUserCoupon.matchFulfilled, (state, action) => {
         state.isLoading = false;
         const index = state.coupons.findIndex(c => c.coupon_id === action.payload.coupon_id);
         if (index !== -1) state.coupons[index] = action.payload;
       })
-      .addMatcher(couponApi.endpoints.updateCoupon.matchRejected, (state, action) => {
+      .addMatcher(couponApi.endpoints.updateUserCoupon.matchRejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error?.message;
       });
 
     // Delete Coupon
     builder
-      .addMatcher(couponApi.endpoints.deleteCoupon.matchPending, (state) => {
+      .addMatcher(couponApi.endpoints.deleteUserCoupon.matchPending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addMatcher(couponApi.endpoints.deleteCoupon.matchFulfilled, (state, action) => {
+      .addMatcher(couponApi.endpoints.deleteUserCoupon.matchFulfilled, (state, action) => {
         state.isLoading = false;
         state.coupons = state.coupons.filter(c => c.coupon_id !== action.meta.arg);
       })
-      .addMatcher(couponApi.endpoints.deleteCoupon.matchRejected, (state, action) => {
+      .addMatcher(couponApi.endpoints.deleteUserCoupon.matchRejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error?.message;
       });
@@ -125,8 +125,8 @@ const couponSlice = createSlice({
 export default couponSlice.reducer;
 
 export const {
-  useGetCouponsQuery,
-  useCreateCouponMutation,
-  useUpdateCouponMutation,
-  useDeleteCouponMutation,
+  useGetUserCouponsQuery,
+  useCreateUserCouponMutation,
+  useUpdateUserCouponMutation,
+  useDeleteUserCouponMutation,
 } = couponApi;

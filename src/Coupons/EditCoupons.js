@@ -5,7 +5,7 @@ import {
   useGetSubcategoriesQuery,
 } from "../Redux/Slices/categorySlice";
 import { useFetchProductsQuery } from "../Redux/Slices/productSlice";
-import { useUpdateCouponMutation } from "../Redux/Slices/couponSlice";
+import { useUpdateUserCouponMutation } from "../Redux/Slices/couponSlice";
 
 const EditCoupons = ({ coupon, onClose }) => {
   const { data: products = [] } = useFetchProductsQuery();
@@ -27,7 +27,7 @@ const EditCoupons = ({ coupon, onClose }) => {
     { skip: selectedCategories.length === 0 }
   );
 
-  const [updateCoupon, { isLoading }] = useUpdateCouponMutation();
+  const [updateCoupon, { isLoading }] = useUpdateUserCouponMutation();
 
   useEffect(() => {
     reset({

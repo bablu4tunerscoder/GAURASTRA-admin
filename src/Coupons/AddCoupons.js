@@ -1,11 +1,11 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useCreateCouponMutation } from "../Redux/Slices/couponSlice";
+import { useCreateUserCouponMutation } from "../Redux/Slices/couponSlice";
 import { useFetchProductsQuery } from "../Redux/Slices/productSlice";
 
 const AddCoupons = ({ onClose }) => {
   const { data: products = [] } = useFetchProductsQuery();
-  const [createCoupon, { isLoading }] = useCreateCouponMutation();
+  const [createCoupon, { isLoading }] = useCreateUserCouponMutation();
 
   const {
     register,

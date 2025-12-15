@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
-  useGetCouponsQuery,
-  useDeleteCouponMutation,
+  useGetUserCouponsQuery,
+  useDeleteUserCouponMutation,
 } from "../Redux/Slices/couponSlice";
 import AddCoupon from "./AddCoupons";
 import EditCoupon from "./EditCoupons";
@@ -11,8 +11,8 @@ import EditCoupon from "./EditCoupons";
 dayjs.extend(relativeTime);
 
 const CouponsList = () => {
-  const { data: coupons = [], isLoading, isError, error } = useGetCouponsQuery();
-  const [deleteCoupon] = useDeleteCouponMutation();
+  const { data: coupons = [], isLoading, isError, error } = useGetUserCouponsQuery();
+  const [deleteCoupon] = useDeleteUserCouponMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,12 +41,12 @@ const CouponsList = () => {
   };
 
   return (
-    <div className="flex">
-      <div className="flex-1 p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h1 className="text-2xl font-bold">All Coupons</h1>
+    <div className="w-full p-6">
+      <div className="bg-white shadow rounded-lg p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">All Coupons</h1>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
             onClick={() => setIsModalOpen(true)}
           >
             Create Coupon
@@ -54,65 +54,61 @@ const CouponsList = () => {
         </div>
 
         {isLoading ? (
-          <p>Loading coupons...</p>
+          <p className="text-gray-600">Loading coupons...</p>
         ) : isError ? (
           <p className="text-red-600 font-medium">{error}</p>
         ) : coupons.length === 0 ? (
           <p className="text-gray-600 italic">No Coupons Found</p>
         ) : (
-          <div className="w-full overflow-x-auto bg-white shadow-md rounded-lg">
-            <table className="w-full border-collapse min-w-[900px]">
-              <thead className="bg-gray-100">
+          <div className="overflow-x-auto">
+            <table className="w-full rounded-lg overflow-hidden">
+              <thead className="bg-gray-600">
                 <tr>
-                  <th className="px-4 py-2 border">S.No</th>
-                  <th className="px-4 py-2 border">Code</th>
-                  <th className="px-4 py-2 border">Type</th>
-                  <th className="px-4 py-2 border">Value</th>
-                  <th className="px-4 py-2 border">Min Amount</th>
-                  <th className="px-4 py-2 border">Status</th>
-                  <th className="px-4 py-2 border">Expires</th>
-                  <th className="px-4 py-2 border">Actions</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">S.No</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Code</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Type</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Value</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Min Amount</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Status</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Expires</th>
+                  <th className="px-4 py-3 text-white font-medium text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {coupons.map((coupon, index) => (
                   <tr
                     key={coupon.coupon_id}
-                    className="odd:bg-white even:bg-gray-50"
+                    className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
                   >
-                    <td className="px-4 py-2 border">{index + 1}</td>
-                    <td className="px-4 py-2 border">{coupon.code}</td>
-                    <td className="px-4 py-2 border">{coupon.discountType}</td>
-                    <td className="px-4 py-2 border">
+                    <td className="px-4 py-3">{index + 1}</td>
+                    <td className="px-4 py-3">{coupon.code}</td>
+                    <td className="px-4 py-3">{coupon.discountType}</td>
+                    <td className="px-4 py-3">
                       {coupon.discountType === "percentage"
                         ? `${coupon.discountValue}%`
                         : `₹${coupon.discountValue}`}
                     </td>
-                    <td className="px-4 py-2 border">
-                      ₹{coupon.minCartAmount || 0}
-                    </td>
-                    <td className="px-4 py-2 border">
+                    <td className="px-4 py-3">₹{coupon.minCartAmount || 0}</td>
+                    <td className="px-4 py-3">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${coupon.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
                           }`}
                       >
                         {coupon.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2 border">
-                      {formatCouponDate(coupon.expiresAt)}
-                    </td>
-                    <td className="px-4 py-2 border space-x-2">
+                    <td className="px-4 py-3">{formatCouponDate(coupon.expiresAt)}</td>
+                    <td className="px-4 py-3 flex justify-center gap-2">
                       <button
-                        className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                        className="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded hover:bg-blue-600 hover:border-blue-600 text-sm"
                         onClick={() => handleEdit(coupon)}
                       >
                         Edit
                       </button>
                       <button
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                        className="px-3 py-1 bg-red-500 text-white border border-red-500 rounded hover:bg-red-600 hover:border-red-600 text-sm"
                         onClick={() => handleDelete(coupon.coupon_id)}
                       >
                         Delete
@@ -124,16 +120,14 @@ const CouponsList = () => {
             </table>
           </div>
         )}
-      </div>
 
-      {isModalOpen && <AddCoupon onClose={() => setIsModalOpen(false)} />}
-      {isEditModalOpen && (
-        <EditCoupon
-          onClose={() => setIsEditModalOpen(false)}
-          coupon={selectedCoupon}
-        />
-      )}
+        {isModalOpen && <AddCoupon onClose={() => setIsModalOpen(false)} />}
+        {isEditModalOpen && (
+          <EditCoupon onClose={() => setIsEditModalOpen(false)} coupon={selectedCoupon} />
+        )}
+      </div>
     </div>
+
   );
 };
 

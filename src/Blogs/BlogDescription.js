@@ -1,7 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { BASE_URL } from "../Components/Helper/axiosinstance";
 import { useDeleteBlogMutation } from "../Redux/Slices/BlogSlice";
-import { get } from "react-hook-form";
 import { getImageUrl } from "../utils/getImageUrl";
 
 function BlogDescription() {

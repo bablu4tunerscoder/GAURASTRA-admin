@@ -1,13 +1,13 @@
 import { ArrowLeft, Save, Upload } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useUpdateBlogMutation } from "../Redux/Slices/BlogSlice";
 import { getImageUrl } from "../utils/getImageUrl";
 import TagInput from "./TagInput";
-import { useUpdateBlogMutation } from "../Redux/Slices/BlogSlice";
-import toast from "react-hot-toast";
 
 const EditBlog = () => {
   const navigate = useNavigate();

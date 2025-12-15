@@ -1,6 +1,4 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../Components/Sidebar/sidebar";
 import {
   useGetAllUsersQuery,
 } from "../Redux/Slices/userSlice"; // RTK Query API
@@ -21,42 +19,46 @@ const UsersList = () => {
   };
 
   return (
-    <div className="flex p-6">
-      <div className="w-full max-w-6xl">
-
+    <div className="w-full">
+      <div className="bg-white shadow rounded-lg p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">All Users</h1>
         </div>
 
-        {/* Loading & Error */}
+        {/* States */}
         {success ? (
-          <p className="text-red-500">Something went wrong</p>
+          <p className="text-red-600 font-medium">Something went wrong</p>
         ) : allUsers.count === 0 ? (
-          <p className="text-gray-600">No Users Found</p>
+          <p className="text-gray-600 italic">No Users Found</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="w-full border-collapse text-left">
-              <thead className="bg-gray-100">
+          <div className="overflow-x-auto">
+            <table className="w-full rounded-lg overflow-hidden">
+              <thead className="bg-gray-600">
                 <tr>
-                  <th className="px-4 py-3 font-semibold text-gray-700 border-b">S.No</th>
-                  <th className="px-4 py-3 font-semibold text-gray-700 border-b">Name</th>
-                  <th className="px-4 py-3 font-semibold text-gray-700 border-b">Email</th>
-                  <th className="px-4 py-3 font-semibold text-gray-700 border-b">Actions</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">S.No</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Name</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Email</th>
+                  <th className="px-4 py-3 text-white font-medium text-center">
+                    Actions
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-                {allUsers.data ? (
+                {allUsers.data && allUsers.data.length > 0 ? (
                   allUsers.data.map((user, index) => (
-                    <tr key={user.user_id} className="hover:bg-gray-50 transition">
-                      <td className="px-4 py-3 border-b">{index + 1}</td>
-                      <td className="px-4 py-3 border-b">{user.name}</td>
-                      <td className="px-4 py-3 border-b">{user.email}</td>
-                      <td className="px-4 py-3 border-b">
+                    <tr
+                      key={user.user_id}
+                      className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
+                    >
+                      <td className="px-4 py-3">{index + 1}</td>
+                      <td className="px-4 py-3">{user.name}</td>
+                      <td className="px-4 py-3">{user.email}</td>
+                      <td className="px-4 py-3 flex justify-center">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition"
+                          className="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded hover:bg-blue-600 hover:border-blue-600 text-sm"
                         >
                           View Details
                         </button>
@@ -67,7 +69,7 @@ const UsersList = () => {
                   <tr>
                     <td
                       colSpan={4}
-                      className="text-center text-red-500 py-4"
+                      className="px-4 py-6 text-center text-gray-600"
                     >
                       No Users Found
                     </td>
@@ -79,6 +81,7 @@ const UsersList = () => {
         )}
       </div>
     </div>
+
 
   );
 };
