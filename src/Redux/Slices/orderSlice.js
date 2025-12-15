@@ -1,78 +1,61 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOnline from "./api/baseQuery";
 
-// Async thunk to fetch all orders with payment info (admin dashboard)
-export const fetchOrdersWithPayments = createAsyncThunk(
-  "orders/fetchOrdersWithPayments",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/orders/order-payment`); // Use your actual backend API URL
-      return response.data.orders; // response.orders is the array we want
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch orders"
-      );
-    }
-  }
-);
+/* =======================
+   RTK QUERY API
+======================= */
+export const ordersApi = createApi({
+  reducerPath: "ordersApi",
+  baseQuery: baseQueryOnline,
+  tagTypes: ["Orders", "SingleOrder"],
+  endpoints: (builder) => ({
+    fetchOrdersWithPayments: builder.query({
+      query: () => `/api/orders/order-payment`,
+      providesTags: ["Orders"],
+    }),
 
-// ✅ New thunk to get a specific order with payment info by order_id
-export const fetchOrderWithPaymentById = createAsyncThunk(
-  "orders/fetchOrderWithPaymentById",
-  async (orderId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/orders/order-payment/${orderId}`
-      ); // Adjust if route is different
-      return response.data; // Contains { order, payment }
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch order details"
-      );
-    }
-  }
-);
+    fetchOrderWithPaymentById: builder.query({
+      query: (orderId) => `/api/orders/order-payment/${orderId}`,
+      providesTags: (result, error, id) => [
+        { type: "SingleOrder", id },
+      ],
+    }),
 
-// Add this below fetchOrderWithPaymentById
-export const updateOrderStatusById = createAsyncThunk(
-  "orders/updateOrderStatusById",
-  async ({ order_id, order_status }, { rejectWithValue }) => {
-    try {
-      const response = await axios.patch(
-        `${BASE_URL}/api/orders/update-status/${order_id}`,
-        { order_status }
-      );
-      return response.data.order; // return updated order
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update order status"
-      );
-    }
-  }
-);
+    updateOrderStatusById: builder.mutation({
+      query: ({ order_id, order_status }) => ({
+        url: `/api/orders/update-status/${order_id}`,
+        method: "PATCH",
+        body: { order_status },
+      }),
+      invalidatesTags: ["Orders", "SingleOrder"],
+    }),
 
-// ✅ NEW: Delete order by ID
-export const deleteOrderById = createAsyncThunk(
-  "orders/deleteOrderById",
-  async (orderId, { rejectWithValue }) => {
-    try {
-      const response = await axios.delete(`${BASE_URL}/api/orders/${orderId}`);
-      return { orderId, ...response.data };
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to delete order"
-      );
-    }
-  }
-);
+    deleteOrderById: builder.mutation({
+      query: (orderId) => ({
+        url: `/api/orders/${orderId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Orders"],
+    }),
+  }),
+});
 
+export const {
+  useFetchOrdersWithPaymentsQuery,
+  useFetchOrderWithPaymentByIdQuery,
+  useUpdateOrderStatusByIdMutation,
+  useDeleteOrderByIdMutation,
+} = ordersApi;
 
+/* =======================
+   SLICE WITH extraReducers
+======================= */
 const orderSlice = createSlice({
   name: "orders",
   initialState: {
-    orders: [], // For all orders with payment info
-    selectedOrder: null, // For single order with payment info
+    orders: [],
+    selectedOrder: null,
     loading: false,
     error: null,
   },
@@ -86,90 +69,124 @@ const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // For all orders with payments
-      .addCase(fetchOrdersWithPayments.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchOrdersWithPayments.fulfilled, (state, action) => {
-        state.loading = false;
-        state.orders = action.payload;
-      })
-      .addCase(fetchOrdersWithPayments.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // ✅ For single order by ID
-      .addCase(fetchOrderWithPaymentById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.selectedOrder = null;
-      })
-      .addCase(fetchOrderWithPaymentById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.selectedOrder = action.payload; // Contains { order, payment }
-      })
-      .addCase(fetchOrderWithPaymentById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // ✅ Update Order Status
-      .addCase(updateOrderStatusById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateOrderStatusById.fulfilled, (state, action) => {
-        state.loading = false;
-
-        // Update the status in the selectedOrder if it matches
-        if (
-          state.selectedOrder &&
-          state.selectedOrder.order.order_id === action.payload.order_id
-        ) {
-          state.selectedOrder.order = {
-            ...state.selectedOrder.order,
-            ...action.payload,
-          };
+      /* ===== Fetch All Orders ===== */
+      .addMatcher(
+        ordersApi.endpoints.fetchOrdersWithPayments.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
         }
+      )
+      .addMatcher(
+        ordersApi.endpoints.fetchOrdersWithPayments.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.orders = action.payload.orders ?? action.payload;
+        }
+      )
+      .addMatcher(
+        ordersApi.endpoints.fetchOrdersWithPayments.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      )
 
-        // Also update it in the orders list if present
-        state.orders = state.orders.map((order) =>
-          order.order_id === action.payload.order_id
-            ? { ...order, order_status: action.payload.order_status }
-            : order
-        );
-      })
-      .addCase(updateOrderStatusById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // ✅ NEW: Delete Order Cases
-      .addCase(deleteOrderById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(deleteOrderById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
-        // Remove the deleted order from the orders array
-        state.orders = state.orders.filter(
-          (order) => order.order_id !== action.payload.orderId
-        );
-        // Clear selectedOrder if it was the deleted one
-        if (state.selectedOrder?.order?.order_id === action.payload.orderId) {
+      /* ===== Fetch Single Order ===== */
+      .addMatcher(
+        ordersApi.endpoints.fetchOrderWithPaymentById.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
           state.selectedOrder = null;
         }
-      })
-      .addCase(deleteOrderById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+      )
+      .addMatcher(
+        ordersApi.endpoints.fetchOrderWithPaymentById.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.selectedOrder = action.payload;
+        }
+      )
+      .addMatcher(
+        ordersApi.endpoints.fetchOrderWithPaymentById.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      )
+
+      /* ===== Update Order Status ===== */
+      .addMatcher(
+        ordersApi.endpoints.updateOrderStatusById.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        ordersApi.endpoints.updateOrderStatusById.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          const updated = action.payload?.order || action.payload;
+
+          if (
+            state.selectedOrder?.order?.order_id === updated.order_id
+          ) {
+            state.selectedOrder.order = {
+              ...state.selectedOrder.order,
+              ...updated,
+            };
+          }
+
+          state.orders = state.orders.map((order) =>
+            order.order_id === updated.order_id
+              ? { ...order, order_status: updated.order_status }
+              : order
+          );
+        }
+      )
+      .addMatcher(
+        ordersApi.endpoints.updateOrderStatusById.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      )
+
+      /* ===== Delete Order ===== */
+      .addMatcher(
+        ordersApi.endpoints.deleteOrderById.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        ordersApi.endpoints.deleteOrderById.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          const deletedId = action.meta.arg;
+          state.orders = state.orders.filter(
+            (order) => order.order_id !== deletedId
+          );
+
+          if (state.selectedOrder?.order?.order_id === deletedId) {
+            state.selectedOrder = null;
+          }
+        }
+      )
+      .addMatcher(
+        ordersApi.endpoints.deleteOrderById.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      );
   },
 });
 
-export const { clearOrderError, clearSelectedOrder } = orderSlice.actions;
+export const { clearOrderError, clearSelectedOrder } =
+  orderSlice.actions;
 
 export default orderSlice.reducer;

@@ -6,7 +6,12 @@ export const IMG_BASE_URL = "https://backend.gaurastra.com";
 export const BASE_URL = "https://testbackend.gaurastra.com";
 
 
-const axiosInstance = axios.create();
+const axiosInstance = axios.create({
+    headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+    },
+});
 
 axiosInstance.defaults.baseURL = BASE_URL;
 axiosInstance.defaults.withCredentials = true;

@@ -57,7 +57,7 @@ const Sidebar = () => {
                   to={item.path}
                   className={({ isActive }) =>
                     `
-                block px-2 py-2 rounded-md font-semibold text-md
+                block px-2 py-2 capitalize rounded-md font-semibold text-md
                  transition-all duration-200
                 ${isActive ? "bg-[#42454c] text-red-500" : "text-white"}
                 hover:bg-[#555861] hover:translate-x-1
