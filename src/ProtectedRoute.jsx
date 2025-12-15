@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "./Redux/Slices/userSlice";
+import { onlineAdminRoutes } from "./App";
 
 const ProtectedRoute = () => {
     const dispatch = useDispatch();
@@ -9,56 +10,74 @@ const ProtectedRoute = () => {
     const user = useSelector((state) => state.user);
 
     const [isChecking, setIsChecking] = useState(true);
-    const [shouldRedirect, setShouldRedirect] = useState(false);
+    const [redirectPath, setRedirectPath] = useState(null);
 
-    const firstCheckDone = useRef(false); // track if first check has run
+    const firstCheckDone = useRef(false);
 
     useEffect(() => {
         setIsChecking(true);
-        setShouldRedirect(false);
+        setRedirectPath(null);
 
         const checkAuth = () => {
             const u = user?.userData;
             const token = user?.token;
 
-
-
-            // If no user or token → logout + redirect
+            // ❌ No auth
             if (!u || !token) {
                 dispatch(logout());
-                setShouldRedirect(true);
+                setRedirectPath("/");
                 setIsChecking(false);
                 return;
             }
 
-            // Admin → full access
-            if (u?.user?.role === "Admin") {
+            const role = u?.user?.role;
+
+            // ✅ Admin → full access
+            if (role === "Admin") {
                 setIsChecking(false);
                 return;
             }
 
-            // Employee → must be active + have permissions
-            if (u.user?.role === "Employee") {
-
+            // 👤 Employee permission check
+            if (role === "Employee") {
                 const isActive = u.user?.status === "Active";
-                const hasPermissions = Array.isArray(u.user?.permissions) && u?.user?.permissions?.length > 0;
-                if (!isActive || !hasPermissions) {
-                    console.log("not active or no permissions")
+                const permissions = u.user?.permissions || [];
 
+                if (!isActive || permissions.length === 0) {
                     dispatch(logout());
-                    setShouldRedirect(true);
+                    setRedirectPath("/");
+                    setIsChecking(false);
+                    return;
                 }
+
+                const currentPath = location.pathname.toLowerCase();
+
+                // ✅ Does current route match any permission?
+                const hasAccess = permissions.some((perm) =>
+                    currentPath.includes(perm.toLowerCase())
+                );
+
+                if (!hasAccess) {
+                    // 🔁 Find first allowed route
+                    const fallbackRoute = onlineAdminRoutes.find((route) =>
+                        permissions.some((perm) =>
+                            route.path.toLowerCase().includes(perm.toLowerCase())
+                        )
+                    );
+
+                    setRedirectPath(fallbackRoute?.path || "/");
+                }
+
                 setIsChecking(false);
                 return;
             }
 
-            // Any other role → logout + redirect
+            // ❌ Unknown role
             dispatch(logout());
-            setShouldRedirect(true);
+            setRedirectPath("/");
             setIsChecking(false);
         };
 
-        // If first check → delay 1 second
         if (!firstCheckDone.current) {
             const timeoutId = setTimeout(() => {
                 checkAuth();
@@ -67,33 +86,33 @@ const ProtectedRoute = () => {
 
             return () => clearTimeout(timeoutId);
         } else {
-            // Subsequent checks → no delay
             checkAuth();
         }
     }, [user, location.pathname, dispatch]);
 
-    // Show loading state during check
+    // ⏳ Loading
     if (isChecking) {
         return (
-            <div style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh",
-                fontSize: "1.2rem",
-                color: "#666"
-            }}>
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100vh",
+                    fontSize: "1.2rem",
+                    color: "#666",
+                }}
+            >
                 Verifying access...
             </div>
         );
     }
 
-    // Redirect if unauthorized
-    if (shouldRedirect) {
-        return <Navigate to="/" replace />;
+    // 🔁 Redirect
+    if (redirectPath) {
+        return <Navigate to={redirectPath} replace />;
     }
 
-    // Render nested routes
     return <Outlet />;
 };
 

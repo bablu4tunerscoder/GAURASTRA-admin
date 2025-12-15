@@ -1,22 +1,17 @@
 // userSlice.js
 import { createSlice } from "@reduxjs/toolkit";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { toast } from "react-toastify";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import baseQueryOnline from "./api/baseQuery";
 
 // ------------------------------------------------
 // RTK QUERY API
 // ------------------------------------------------
 export const userApi = createApi({
+
   reducerPath: "userApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem("token");
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryOnline,
+
 
   tagTypes: ["Users", "SingleUser"],
 
@@ -169,13 +164,15 @@ const userSlice = createSlice({
         (state, { payload }) => {
           state.isLoading = false;
 
+          let user = payload.data;
+          // user = { ...user, user: { ...user.user, role: "Employee" } }
           // Save user to Redux state
-          state.userData = payload.data;
-          state.token = payload.data.token;
+          state.userData = user;
+          state.token = user.token;
 
           // Save to localStorage
-          localStorage.setItem("user", JSON.stringify(payload.data));
-          localStorage.setItem("token", payload.data.token);
+          localStorage.setItem("user", JSON.stringify(user));
+          localStorage.setItem("token", user.token);
         }
       )
 

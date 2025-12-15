@@ -21,9 +21,6 @@ const TagInput = ({ tags, setTags }) => {
 
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-600 mb-2">
-        Meta Keywords
-      </label>
       <div className="border border-gray-200 p-2 rounded-md shadow-sm bg-white">
         <ReactTags
           tags={tags.map((tag) => ({ id: tag, text: tag }))}

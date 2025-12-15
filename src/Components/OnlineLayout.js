@@ -4,7 +4,7 @@ import Sidebar from "../Components/Sidebar/sidebar";
 
 const OnlineLayout = () => {
   return (
-    <div className="flex h-[100dvh]">
+    <div className="flex max-h-[100dvh] overflow-hidden">
 
       {/* Sidebar - scrollable independently */}
       <div className="w-[300px] bg-[#131720] mt-[60px] flex-shrink-0 overflow-y-auto">

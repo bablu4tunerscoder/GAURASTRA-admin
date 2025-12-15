@@ -30,7 +30,7 @@ const Sidebar = () => {
 
   if (role !== "Admin") {
     menuItems = menuItems.filter(item =>
-      permissions.some(permission =>
+      permissions && permissions.some(permission =>
         item.title.toLowerCase().includes(permission.toLowerCase())
       )
     );

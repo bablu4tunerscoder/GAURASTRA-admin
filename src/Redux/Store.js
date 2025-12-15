@@ -1,10 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer, { userApi } from "./Slices/userSlice";
 import mediaReducer from "./Slices/mediaSlice";
-import categoryReducer from "./Slices/categorySlice";
+import categoryReducer, { categoryApi } from "./Slices/categorySlice";
 import subcategoryReducer from "./Slices/subcategorySlice";
 import productReducer, { productApi } from "./Slices/productSlice";
-import BlogSliceReducer from "./Slices/BlogSlice";
+import BlogSliceReducer, { blogApi } from "./Slices/BlogSlice";
 import OrderSliceReducer from "./Slices/orderSlice";
 import landingReducer from "./Slices/landingSlice";
 import couponsReducer from "./Slices/couponSlice";
@@ -33,11 +33,15 @@ const store = configureStore({
 
     [userApi.reducerPath]: userApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
+    [blogApi.reducerPath]: blogApi.reducer,
+    [categoryApi.reducerPath]: categoryApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(userApi.middleware)
+      .concat(blogApi.middleware)
+      .concat(categoryApi.middleware)
       .concat(productApi.middleware),
 });
 

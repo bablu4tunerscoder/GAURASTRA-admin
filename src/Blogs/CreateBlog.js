@@ -1,424 +1,302 @@
-import React, { useState, useRef } from "react";
-import { useDispatch } from "react-redux";
-import { createNewBlog } from "../Redux/Slices/BlogSlice";
-import { useNavigate } from "react-router-dom";
-import TagInput from "./TagInput";
+import { ArrowLeft, Save, Upload } from "lucide-react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import Sidebar from "../Components/Sidebar/sidebar";
+import { useNavigate } from "react-router-dom";
+import { useCreateNewBlogMutation } from "../Redux/Slices/BlogSlice";
+import TagInput from "./TagInput";
 
 const CreateBlog = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const thumbnailRef = useRef(null);
-  const [blog_content_type, setBlogContentType] = useState("1"); // Default tab
+  const [createBlog, { isLoading: isCreating }] = useCreateNewBlogMutation();
 
-  const [blogData, setBlogData] = useState({
-    author: "",
-    blogTitle: "",
-    blogContent: "",
-    blogStatus: "Published",
-    blogPublished: "",
-    blogSlug: "",
-    thumbnail: null,
-    seo: {
-      pageTitle: "",
-      metaKeywords: [],
-      metaDescription: "",
+
+  const [previewImage, setPreviewImage] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      author: "",
+      blogTitle: "",
+
+      blogContent: "",
+      blogStatus: "Draft",
+      blogPublished: "",
+      seo: {
+        pageTitle: "",
+        metaDescription: "",
+        metaKeywords: [],
+      },
     },
   });
-
-  const [previewImage, setPreviewImage] = useState(null); // Preview image state
-
-  const handleChange = (event, fieldName) => {
-    // Handle the case for ReactQuill separately
-    if (fieldName === "blogContent") {
-      setBlogData((prevData) => ({
-        ...prevData,
-        [fieldName]: event, // ReactQuill provides the content directly
-      }));
-    } else {
-      const { name, value } = event.target;
-      // If the name is inside the seo object, update the seo sub-object
-      if (name === "pageTitle" || name === "metaDescription") {
-        setBlogData((prevData) => ({
-          ...prevData,
-          seo: {
-            ...prevData.seo,
-            [name]: value, // Update specific seo field
-          },
-        }));
-      }
-      // Handle other fields (like blogTitle, blogContent, etc.)
-      else {
-        setBlogData((prevData) => ({
-          ...prevData,
-          [name]: value,
-        }));
-      }
-    }
-  };
-
-  // Function to update metaKeywords when tags change
-  const handleMetaKeywordsChange = (newTags) => {
-    setBlogData((prevData) => ({
-      ...prevData,
-      seo: {
-        ...prevData.seo,
-        metaKeywords: newTags, // Ensure it's an array
-      },
-    }));
-  };
 
   // Handle image upload and preview
   const handleImageUpload = (e) => {
     const uploadedImage = e.target.files[0];
-    if (!uploadedImage) {
-      alert("Thumbnail is required.");
+    if (!uploadedImage) return;
+
+    if (!uploadedImage.type.startsWith("image/")) {
+      toast.error("Invalid file type. Please upload a JPG or PNG image.");
       return;
     }
 
-    const validTypes = ["image/jpeg", "image/png", "image/jpg"];
-    if (!validTypes.includes(uploadedImage.type)) {
-      alert("Invalid file type. Please upload a JPG or PNG image.");
-      return;
-    }
     if (uploadedImage.size > 25 * 1024 * 1024) {
-      alert("File size exceeds 25MB. Please upload a smaller image.");
+      toast.error("File size exceeds 25MB. Please upload a smaller image.");
       return;
     }
 
-    // Set image preview
     setPreviewImage(URL.createObjectURL(uploadedImage));
-
-    // Store the uploaded image in the state
-    setBlogData((prevData) => ({
-      ...prevData,
-      thumbnail: uploadedImage,
-    }));
+    setThumbnailFile(uploadedImage);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Handle form submission
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
 
-    const {
-      author,
-      blogTitle,
-      blogContent,
-      blogStatus,
-      blogPublished,
-      blogSlug,
-      thumbnail,
-      seo: { pageTitle, metaKeywords, metaDescription },
-    } = blogData;
+      // Append text fields
+      formData.append("author", data.author);
+      formData.append("blog_title", data.blogTitle);
+      formData.append("blog_content", data.blogContent);
+      formData.append("blog_status", data.blogStatus);
+      formData.append("blog_published", data.blogPublished);
 
-    if (!thumbnail) {
-      alert("Thumbnail is required");
-      return;
-    }
+      // Append SEO data
+      formData.append("seo[page_title]", data.seo.pageTitle);
+      formData.append("seo[meta_description]", data.seo.metaDescription);
+      formData.append("seo[meta_keywords]", JSON.stringify(data.seo.metaKeywords));
 
-    // Restructure the SEO data to match the required format
-    const seoData = {
-      page_title: pageTitle,
-      meta_keywords: metaKeywords,
-      meta_description: metaDescription,
-    };
+      // Append thumbnail if new file uploaded
+      if (thumbnailFile) {
+        formData.append("thumbnail", thumbnailFile);
+      }
 
-    // Prepare the data for dispatch
-    const blogDataToSubmit = {
-      author,
-      blogTitle,
-      blogContent,
-      blogStatus,
-      blogPublished,
-      blogSlug,
-      thumbnail,
-      seo: seoData, // Pass the formatted SEO data here
-    };
-
-    // Dispatch the blog data to Redux store
-    const response = await dispatch(createNewBlog(blogDataToSubmit));
-    if (response.meta.requestStatus === "fulfilled") {
+      await createBlog(formData).unwrap();
+      toast.success("Blog updated successfully!");
       navigate("/blogs");
+    } catch (err) {
+      console.log("Failed to update blog:", err);
+      toast.error(err?.data?.message || "Failed to update blog");
     }
   };
+
+
+
   return (
-    <>
-      <div>
-        <div className="min-h-screen bg-gray-50 mb-8 " style={{ marginLeft: "270px" }}>
-          <main className="container mx-auto px-4 py-6">
-            <form onSubmit={handleSubmit} method="post">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div className="md:col-span-2">
-                  <div className="space-y-6">
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6">
-                        <div className="flex justify-center mt-4">
-                          <h1 className="text-black text-xl font-bold px-6 py-3">
-                            Create Blog
-                          </h1>
-                        </div>
-                      </div>
-
-                      <div className="p-6 pt-0">
-                        <div className="space-y-4">
-                          <div>
-                            <label
-                              className="text-2xl font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              htmlFor="blogTitle"
-                            >
-                              Title
-                            </label>
-                            <input
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              id="blogTitle"
-                              name="blogTitle"
-                              placeholder="Enter title"
-                              value={blogData.blogTitle}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-
-                          <ReactQuill
-                            value={blogData.blogContent}
-                            onChange={(value) =>
-                              handleChange(value, "blogContent")
-                            }
-                            modules={{
-                              toolbar: [
-                                [{ header: [1, 2, 3, false] }],
-                                ["bold", "italic", "underline"],
-                                [{ list: "ordered" }, { list: "bullet" }],
-                                ["link"],
-                              ],
-                            }}
-                            formats={[
-                              "header",
-                              "bold",
-                              "italic",
-                              "underline",
-                              "list",
-                              "bullet",
-                              "link",
-                            ]}
-                            theme="snow"
-                            placeholder="Write your content here..."
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6">
-                        <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                          Author
-                        </h3>
-                      </div>
-                      <div className="p-6 pt-0">
-                        <input
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          placeholder="Author name"
-                          name="author"
-                          value={blogData.author}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    {blog_content_type === "1" && (
-                      <div
-                        className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                        data-v0-t="card"
-                      >
-                        <div className="flex flex-col space-y-1.5 p-6">
-                          <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                            SEO
-                          </h3>
-                        </div>
-                        <div className="p-6 pt-0 space-y-4">
-                          <div>
-                            <label
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              htmlFor="pageTitle"
-                            >
-                              Page Title
-                            </label>
-                            <input
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              id="pageTitle"
-                              name="pageTitle"
-                              placeholder="Enter Meta Tilte"
-                              value={blogData.seo.pageTitle}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-                          <div>
-                            <TagInput
-                              tags={blogData.seo.metaKeywords}
-                              setTags={handleMetaKeywordsChange}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              htmlFor="metaDescription"
-                            >
-                              Meta Description
-                            </label>
-                            <input
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              id="metaKeywords"
-                              name="metaDescription"
-                              placeholder="Enter meta description"
-                              value={blogData.seo.metaDescription}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="md:col-span-1">
-                  <div className="space-y-6">
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6 cursor-pointer">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                            Publish
-                          </h3>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-chevron-up h-4 w-4"
-                          >
-                            <path d="m18 15-6-6-6 6"></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="p-6 pt-0 space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Status
-                          </label>
-                          <select
-                            name="blogStatus"
-                            value={blogData.blogStatus}
-                            onChange={handleChange}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value="Published">Published</option>
-                            <option value="Draft">Draft</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Published on
-                          </label>
-                          <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            type="date"
-                            name="blogPublished"
-                            value={blogData.blogPublished}
-                            onChange={handleChange}
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 text-white bg-blue-500 hover:bg-blue-600 xt-primary-foreground h-10 px-4 py-2 w-full"
-                        >
-                          {/* hover:bg-primary/90 */}
-                          Create
-                        </button>
-                      </div>
-                    </div>
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6 cursor-pointer">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                            Upload Thumbnail
-                          </h3>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-chevron-up h-4 w-4"
-                          >
-                            <path d="m18 15-6-6-6 6"></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="p-6 pt-0">
-                        <div
-                          onClick={() => thumbnailRef.current?.click()}
-                          className="border-2 border-dashed rounded-lg p-4 text-center"
-                        >
-                          <input
-                            className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 hidden"
-                            type="file"
-                            id="thumbnail"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            ref={thumbnailRef}
-                          />
-                          <label
-                            className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-sm text-gray-600"
-                            htmlFor="featured-image"
-                          >
-                            Choose File
-                          </label>
-                          <p className="text-xs text-gray-400 mt-1">
-                            No file chosen
-                          </p>
-                          {/* Display image preview if uploaded */}
-                          {previewImage && (
-                            <div className="mt-4">
-                              <img
-                                src={previewImage}
-                                alt="Thumbnail Preview"
-                                className="w-32 h-32 object-cover rounded-md mx-auto"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </main>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">Create Blog</h1>
+          </div>
         </div>
       </div>
-    </>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Main Content */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Title
+            </label>
+            <input
+              type="text"
+              {...register("blogTitle", { required: "Title is required" })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter blog title"
+            />
+            {errors.blogTitle && (
+              <p className="mt-1 text-sm text-red-600">{errors.blogTitle.message}</p>
+            )}
+          </div>
+
+          {/* Content */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Content
+            </label>
+            <Controller
+              name="blogContent"
+              control={control}
+              rules={{ required: "Content is required" }}
+              render={({ field }) => (
+                <ReactQuill
+                  {...field}
+                  theme="snow"
+                  className="bg-white rounded-lg"
+                  placeholder="Write your blog content..."
+                />
+              )}
+            />
+            {errors.blogContent && (
+              <p className="mt-1 text-sm text-red-600">{errors.blogContent.message}</p>
+            )}
+          </div>
+
+          {/* Author */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Author
+            </label>
+            <input
+              type="text"
+              {...register("author", { required: "Author is required" })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter author name"
+            />
+            {errors.author && (
+              <p className="mt-1 text-sm text-red-600">{errors.author.message}</p>
+            )}
+          </div>
+        </div>
+
+        {/* SEO Section */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <h2 className="text-lg font-semibold text-gray-900">SEO</h2>
+
+          {/* Page Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Page Title
+            </label>
+            <input
+              type="text"
+              {...register("seo.pageTitle")}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter SEO page title"
+            />
+          </div>
+
+          {/* Meta Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Meta Description
+            </label>
+            <textarea
+              {...register("seo.metaDescription")}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter meta description"
+            />
+          </div>
+
+          {/* Meta Keywords */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Meta Keywords
+            </label>
+            <Controller
+              name="seo.metaKeywords"
+              control={control}
+              render={({ field }) => (
+                <TagInput
+                  tags={field.value}
+                  setTags={field.onChange}
+                />
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Publish Settings */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <h2 className="text-lg font-semibold text-gray-900">Publish</h2>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select
+              {...register("blogStatus")}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="Published">Published</option>
+              <option value="Draft">Draft</option>
+              <option value="Archived">Archived</option>
+            </select>
+          </div>
+
+          {/* Published Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Published on
+            </label>
+            <input
+              type="date"
+              {...register("blogPublished")}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Thumbnail */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Thumbnail</h2>
+
+          <div className="flex items-center space-x-4">
+            <label>
+              <div className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors">
+
+                <Upload className="w-4 h-4" />
+                <span>Choose File</span>
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/jpg"
+                onChange={handleImageUpload}
+                // The input is hidden
+                className="hidden"
+              />
+            </label>
+            <span className="text-sm text-gray-500">
+              {thumbnailFile ? thumbnailFile.name : "No new file chosen"}
+            </span>
+          </div>
+
+          {/* Image Preview */}
+          {previewImage && (
+            <div className="mt-4">
+              <div className="relative w-full h-64  bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={previewImage}
+                  alt="Blog thumbnail preview"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <button
+            disabled={isCreating}
+            className={`flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors ${isCreating ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <Save className="w-5 h-5" />
+            <span>{isCreating ? "Creating..." : "Create Blog"}</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

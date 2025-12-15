@@ -1,278 +1,165 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { updateCoupon } from "../Redux/Slices/couponSlice";
-import { fetchProducts, useFetchProductsQuery } from "../Redux/Slices/productSlice";
-import { fetchCategories } from "../Redux/Slices/categorySlice";
-import { fetchSubcategories } from "../Redux/Slices/categorySlice";
-import "./CouponModal.scss";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import {
+  useGetCategoriesQuery,
+  useGetSubcategoriesQuery,
+} from "../Redux/Slices/categorySlice";
+import { useFetchProductsQuery } from "../Redux/Slices/productSlice";
+import { useUpdateCouponMutation } from "../Redux/Slices/couponSlice";
 
 const EditCoupons = ({ coupon, onClose }) => {
-  const dispatch = useDispatch();
-  const { data: products = [], isLoading, isError } = useFetchProductsQuery();
-  const { categories } = useSelector((state) => state.category);
-  const { subcategories } = useSelector((state) => state.category);
+  const { data: products = [] } = useFetchProductsQuery();
+  const { data: categories = [] } = useGetCategoriesQuery();
 
-  const [formData, setFormData] = useState({
-    code: coupon.code,
-    discountType: coupon.discountType,
-    discountValue: coupon.discountValue,
-    applicableProducts: coupon.applicableProducts || [],
-    // applicableCategories: coupon.applicableCategories || [],
-    // applicableSubcategories: coupon.applicableSubcategories || [],
-    minCartAmount: coupon.minCartAmount || "",
-    status: coupon.status,
-    expiresAt: coupon.expiresAt ? coupon.expiresAt.split("T")[0] : "",
-    usageLimit: coupon.usageLimit || "",
-  });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm();
 
-  const [errors, setErrors] = useState({});
+  const selectedCategories = watch("applicableCategories") || [];
+
+  const { data: subcategoriesMap = {} } = useGetSubcategoriesQuery(
+    selectedCategories,
+    { skip: selectedCategories.length === 0 }
+  );
+
+  const [updateCoupon, { isLoading }] = useUpdateCouponMutation();
 
   useEffect(() => {
-    dispatch(fetchCategories());
-
-    // Fetch subcategories for each category in the coupon
-    if (coupon.applicableCategories && coupon.applicableCategories.length > 0) {
-      coupon.applicableCategories.forEach((categoryId) => {
-        dispatch(fetchSubcategories(categoryId));
-      });
-    }
-  }, [dispatch, coupon]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
+    reset({
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      applicableProducts: coupon.applicableProducts || [],
+      applicableCategories: coupon.applicableCategories || [],
+      applicableSubcategories: coupon.applicableSubcategories || [],
+      minCartAmount: coupon.minCartAmount || "",
+      status: coupon.status,
+      expiresAt: coupon.expiresAt?.split("T")[0] || "",
+      usageLimit: coupon.usageLimit || "",
     });
-  };
+  }, [coupon, reset]);
 
-  const handleMultiSelect = (e, field) => {
-    const options = e.target.options;
-    const selectedValues = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selectedValues.push(options[i].value);
-      }
-    }
-    setFormData({
-      ...formData,
-      [field]: selectedValues,
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length === 0) {
-      dispatch(updateCoupon({ id: coupon.coupon_id, couponData: formData }))
-        .unwrap()
-        .then(() => {
-          onClose();
-        })
-        .catch((error) => {
-          console.error("Error updating coupon:", error);
-        });
-    } else {
-      setErrors(validationErrors);
-    }
-  };
-
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.code) errors.code = "Coupon code is required";
-    if (!formData.discountValue)
-      errors.discountValue = "Discount value is required";
-    if (
-      formData.discountType === "percentage" &&
-      formData.discountValue > 100
-    ) {
-      errors.discountValue = "Percentage discount cannot exceed 100%";
-    }
-    return errors;
-  };
-
-  const handleCategoryChange = (e) => {
-    const selectedCategoryIds = Array.from(e.target.selectedOptions).map(
-      (option) => option.value
-    );
-    setFormData({
-      ...formData,
-      applicableCategories: selectedCategoryIds,
-      applicableSubcategories: [], // Reset subcategories when categories change
-    });
-
-    // Fetch subcategories for each selected category
-    selectedCategoryIds.forEach((categoryId) => {
-      dispatch(fetchSubcategories(categoryId));
-    });
+  const onSubmit = async (data) => {
+    await updateCoupon({
+      id: coupon.coupon_id,
+      couponData: data,
+    }).unwrap();
+    onClose();
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>Edit Coupon</h2>
-          <button className="close-btn" onClick={onClose}>
-            &times;
-          </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-lg">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Edit Coupon</h2>
+          <button onClick={onClose} className="text-xl">&times;</button>
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Coupon Code*</label>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Code */}
+          <input
+            {...register("code", { required: "Coupon code is required" })}
+            className="w-full rounded border px-3 py-2"
+            placeholder="Coupon Code"
+          />
+          {errors.code && <p className="text-sm text-red-500">{errors.code.message}</p>}
+
+          {/* Discount */}
+          <div className="grid grid-cols-2 gap-4">
+            <select {...register("discountType")} className="rounded border px-3 py-2">
+              <option value="percentage">Percentage</option>
+              <option value="flat">Flat</option>
+            </select>
+
             <input
-              type="text"
-              name="code"
-              value={formData.code}
-              onChange={handleChange}
-              placeholder="e.g., SUMMER20"
+              type="number"
+              {...register("discountValue", {
+                required: "Discount value required",
+                validate: (v) =>
+                  watch("discountType") === "percentage" && v > 100
+                    ? "Percentage cannot exceed 100"
+                    : true,
+              })}
+              className="rounded border px-3 py-2"
+              placeholder="Discount Value"
             />
-            {errors.code && <span className="error">{errors.code}</span>}
           </div>
+          {errors.discountValue && (
+            <p className="text-sm text-red-500">{errors.discountValue.message}</p>
+          )}
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Discount Type*</label>
-              <select
-                name="discountType"
-                value={formData.discountType}
-                onChange={handleChange}
-              >
-                <option value="percentage">Percentage</option>
-                <option value="flat">Flat Amount</option>
-              </select>
-            </div>
+          {/* Products */}
+          <select
+            multiple
+            {...register("applicableProducts")}
+            className="w-full rounded border px-3 py-2"
+          >
+            {products.map((p) => (
+              <option key={p.product_id} value={p.product_id}>
+                {p.product_name}
+              </option>
+            ))}
+          </select>
 
-            <div className="form-group">
-              <label>
-                Discount Value*
-                {formData.discountType === "percentage" ? " (%)" : " (₹)"}
-              </label>
-              <input
-                type="number"
-                name="discountValue"
-                value={formData.discountValue}
-                onChange={handleChange}
-                placeholder={
-                  formData.discountType === "percentage" ? "10" : "100"
-                }
-                min="0"
-                max={formData.discountType === "percentage" ? "100" : undefined}
-              />
-              {errors.discountValue && (
-                <span className="error">{errors.discountValue}</span>
+          {/* Categories */}
+          <select
+            multiple
+            {...register("applicableCategories")}
+            onChange={(e) =>
+              setValue(
+                "applicableCategories",
+                Array.from(e.target.selectedOptions).map((o) => o.value)
+              )
+            }
+            className="w-full rounded border px-3 py-2"
+          >
+            {categories.map((c) => (
+              <option key={c.category_id} value={c.category_id}>
+                {c.category_name}
+              </option>
+            ))}
+          </select>
+
+          {/* Subcategories */}
+          {selectedCategories.length > 0 && (
+            <select
+              multiple
+              {...register("applicableSubcategories")}
+              className="w-full rounded border px-3 py-2"
+            >
+              {selectedCategories.flatMap((catId) =>
+                (subcategoriesMap[catId] || []).map((sub) => (
+                  <option
+                    key={sub.Subcategory_id}
+                    value={sub.Subcategory_id}
+                  >
+                    {sub.Subcategory_name}
+                  </option>
+                ))
               )}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Minimum Cart Amount (₹)</label>
-            <input
-              type="number"
-              name="minCartAmount"
-              value={formData.minCartAmount}
-              onChange={handleChange}
-              placeholder="0"
-              min="0"
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Expiry Date</label>
-              <input
-                type="date"
-                name="expiresAt"
-                value={formData.expiresAt}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Usage Limit</label>
-            <input
-              type="number"
-              name="usageLimit"
-              value={formData.usageLimit}
-              onChange={handleChange}
-              placeholder="Leave empty for unlimited"
-              min="1"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Applicable Products</label>
-            <select
-              multiple
-              value={formData.applicableProducts}
-              onChange={(e) => handleMultiSelect(e, "applicableProducts")}
-            >
-              {products.map((product) => (
-                <option key={product.product_id} value={product.product_id}>
-                  {product.product_name}
-                </option>
-              ))}
             </select>
-            <small>Hold Ctrl/Cmd to select multiple</small>
-          </div>
-          {/* 
-          <div className="form-group">
-            <label>Applicable Categories</label>
-            <select
-              multiple
-              value={formData.applicableCategories}
-              onChange={handleCategoryChange}
+          )}
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded border px-4 py-2"
             >
-              {categories.map((category) => (
-                <option key={category.category_id} value={category.category_id}>
-                  {category.category_name}
-                </option>
-              ))}
-            </select>
-            <small>Hold Ctrl/Cmd to select multiple</small>
-          </div>
-
-          {formData.applicableCategories.length > 0 && (
-            <div className="form-group">
-              <label>Applicable Subcategories</label>
-              <select
-                multiple
-                value={formData.applicableSubcategories}
-                onChange={(e) =>
-                  handleMultiSelect(e, "applicableSubcategories")
-                }
-              >
-                {formData.applicableCategories.flatMap((categoryId) => {
-                  const categorySubs = subcategories[categoryId] || [];
-                  return categorySubs.map((sub) => (
-                    <option key={sub.subcategory_id} value={sub.subcategory_id}>
-                      {sub.subcategory_name}
-                    </option>
-                  ));
-                })}
-              </select>
-              <small>Hold Ctrl/Cmd to select multiple</small>
-            </div>
-          )} */}
-
-          <div className="form-actions">
-            <button type="button" className="cancel-btn" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="submit-btn">
-              Update Coupon
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="rounded bg-blue-600 px-5 py-2 text-white"
+            >
+              {isLoading ? "Updating..." : "Update Coupon"}
             </button>
           </div>
         </form>

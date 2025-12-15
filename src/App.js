@@ -31,6 +31,32 @@ import store from "./Redux/Store";
 import SubCategoryList from "./SubCategory/SubCategoryList";
 import UserDetails from "./User/UserDetails";
 import UsersList from "./User/UsersList";
+import CreateBlog from "./Blogs/CreateBlog";
+
+export const onlineAdminRoutes = [
+  { path: "/OnlineAdmin", element: <HomeComponent /> },
+  { path: "/NewProduct", element: <NewProduct /> },
+  { path: "/edit-product/:id", element: <NewProduct /> },
+  { path: "/blog/description", element: <BlogDescription /> },
+
+  { path: "/blogs", element: <BlogList /> },
+  { path: "/blog/create", element: <CreateBlog /> },
+  { path: "/blog/edit/:id", element: <EditBlog /> },
+  { path: "/users", element: <UsersList /> },
+  { path: "/users/:id", element: <UserDetails /> },
+  { path: "/DownloadQR", element: <DownloadQR /> },
+  { path: "/products", element: <ProductTable /> },
+  { path: "/OfferBanner", element: <OfferBannerForm /> },
+  { path: "/OfferBannerHistory", element: <OfferBannerHistory /> },
+  { path: "/category", element: <CategoryList /> },
+  { path: "/Coupons", element: <CouponsList /> },
+  { path: "/sub_category", element: <SubCategoryList /> },
+  { path: "/OrderList", element: <OrderList /> },
+  { path: "/LandingEditor", element: <LandingEditor /> },
+  { path: "/lp-uploads-history", element: <LPUploadsHistory /> },
+  { path: "/leads", element: <LeadsList /> },
+];
+
 
 function App() {
   return (
@@ -47,28 +73,11 @@ function App() {
 
             {/* ---------------- ONLINE LAYOUT ---------------- */}
             <Route element={<OnlineLayout />}>
-              <Route path="/OnlineAdmin" element={<HomeComponent />} />
-              <Route path="/NewProduct" element={<NewProduct />} />
-              <Route path="/edit-product/:id" element={<NewProduct />} />
-              <Route path="/blog/description" element={<BlogDescription />} />
-              {/* ---------------- PAGES WITHOUT SPECIFIC LAYOUT ---------------- */}
-              <Route path="/blogs" element={<BlogList />} />
-              <Route path="/blog/edit/:id" element={<EditBlog />} />
-              <Route path="/users" element={<UsersList />} />
-              <Route path="/users/:id" element={<UserDetails />} />
-              <Route path="/DownloadQR" element={<DownloadQR />} />
-              <Route path="/products" element={<ProductTable />} />
-              <Route path="/OfferBanner" element={<OfferBannerForm />} />
-              <Route path="/OfferBannerHistory" element={<OfferBannerHistory />} />
-              <Route path="/category" element={<CategoryList />} />
-              <Route path="/Coupons" element={<CouponsList />} />
-              <Route path="/sub_category" element={<SubCategoryList />} />
-              <Route path="/OrderList" element={<OrderList />} />
-              <Route path="/LandingEditor" element={<LandingEditor />} />
-              <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
-              <Route path="/leads" element={<LeadsList />} />
-
+              {onlineAdminRoutes.map(({ path, element }) => (
+                <Route key={path} path={path} element={element} />
+              ))}
             </Route>
+
 
             {/* ---------------- OFFLINE LAYOUT ---------------- */}
             <Route element={<OfflineLayout />}>

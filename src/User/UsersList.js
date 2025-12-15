@@ -12,9 +12,9 @@ const UsersList = () => {
   // Fetch users with RTK Query (Auto-fetches, caching, loading & error handled)
   const {
     data: allUsers = [],
-    isLoading,
-    isError,
+    success,
   } = useGetAllUsersQuery();
+
 
   const handleEdit = (user) => {
     navigate(`/users/${user.user_id}`);
@@ -30,11 +30,9 @@ const UsersList = () => {
         </div>
 
         {/* Loading & Error */}
-        {isLoading ? (
-          <p className="text-gray-500">Loading users...</p>
-        ) : isError ? (
+        {success ? (
           <p className="text-red-500">Something went wrong</p>
-        ) : allUsers.length === 0 ? (
+        ) : allUsers.count === 0 ? (
           <p className="text-gray-600">No Users Found</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -49,8 +47,8 @@ const UsersList = () => {
               </thead>
 
               <tbody>
-                {allUsers.map ? (
-                  allUsers.map((user, index) => (
+                {allUsers.data ? (
+                  allUsers.data.map((user, index) => (
                     <tr key={user.user_id} className="hover:bg-gray-50 transition">
                       <td className="px-4 py-3 border-b">{index + 1}</td>
                       <td className="px-4 py-3 border-b">{user.name}</td>

@@ -1,103 +1,115 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createSlice } from "@reduxjs/toolkit";
+import baseQueryOnline from "./api/baseQuery";
 
-// Fetch all categories
-export const fetchCategories = createAsyncThunk(
-  "category/fetchCategories",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/categories/findAll`);
-      return response.data?.data || [];
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch categories"
-      );
-    }
-  }
-);
+/* ===========================
+   RTK QUERY API
+=========================== */
 
-// Fetch subcategories by category ID
-export const fetchSubcategories = createAsyncThunk(
-  "category/fetchSubcategories",
-  async (categoryId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/subcategories/subcategories-by-category/${categoryId}`
-      );
-      return { categoryId, subcategories: response.data?.data || [] };
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch subcategories"
-      );
-    }
-  }
-);
+export const categoryApi = createApi({
+  reducerPath: "categoryApi",
+  baseQuery: baseQueryOnline,
+  tagTypes: ["Categories", "Subcategories"],
 
-// Create category
-export const createCategory = createAsyncThunk(
-  "category/createCategory",
-  async ({ category_name, category_description }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${BASE_URL}/api/categories/create`, {
-        category_name,
-        category_description,
-      });
+  endpoints: (builder) => ({
+    /* ---------- CATEGORY ---------- */
 
-      return response.data.data; // Return newly created category
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to create category"
-      );
-    }
-  }
-);
+    // GET all categories
+    getCategories: builder.query({
+      query: () => "/api/categories/findAll",
+      transformResponse: (res) => res?.data || [],
+      providesTags: ["Categories"],
+    }),
 
-// **Update category**
-export const updateCategory = createAsyncThunk(
-  "category/updateCategory",
-  async ({ id, category_name, category_description, status }, { rejectWithValue }) => {
-    try {
-      const response = await axios.put(`${BASE_URL}/api/categories/update/${id}`, {
-        category_name,
-        category_description,
-        status,
-      });
+    // CREATE category
+    createCategory: builder.mutation({
+      query: (body) => ({
+        url: "/api/categories/create",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Categories"],
+    }),
 
-      return response.data.data; // Return updated category
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update category"
-      );
-    }
-  }
-);
+    // UPDATE category
+    updateCategory: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/api/categories/update/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Categories"],
+    }),
 
-// **Delete category**
-export const deleteCategory = createAsyncThunk(
-  "category/deleteCategory",
-  async (id, { rejectWithValue }) => {
-    try {
-      await axios.delete(`${BASE_URL}/api/categories/delete/${id}`);
-      return id; // Return deleted category ID
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to delete category"
-      );
-    }
-  }
-);
+    // DELETE category
+    deleteCategory: builder.mutation({
+      query: (id) => ({
+        url: `/api/categories/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Categories"],
+    }),
+
+    /* ---------- SUBCATEGORY ---------- */
+
+    // GET subcategories by category
+    getSubcategories: builder.query({
+      query: (categoryId) =>
+        `/api/subcategories/subcategories-by-category/${categoryId}`,
+      transformResponse: (res) => res?.data || [],
+      providesTags: (result, error, categoryId) => [
+        { type: "Subcategories", id: categoryId },
+      ],
+    }),
+
+    // CREATE subcategory
+    createSubcategory: builder.mutation({
+      query: (body) => ({
+        url: "/api/subcategories/create",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Subcategories"],
+    }),
+
+    // UPDATE subcategory
+    updateSubcategory: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/api/subcategories/update/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Subcategories"],
+    }),
+
+    // DELETE subcategory
+    deleteSubcategory: builder.mutation({
+      query: (id) => ({
+        url: `/api/subcategories/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Subcategories"],
+    }),
+  }),
+});
+
+/* ===========================
+   UI STATE SLICE
+=========================== */
 
 const categorySlice = createSlice({
   name: "category",
   initialState: {
     categories: [],
     subcategories: {},
+
     selectedCategory: null,
     selectedSubcategory: null,
+
     isLoading: false,
     error: null,
   },
+
   reducers: {
     setSelectedCategory: (state, action) => {
       state.selectedCategory = action.payload;
@@ -107,58 +119,85 @@ const categorySlice = createSlice({
       state.selectedSubcategory = action.payload;
     },
   },
+
+  /* ===========================
+     EXTRA REDUCERS (RTK QUERY)
+  =========================== */
+
   extraReducers: (builder) => {
+    /* ---------- CATEGORY ---------- */
+
     builder
-      .addCase(fetchCategories.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchCategories.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.categories = action.payload;
-      })
-      .addCase(fetchCategories.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
-
-      // Create Category
-      .addCase(createCategory.fulfilled, (state, action) => {
-        state.categories.push(action.payload);
-      })
-      .addCase(createCategory.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // Fetch Subcategories
-      .addCase(fetchSubcategories.fulfilled, (state, action) => {
-        const { categoryId, subcategories } = action.payload;
-        state.subcategories[categoryId] = subcategories;
-      })
-      .addCase(fetchSubcategories.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // **Update Category**
-      .addCase(updateCategory.fulfilled, (state, action) => {
-        const index = state.categories.findIndex(cat => cat.id === action.payload.id);
-        if (index !== -1) {
-          state.categories[index] = action.payload;
+      .addMatcher(
+        categoryApi.endpoints.getCategories.matchPending,
+        (state) => {
+          state.isLoading = true;
+          state.error = null;
         }
-      })
-      .addCase(updateCategory.rejected, (state, action) => {
-        state.error = action.payload;
-      })
+      )
+      .addMatcher(
+        categoryApi.endpoints.getCategories.matchFulfilled,
+        (state, action) => {
+          state.isLoading = false;
+          state.categories = action.payload;
+        }
+      )
+      .addMatcher(
+        categoryApi.endpoints.getCategories.matchRejected,
+        (state, action) => {
+          state.isLoading = false;
+          state.error = action.error?.message;
+        }
+      );
 
-      // **Delete Category**
-      .addCase(deleteCategory.fulfilled, (state, action) => {
-        state.categories = state.categories.filter(cat => cat.id !== action.payload);
-      })
-      .addCase(deleteCategory.rejected, (state, action) => {
-        state.error = action.payload;
-      });
+    /* ---------- SUBCATEGORY ---------- */
+
+    builder
+      .addMatcher(
+        categoryApi.endpoints.getSubcategories.matchPending,
+        (state) => {
+          state.isLoading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        categoryApi.endpoints.getSubcategories.matchFulfilled,
+        (state, action) => {
+          state.isLoading = false;
+          const categoryId = action.meta.arg.originalArgs;
+          state.subcategories[categoryId] = action.payload;
+        }
+      )
+      .addMatcher(
+        categoryApi.endpoints.getSubcategories.matchRejected,
+        (state, action) => {
+          state.isLoading = false;
+          state.error = action.error?.message;
+        }
+      );
   },
 });
 
-export const { setSelectedCategory, setSelectedSubcategory } = categorySlice.actions;
+/* ===========================
+   EXPORTS
+=========================== */
+
+// RTK Query Hooks
+export const {
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
+
+  useGetSubcategoriesQuery,
+  useCreateSubcategoryMutation,
+  useUpdateSubcategoryMutation,
+  useDeleteSubcategoryMutation,
+} = categoryApi;
+
+// UI Actions
+export const { setSelectedCategory, setSelectedSubcategory } =
+  categorySlice.actions;
+
+// Reducer
 export default categorySlice.reducer;

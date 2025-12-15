@@ -1,26 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCoupons, deleteCoupon } from "../Redux/Slices/couponSlice";
-import "./CouponList.scss";
-import Sidebar from "../Components/Sidebar/sidebar";
-import AddCoupon from "./AddCoupons";
-import EditCoupon from "./EditCoupons";
+import React, { useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import {
+  useGetCouponsQuery,
+  useDeleteCouponMutation,
+} from "../Redux/Slices/couponSlice";
+import AddCoupon from "./AddCoupons";
+import EditCoupon from "./EditCoupons";
 
 dayjs.extend(relativeTime);
 
 const CouponsList = () => {
-  const dispatch = useDispatch();
-  const { coupons, isLoading, error } = useSelector((state) => state.coupon);
+  const { data: coupons = [], isLoading, isError, error } = useGetCouponsQuery();
+  const [deleteCoupon] = useDeleteCouponMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
-
-  useEffect(() => {
-    dispatch(fetchCoupons());
-  }, [dispatch]);
 
   const handleEdit = (coupon) => {
     setSelectedCoupon(coupon);
@@ -28,45 +24,38 @@ const CouponsList = () => {
   };
 
   const handleDelete = async (id) => {
-    await dispatch(deleteCoupon(id));
-    dispatch(fetchCoupons());
+    if (window.confirm("Are you sure you want to delete this coupon?")) {
+      await deleteCoupon(id);
+    }
   };
 
   const formatCouponDate = (expiryDateString) => {
     if (!expiryDateString) return "N/A";
     const expiryDate = dayjs(expiryDateString);
     const now = dayjs();
-    const diffText = expiryDate.diff(now, "day") > 0
-      ? `in ${expiryDate.diff(now, "day")} day(s)`
-      : `${-expiryDate.diff(now, "day")} day(s) ago`;
-
+    const diffText =
+      expiryDate.diff(now, "day") > 0
+        ? `in ${expiryDate.diff(now, "day")} day(s)`
+        : `${-expiryDate.diff(now, "day")} day(s) ago`;
     return `${expiryDate.format("DD MMM YYYY, hh:mm A")} (${diffText})`;
   };
 
-
   return (
     <div className="flex">
-
-
-      {/* Main Container */}
       <div className="flex-1 p-6">
-
-        {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h1 className="text-2xl font-bold">All Coupons</h1>
-
           <button
-            className="bg-blue-500 mx-2 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow"
+            className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow"
             onClick={() => setIsModalOpen(true)}
           >
             Create Coupon
           </button>
         </div>
 
-        {/* Table */}
         {isLoading ? (
           <p>Loading coupons...</p>
-        ) : error ? (
+        ) : isError ? (
           <p className="text-red-600 font-medium">{error}</p>
         ) : coupons.length === 0 ? (
           <p className="text-gray-600 italic">No Coupons Found</p>
@@ -85,7 +74,6 @@ const CouponsList = () => {
                   <th className="px-4 py-2 border">Actions</th>
                 </tr>
               </thead>
-
               <tbody>
                 {coupons.map((coupon, index) => (
                   <tr
@@ -95,30 +83,27 @@ const CouponsList = () => {
                     <td className="px-4 py-2 border">{index + 1}</td>
                     <td className="px-4 py-2 border">{coupon.code}</td>
                     <td className="px-4 py-2 border">{coupon.discountType}</td>
-
                     <td className="px-4 py-2 border">
                       {coupon.discountType === "percentage"
                         ? `${coupon.discountValue}%`
                         : `₹${coupon.discountValue}`}
                     </td>
-
-                    <td className="px-4 py-2 border">₹{coupon.minCartAmount || 0}</td>
-
+                    <td className="px-4 py-2 border">
+                      ₹{coupon.minCartAmount || 0}
+                    </td>
                     <td className="px-4 py-2 border">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${coupon.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
                           }`}
                       >
                         {coupon.status}
                       </span>
                     </td>
-
                     <td className="px-4 py-2 border">
                       {formatCouponDate(coupon.expiresAt)}
                     </td>
-
                     <td className="px-4 py-2 border space-x-2">
                       <button
                         className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
@@ -126,7 +111,6 @@ const CouponsList = () => {
                       >
                         Edit
                       </button>
-
                       <button
                         className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                         onClick={() => handleDelete(coupon.coupon_id)}
@@ -141,8 +125,15 @@ const CouponsList = () => {
           </div>
         )}
       </div>
-    </div>
 
+      {isModalOpen && <AddCoupon onClose={() => setIsModalOpen(false)} />}
+      {isEditModalOpen && (
+        <EditCoupon
+          onClose={() => setIsEditModalOpen(false)}
+          coupon={selectedCoupon}
+        />
+      )}
+    </div>
   );
 };
 
