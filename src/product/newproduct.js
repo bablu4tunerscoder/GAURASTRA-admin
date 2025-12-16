@@ -221,7 +221,7 @@ const NewProduct = () => {
 
       {/* BOTTOM BUTTONS */}
       {isEditMode ? (
-        <div className="w-full bg-white border-t py-4 px-6 flex justify-end gap-4 mt-6 shadow-sm">
+        <div className="w-full bg-white py-4 px-6 flex justify-end gap-4 mt-6 shadow-sm">
           <button
             className="bg-gray-500 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
             onClick={handleCancel}
@@ -239,7 +239,7 @@ const NewProduct = () => {
           </button>
         </div>
       ) : (
-        <div className="w-full bg-white border-t py-4 px-6 flex justify-end gap-4 mt-6 shadow-sm">
+        <div className="w-full bg-white py-4 px-6 flex justify-end gap-4 mt-6 shadow-sm">
           <button
             className="bg-red-500 flex-1 hover:bg-red-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
             onClick={handleCancel}

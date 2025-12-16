@@ -148,82 +148,92 @@ const ImageVideoManager = ({ images = [] }) => {
      UI
   ======================== */
   return (
-    <div className="image-video-manager">
-      <h2 className="title">Images and Videos</h2>
+    <div className="w-full bg-white rounded-xl shadow p-6">
+      <h2 className="text-xl font-semibold mb-4">Images and Videos</h2>
 
-      {error && <p className="error-message">{error}</p>}
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
-      {loading && <p className="loading-message">Uploading files...</p>}
-      {saving && <p className="loading-message">Saving images...</p>}
+      {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+      {errorMessage && <p className="text-red-500 text-sm mb-2">{errorMessage}</p>}
+      {loading && <p className="text-blue-500 text-sm mb-2">Uploading files...</p>}
+      {saving && <p className="text-blue-500 text-sm mb-2">Saving images...</p>}
 
-      <div className="media-wrapper">
-        <div className="main-image">
-          <img
-            src={displayImages[0]?.url || coverimg}
-            alt="Cover"
-            className="media-content"
-            onError={(e) => (e.target.src = coverimg)}
-          />
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-1/3">
+          <div className="aspect-square border rounded-lg overflow-hidden">
+            <img
+              src={displayImages[0]?.url || coverimg}
+              alt="Cover"
+              className="w-full h-full object-cover"
+              onError={(e) => (e.target.src = coverimg)}
+            />
+          </div>
         </div>
 
-        <div className="media-container">
-          {displayImages.map((media, index) => (
-            <div
-              key={media.id || index}
-              className="media-item"
-              draggable
-              onDragStart={() => setDraggingIndex(index)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => handleDrop(draggingIndex, index)}
-            >
-              <img
-                src={media.url}
-                alt="media"
-                className="media-content"
-                onError={(e) => (e.target.src = placeimg)}
-              />
-
-              <div className="overlay">
-                <FaArrowsAlt className="drag-icon" />
-                <FaTimes
-                  className="remove-icon"
-                  onClick={() =>
-                    isEditMode && media.id
-                      ? handleDelete(media.id, index)
-                      : handleRemove(index)
-                  }
+        <div className="w-full lg:w-2/3">
+          <div className="flex flex-wrap gap-4">
+            {displayImages.map((media, index) => (
+              <div
+                key={media.id || index}
+                className="relative w-24 h-24 border rounded-lg overflow-hidden cursor-move group"
+                draggable
+                onDragStart={() => setDraggingIndex(index)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(draggingIndex, index)}
+              >
+                <img
+                  src={media.url}
+                  alt="media"
+                  className="w-full h-full object-cover"
+                  onError={(e) => (e.target.src = placeimg)}
                 />
-              </div>
-            </div>
-          ))}
 
-          {displayImages.length < 8 && (
-            <div className="upload-box">
-              <input
-                type="file"
-                id="fileInput"
-                accept="image/*,video/*"
-                multiple
-                hidden
-                onChange={handleFileUpload}
-              />
-              <label htmlFor="fileInput" className="upload-btn">
-                <FaUpload />
-                <span>Upload</span>
-              </label>
-            </div>
-          )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition">
+                  <FaArrowsAlt className="text-white text-lg" />
+                  <FaTimes
+                    className="text-white text-lg cursor-pointer"
+                    onClick={() =>
+                      isEditMode && media.id
+                        ? handleDelete(media.id, index)
+                        : handleRemove(index)
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+
+            {displayImages.length < 8 && (
+              <div className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center">
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept="image/*,video/*"
+                  multiple
+                  hidden
+                  onChange={handleFileUpload}
+                />
+                <label
+                  htmlFor="fileInput"
+                  className="flex flex-col items-center text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                >
+                  <FaUpload className="text-lg" />
+                  <span>Upload</span>
+                </label>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <button
-        onClick={isEditMode ? handleUpdateImages : handleSaveImages}
-        className="save-images-btn"
-        disabled={loading || saving || updating}
-      >
-        {isEditMode ? "Update Images" : "Save Images"}
-      </button>
+      <div className="mt-6">
+        <button
+          onClick={isEditMode ? handleUpdateImages : handleSaveImages}
+          disabled={loading || saving || updating}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 transition"
+        >
+          {isEditMode ? "Update Images" : "Save Images"}
+        </button>
+      </div>
     </div>
+
   );
 };
 
