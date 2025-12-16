@@ -14,7 +14,6 @@ const EditBlog = () => {
   const { state } = useLocation();
   const { id } = useParams();
   const [updateBlog, { isLoading: isUpdating }] = useUpdateBlogMutation();
-  console.log(state)
 
   const imageUrl = state?.thumbnail?.secure_url ? getImageUrl(state.thumbnail.secure_url) : null;
   const [previewImage, setPreviewImage] = useState(imageUrl);

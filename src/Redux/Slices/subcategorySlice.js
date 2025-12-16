@@ -1,104 +1,65 @@
 // src/Redux/Slices/subcategorySlice.js
 
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOnline from "./api/baseQuery";
 
-// Fetch subcategories by category ID
-export const fetchSubcategories = createAsyncThunk(
-  "subcategory/fetchSubcategories",
-  async (categoryId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/subcategories/subcategories-by-category/${categoryId}`
-      );
-      return { categoryId, subcategories: response.data?.data || [] };
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch subcategories"
-      );
-    }
-  }
-);
+/* =========================
+   RTK QUERY API
+========================= */
+export const subcategoryApi = createApi({
+  reducerPath: "subcategoryApi",
+  baseQuery: baseQueryOnline,
+  tagTypes: ["Subcategory"],
+  endpoints: (builder) => ({
+    fetchSubcategories: builder.query({
+      query: (categoryId) => ({
+        url: `/api/subcategories/subcategories-by-category/${categoryId}`,
+        method: "GET",
+      }),
+      providesTags: [{ type: "Subcategory", id: "LIST" }],
+    }),
 
-// ✅ Create SubCategory with optional gender
-export const createSubCategory = createAsyncThunk(
-  "subcategory/createSubCategory",
-  async (
-    { category_id, Subcategory_name, Subcategory_description, gender },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/api/subcategories/create`,
-        {
-          category_id,
-          Subcategory_name,
-          Subcategory_description,
-          ...(gender && { gender }), // ✅ Include gender only if present
-        }
-      );
+    createSubCategory: builder.mutation({
+      query: (body) => ({
+        url: "/api/subcategories/create",
+        method: "POST",
+        data: body,
+      }),
+      invalidatesTags: [{ type: "Subcategory", id: "LIST" }],
+    }),
 
-      return response.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to create subcategory"
-      );
-    }
-  }
-);
+    updateSubCategory: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/api/subcategories/update/${id}`,
+        method: "PUT",
+        data: body,
+      }),
+      invalidatesTags: (r, e, arg) => [
+        { type: "Subcategory", id: arg.id },
+      ],
+    }),
 
-// Update SubCategory
-export const updateSubCategory = createAsyncThunk(
-  "subcategory/updateSubCategory",
-  async (
-    {
-      id,
-      category_id,
-      Subcategory_name,
-      Subcategory_description,
-      status,
-      gender, // ✅ Accept optional gender
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axios.put(
-        `${BASE_URL}/api/subcategories/update/${id}`,
-        {
-          category_id,
-          Subcategory_name,
-          Subcategory_description,
-          status,
-          ...(gender && { gender }), // ✅ Send only if present
-        }
-      );
+    deleteSubCategory: builder.mutation({
+      query: (id) => ({
+        url: `/api/subcategories/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (r, e, id) => [{ type: "Subcategory", id }],
+    }),
+  }),
+});
 
-      return response.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update subcategory"
-      );
-    }
-  }
-);
+export const {
+  useFetchSubcategoriesQuery,
+  useCreateSubCategoryMutation,
+  useUpdateSubCategoryMutation,
+  useDeleteSubCategoryMutation,
+} = subcategoryApi;
 
-
-// Delete SubCategory
-export const deleteSubCategory = createAsyncThunk(
-  "subcategory/deleteSubCategory",
-  async (id, { rejectWithValue }) => {
-    try {
-      await axios.delete(`${BASE_URL}/api/subcategories/delete/${id}`);
-      return id;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to delete subcategory"
-      );
-    }
-  }
-);
-
+/* =========================
+   SLICE
+========================= */
 const subcategorySlice = createSlice({
   name: "subcategory",
   initialState: {
@@ -106,60 +67,55 @@ const subcategorySlice = createSlice({
     isLoading: false,
     error: null,
   },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      // ✅ Create SubCategory
-      .addCase(createSubCategory.fulfilled, (state, action) => {
-        const newSubCategory = action.payload;
-        const categoryId = newSubCategory.category_id;
-        if (!state.subcategories[categoryId]) {
-          state.subcategories[categoryId] = [];
+      /* Fetch */
+      .addMatcher(
+        subcategoryApi.endpoints.fetchSubcategories.matchPending,
+        (state) => {
+          state.isLoading = true;
+          state.error = null;
         }
-        state.subcategories[categoryId].push(newSubCategory);
-      })
-      .addCase(createSubCategory.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // Fetch Subcategories
-      .addCase(fetchSubcategories.fulfilled, (state, action) => {
-        const { categoryId, subcategories } = action.payload;
-        state.subcategories[categoryId] = subcategories;
-      })
-      .addCase(fetchSubcategories.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // Update SubCategory
-      .addCase(updateSubCategory.fulfilled, (state, action) => {
-        const updatedSubCategory = action.payload;
-        const categoryId = updatedSubCategory.category_id;
-        if (state.subcategories[categoryId]) {
-          const index = state.subcategories[categoryId].findIndex(
-            (subcat) =>
-              subcat.Subcategory_id === updatedSubCategory.Subcategory_id
-          );
-          if (index !== -1) {
-            state.subcategories[categoryId][index] = updatedSubCategory;
-          }
+      )
+      .addMatcher(
+        subcategoryApi.endpoints.fetchSubcategories.matchFulfilled,
+        (state, action) => {
+          state.isLoading = false;
+          state.error = null;
         }
-      })
-      .addCase(updateSubCategory.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // Delete SubCategory
-      .addCase(deleteSubCategory.fulfilled, (state, action) => {
-        const deletedSubCategoryId = action.payload;
-        for (const categoryId in state.subcategories) {
-          state.subcategories[categoryId] = state.subcategories[
-            categoryId
-          ].filter((subcat) => subcat.Subcategory_id !== deletedSubCategoryId);
+      )
+      .addMatcher(
+        subcategoryApi.endpoints.fetchSubcategories.matchRejected,
+        (state, action) => {
+          state.isLoading = false;
+          state.error = action.error?.message;
         }
-      })
-      .addCase(deleteSubCategory.rejected, (state, action) => {
-        state.error = action.payload;
-      });
+      )
+
+      /* Create */
+      .addMatcher(
+        subcategoryApi.endpoints.createSubCategory.matchFulfilled,
+        (state) => {
+          state.error = null;
+        }
+      )
+
+      /* Update */
+      .addMatcher(
+        subcategoryApi.endpoints.updateSubCategory.matchFulfilled,
+        (state) => {
+          state.error = null;
+        }
+      )
+
+      /* Delete */
+      .addMatcher(
+        subcategoryApi.endpoints.deleteSubCategory.matchFulfilled,
+        (state) => {
+          state.error = null;
+        }
+      );
   },
 });
 

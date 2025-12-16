@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
+  useDeleteSubcategoryMutation,
   useGetCategoriesQuery,
   useGetSubcategoriesQuery,
-  useDeleteSubcategoryMutation,
 } from "../Redux/Slices/categorySlice";
 
 import AddSubCategory from "./AddSubCategory";
