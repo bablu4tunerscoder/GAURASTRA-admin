@@ -6,6 +6,7 @@ import {
   useDeleteOfferBannerMutation,
 } from "../Redux/Slices/offerBannerSlice";
 import { BASE_URL } from "./Helper/axiosinstance";
+import { getImageUrl } from "../utils/getImageUrl";
 
 const OfferBannerHistory = () => {
   const navigate = useNavigate();
@@ -13,12 +14,6 @@ const OfferBannerHistory = () => {
   // RTK Query hooks
   const { data: banners = [], isLoading, isError, error } = useFetchOfferBannersQuery();
   const [deleteOfferBanner] = useDeleteOfferBannerMutation();
-
-  // Helper to get the correct banner image URL
-  const getBannerImageUrl = (image) => {
-    if (!image) return "";
-    return image.startsWith("http") ? image : `${BASE_URL}/uploads/banner/${image}`;
-  };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this banner?")) {
@@ -62,7 +57,7 @@ const OfferBannerHistory = () => {
                 {/* Image */}
                 <div className="relative w-full h-48 bg-gray-100">
                   <img
-                    src={getBannerImageUrl(banner.image)}
+                    src={getImageUrl(banner.image)}
                     alt="Banner"
                     loading="lazy"
                     className="w-full h-full object-cover"

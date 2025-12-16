@@ -1,65 +1,50 @@
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
-import "./offlineSidebar.scss";
 
 const OfflineSidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const sidebarRef = useRef(null);
-
-  const toggleSidebar = () => setIsOpen(!isOpen);
-
-  // Outside Click Close
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
-
   const offlineMenu = [
-    { title: "Dashboard", path: "/OfflineAdmin" },
-    { title: "Add Offline Product", path: "/AddProduct" },
-    { title: "Offline Product List", path: "/OffProductTable" },
-    { title: "Create Worker", path: "/create-worker" },
-    { title: "All Workers", path: "/all-workers" },
+    { title: "Dashboard", path: "/OfflineAdmin", category: "OFFLINE" },
+    { title: "Add Offline Product", path: "/AddProduct", category: "OFFLINE" },
+    { title: "Offline Product List", path: "/OffProductTable", category: "OFFLINE" },
+
+    { title: "Create Worker", path: "/create-worker", category: "WORKERS" },
+    { title: "All Workers", path: "/all-workers", category: "WORKERS" },
   ];
 
   return (
-    <div className="offline-page-container">
-      <nav className="offline-navbar">
-        <button className="offline-toggle" onClick={toggleSidebar}>
-          ☰
-        </button>
-      </nav>
+    <div className="bg-[#131720] min-h-[calc(100vh-60px)] overflow-y-auto pt-2">
+      <nav>
+        {offlineMenu.map((item, index) => (
+          <React.Fragment key={index}>
+            {/* Category Header */}
+            {index === 0 ||
+              offlineMenu[index - 1].category !== item.category ? (
+              <div className="px-4 py-2 text-lg font-medium text-white uppercase tracking-wide">
+                <h2>{item.category}</h2>
+              </div>
+            ) : null}
 
-      <div
-        className={`offline-sidebar ${isOpen ? "open" : ""}`}
-        ref={sidebarRef}
-      >
-        <nav className="offline-sidebar-nav">
-          <div className="offline-header">
-            <h2>OFFLINE ADMIN</h2>
-          </div>
-
-          <ul className="offline-menu">
-            {offlineMenu.map((item, idx) => (
-              <li key={idx}>
+            {/* Menu Item */}
+            <ul className="px-4">
+              <li className="mb-3">
                 <NavLink
                   to={item.path}
-                  className="offline-link"
-                  onClick={() => setIsOpen(false)}
+                  className={({ isActive }) =>
+                    `
+                      block px-2 py-2 capitalize rounded-md font-semibold text-md
+                      transition-all duration-200
+                      ${isActive ? "bg-[#42454c] text-red-500" : "text-white"}
+                      hover:bg-[#555861] hover:translate-x-1
+                    `
+                  }
                 >
                   {item.title}
                 </NavLink>
               </li>
-            ))}
-          </ul>
-        </nav>
-      </div>
+            </ul>
+          </React.Fragment>
+        ))}
+      </nav>
     </div>
   );
 };

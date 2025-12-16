@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import {
   useGetAllUsersQuery,
 } from "../Redux/Slices/userSlice"; // RTK Query API
-import "./UsersList.scss";
 
 const UsersList = () => {
   const navigate = useNavigate();

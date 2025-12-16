@@ -1,71 +1,52 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../offline-admin/axiosinstance";
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOffline from "./api/baseQueryOffline";
 
-export const createOfflineWorker = createAsyncThunk(
-  "offlineUser/createWorker",
-  async (workerData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/api/offline/user/register`,
-        workerData
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Something went wrong!"
-      );
-    }
-  }
-);
+/* =======================
+   RTK QUERY API
+======================= */
 
-export const getAllWorkers = createAsyncThunk(
-  "offlineUser/getAllWorkers",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/offline/user/allusers`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch workers!"
-      );
-    }
-  }
-);
+export const offlineUserApi = createApi({
+  reducerPath: "offlineUserApi",
+  baseQuery: baseQueryOffline,
+  tagTypes: ["Workers"],
 
-export const deleteWorkerById = createAsyncThunk(
-  "offlineUser/deleteWorker",
-  async (id, {rejectWithValue}) => {
-    try {
-      const response = await axios.delete(
-        `${BASE_URL}/api/offline/user/deleteuser/${id}`
-      );
-      return { id, message: response.data?.message };
-          } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Delete failed!"
-      );
-    }
-  }
-);
+  endpoints: (builder) => ({
+    createOfflineWorker: builder.mutation({
+      query: (workerData) => ({
+        url: "/api/offline/user/register",
+        method: "POST",
+        body: workerData,
+      }),
+      invalidatesTags: ["Workers"],
+    }),
 
-export const updatePasswordById = createAsyncThunk(
-  "offlineUser/updatePassword",
-  async ({ id, password }, { rejectWithValue }) => {
-    try {
-      const response = await axios.put(
-        `${BASE_URL}/api/offline/user/updatepassword/${id}`,
-        { password }
-      );
+    getAllWorkers: builder.query({
+      query: () => "/api/offline/user/allusers",
+      providesTags: ["Workers"],
+    }),
 
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Password update failed!"
-      );
-    }
-  }
-);
+    deleteWorkerById: builder.mutation({
+      query: (id) => ({
+        url: `/api/offline/user/deleteuser/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Workers"],
+    }),
+
+    updatePasswordById: builder.mutation({
+      query: ({ id, password }) => ({
+        url: `/api/offline/user/updatepassword/${id}`,
+        method: "PUT",
+        body: { password },
+      }),
+    }),
+  }),
+});
+
+/* =======================
+   SLICE
+======================= */
 
 const offlineUserSlice = createSlice({
   name: "offlineUser",
@@ -82,57 +63,103 @@ const offlineUserSlice = createSlice({
       state.error = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
-      .addCase(createOfflineWorker.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.success = false;
-      })
-      .addCase(createOfflineWorker.fulfilled, (state) => {
-        state.loading = false;
-        state.success = true;
-      })
-      .addCase(createOfflineWorker.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(getAllWorkers.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getAllWorkers.fulfilled, (state, action) => {
-        state.loading = false;
-        state.workers = action.payload.users || [];
-      })
 
-      .addCase(getAllWorkers.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      /* GET ALL WORKERS */
+      .addMatcher(
+        offlineUserApi.endpoints.getAllWorkers.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.getAllWorkers.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.workers = action.payload?.users || [];
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.getAllWorkers.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      )
 
-      .addCase(deleteWorkerById.fulfilled, (state, action) => {
-  state.workers = state.workers.filter(
-    (worker) => worker._id !== action.payload.id
-  );
-})
-.addCase(updatePasswordById.pending, (state) => {
-  state.loading = true;
-  state.error = null;
-  state.success = false;
-})
-.addCase(updatePasswordById.fulfilled, (state) => {
-  state.loading = false;
-  state.success = true;
-})
-.addCase(updatePasswordById.rejected, (state, action) => {
-  state.loading = false;
-  state.error = action.payload;
-})
+      /* CREATE WORKER */
+      .addMatcher(
+        offlineUserApi.endpoints.createOfflineWorker.matchPending,
+        (state) => {
+          state.loading = true;
+          state.success = false;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.createOfflineWorker.matchFulfilled,
+        (state) => {
+          state.loading = false;
+          state.success = true;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.createOfflineWorker.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      )
 
+      /* DELETE WORKER */
+      .addMatcher(
+        offlineUserApi.endpoints.deleteWorkerById.matchFulfilled,
+        (state, action) => {
+          state.workers = state.workers.filter(
+            (w) => w._id !== action.meta.arg
+          );
+        }
+      )
 
+      /* UPDATE PASSWORD */
+      .addMatcher(
+        offlineUserApi.endpoints.updatePasswordById.matchPending,
+        (state) => {
+          state.loading = true;
+          state.success = false;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.updatePasswordById.matchFulfilled,
+        (state) => {
+          state.loading = false;
+          state.success = true;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.updatePasswordById.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      );
   },
 });
 
 export const { resetStatus } = offlineUserSlice.actions;
 export default offlineUserSlice.reducer;
+
+/* =======================
+   RTK QUERY HOOKS
+======================= */
+
+export const {
+  useCreateOfflineWorkerMutation,
+  useGetAllWorkersQuery,
+  useDeleteWorkerByIdMutation,
+  useUpdatePasswordByIdMutation,
+} = offlineUserApi;

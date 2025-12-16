@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "./ProductList.scss";
 
 const ProductList = ({ products }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,7 +26,7 @@ const ProductList = ({ products }) => {
           </div>
         ))}
       </div>
-      
+
       {products.length > productsPerPage && (
         <div className="pagination">
           <button

@@ -6,6 +6,7 @@ import "./App.css";
 import Login from "./auth/Login";
 import BlogDescription from "./Blogs/BlogDescription";
 import BlogList from "./Blogs/BlogList";
+import CreateBlog from "./Blogs/CreateBlog";
 import EditBlog from "./Blogs/EditBlog";
 import CategoryList from "./Category/CategoryList";
 import HomeComponent from "./Components/home";
@@ -31,7 +32,6 @@ import store from "./Redux/Store";
 import SubCategoryList from "./SubCategory/SubCategoryList";
 import UserDetails from "./User/UserDetails";
 import UsersList from "./User/UsersList";
-import CreateBlog from "./Blogs/CreateBlog";
 
 export const onlineAdminRoutes = [
   { path: "/OnlineAdmin", element: <HomeComponent /> },
@@ -59,6 +59,7 @@ export const onlineAdminRoutes = [
 
 
 function App() {
+
   return (
     <Provider store={store}>
       <Toaster />
