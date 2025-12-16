@@ -1,212 +1,132 @@
-import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateNewProduct, editProduct } from "../Redux/Slices/productSlice";
-import "./Pricing.scss";
+import { selectFormData, selectIsEditMode, updateFormData } from "../Redux/Slices/productSlice";
 
 const Pricing = () => {
   const dispatch = useDispatch();
+  const formData = useSelector(selectFormData);
+  const isEditMode = useSelector(selectIsEditMode);
 
-  const isEditMode = useSelector((state) => state.product.isEditMode);
-  const { pricing } = useSelector((state) =>
-    isEditMode ? state.product.updateProduct : state.product.currentProduct
-  );
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    const parsedValue =
-      name === "original_price" || name === "discount_percent"
-        ? parseFloat(value)
-        : value;
-
-    if (isEditMode) {
-      dispatch(
-        editProduct({
-          pricing: {
-            ...pricing,
-            [name]: parsedValue,
-          },
-        })
-      );
-    } else {
-      dispatch(
-        updateNewProduct({
-          pricing: {
-            ...pricing,
-            [name]: parsedValue,
-          },
-        })
-      );
-    }
+  const handleChange = (field, value) => {
+    dispatch(
+      updateFormData({
+        pricing: {
+          ...formData.pricing,
+          [field]: value,
+        },
+      })
+    );
   };
 
+  const handlePriceDetailChange = (field, value) => {
+    dispatch(
+      updateFormData({
+        pricing: {
+          ...formData.pricing,
+          price_detail: {
+            ...formData.pricing.price_detail,
+            [field]: parseFloat(value) || 0,
+          },
+        },
+      })
+    );
+  };
+
+
   const calculateSalePrice = () => {
-    if (pricing?.discount_percent && pricing?.original_price) {
-      return (
-        pricing.original_price -
-        (pricing.original_price * pricing.discount_percent) / 100
-      );
+    if (isEditMode && formData.pricing?.price_detail) {
+      const { original_price, discount_percent } = formData.pricing.price_detail;
+      if (original_price && discount_percent) {
+        return original_price - (original_price * discount_percent) / 100;
+      }
+      return original_price || 0;
+    } else {
+      const { original_price, discount_percent } = formData.pricing || {};
+      if (original_price && discount_percent) {
+        return original_price - (original_price * discount_percent) / 100;
+      }
+      return original_price || 0;
     }
-    return pricing?.original_price || 0;
   };
 
   const salePrice = calculateSalePrice();
 
   return (
-    <div className="pricing-container">
-      <h2>Pricing</h2>
-      <div className="form-group" id="priceinput">
-        {isEditMode ? (
-          <>
-            <div>
-              <label>Price</label>
-              <input
-                type="number"
-                name="original_price"
-                value={pricing?.price_detail?.original_price || ""}
-                onChange={(e) =>
-                  dispatch(
-                    editProduct({
-                      pricing: {
-                        ...pricing,
-                        price_detail: {
-                          ...pricing?.latest_pricing?.price_detail,
-                          original_price: parseFloat(e.target.value) || 0,
-                        },
-                      },
-                    })
-                  )
-                }
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label>SKU</label>
-              <input
-                type="text"
-                name="sku"
-                value={pricing?.sku || ""}
-                onChange={(e) =>
-                  dispatch(
-                    editProduct({
-                      pricing: {
-                        ...pricing,
-                        sku: e.target.value,
-                      },
-                    })
-                  )
-                }
-                placeholder="Product SKU"
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <div>
-              <label>Price</label>
-              <input
-                type="number"
-                name="original_price"
-                value={pricing?.original_price || ""}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label>SKU</label>
-              <input
-                type="text"
-                name="sku"
-                value={pricing?.sku || ""}
-                onChange={handleChange}
-                placeholder="Product SKU"
-              />
-            </div>
-          </>
-        )}
+    <div className="w-full bg-white rounded-xl p-6 shadow-sm">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">Pricing</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700">
+            Price <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            value={
+              isEditMode
+                ? formData.latest_pricing?.price_detail?.original_price || ""
+                : formData.pricing?.original_price || ""
+            }
+            onChange={(e) =>
+              isEditMode
+                ? handlePriceDetailChange("original_price", e.target.value)
+                : handleChange("original_price", parseFloat(e.target.value) || 0)
+            }
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700">SKU</label>
+          <input
+            type="text"
+            value={formData.pricing?.sku || ""}
+            onChange={(e) => handleChange("sku", e.target.value)}
+            placeholder="Product SKU"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
       </div>
 
-      {isEditMode ? (
-        <div style={{ display: "flex", gap: "10px" }}>
-          <div className="form-group discount">
-            <div className="discount-wrapper">
-              <label>Discount %</label>
-              <input
-                type="number"
-                name="discount_percent"
-                value={pricing?.price_detail?.discount_percent}
-                onChange={(e) =>
-                  dispatch(
-                    editProduct({
-                      pricing: {
-                        ...pricing,
-                        price_detail: {
-                          ...pricing?.price_detail,
-                          discount_percent: parseFloat(e.target.value),
-                        },
-                      },
-                    })
-                  )
-                }
-                className="discount-input"
-                min="0"
-                max="100"
-                step="1"
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <div className="discount-wrapper">
-              <label>Sale price</label>
-              <input
-                type="number"
-                value={
-                  pricing?.price_detail?.original_price != null
-                    ? (
-                        pricing.price_detail.original_price -
-                        (pricing.price_detail.original_price *
-                          (pricing.price_detail.discount_percent || 0)) /
-                          100
-                      ).toFixed(2)
-                    : "0.00"
-                }
-                readOnly
-                className="sale-price-input"
-              />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700">
+            Discount %
+          </label>
+          <input
+            type="number"
+            value={
+              isEditMode
+                ? formData.latest_pricing?.price_detail?.discount_percent || ""
+                : formData.pricing?.discount_percent || ""
+            }
+            onChange={(e) =>
+              isEditMode
+                ? handlePriceDetailChange("discount_percent", e.target.value)
+                : handleChange("discount_percent", parseFloat(e.target.value) || null)
+            }
+            min="0"
+            max="100"
+            step="1"
+            placeholder="0"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
         </div>
-      ) : (
-        <div style={{ display: "flex", gap: "10px" }}>
-          <div className="form-group discount">
-            <div className="discount-wrapper">
-              <label>Discount %</label>
-              <input
-                type="number"
-                name="discount_percent"
-                value={pricing?.discount_percent}
-                onChange={handleChange}
-                className="discount-input"
-                min="0"
-                max="100"
-                step="1"
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <div className="discount-wrapper">
-              <label>Sale price</label>
-              <input
-                type="number"
-                value={salePrice.toFixed(2)}
-                readOnly
-                className="sale-price-input"
-              />
-            </div>
-          </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700">
+            Sale Price
+          </label>
+          <input
+            type="number"
+            value={salePrice.toFixed(2)}
+            readOnly
+            className="border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-600"
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 };

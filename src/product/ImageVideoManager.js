@@ -1,373 +1,214 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  saveImages,
-  uploadMedia,
-  reorderMedia,
   removeMedia,
-  deleteMedia,
+  reorderMedia,
+  saveImages,
   setInitialImages,
 } from "../Redux/Slices/mediaSlice";
-import { updateNewProduct, editProduct } from "../Redux/Slices/productSlice";
-import { FaTimes, FaArrowsAlt, FaUpload } from "react-icons/fa";
-import "./ImageVideoManager.scss";
+import {
+  useDeleteMediaMutation,
+  useUploadMediaMutation,
+} from "../Redux/Slices/mediaSlice";
+import { useUpdateProductByIdMutation } from "../Redux/Slices/productSlice";
+import { FaArrowsAlt, FaTimes, FaUpload } from "react-icons/fa";
 import coverimg from "../assets/coverimg.png";
 import placeimg from "../assets/placehold.png";
 import { BASE_URL } from "../Components/Helper/axiosinstance";
+import { getImageUrl } from "../utils/getImageUrl";
+import "./ImageVideoManager.scss";
 
-const ImageVideoManager = () => {
+const ImageVideoManager = ({ images = [] }) => {
   const dispatch = useDispatch();
-  const {
-    uploadedUrls,
-    coverImage,
-    otherImages,
-    loading,
-    saving,
-    updating,
-    error,
-  } = useSelector((state) => state.media);
 
-  const isEditMode = useSelector((state) => state.product.isEditMode);
-  const product = useSelector((state) =>
-    isEditMode ? state.product.updateProduct : state.product.currentProduct
+  /* =======================
+     Redux State
+  ======================== */
+  const { uploadedUrls, loading, saving, error } = useSelector(
+    (state) => state.media
   );
 
+  const isEditMode = useSelector((state) => state.product.isEditMode);
+
+  /* =======================
+     RTK Query Hooks
+  ======================== */
+  const [uploadMedia] = useUploadMediaMutation();
+  const [deleteMedia] = useDeleteMediaMutation();
+  const [updateProduct, { isLoading: updating }] =
+    useUpdateProductByIdMutation();
+
+  /* =======================
+     Local State
+  ======================== */
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [initialImagesLoaded, setInitialImagesLoaded] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // Get images from product or default empty array
-  const images = product?.images || [];
-  // Initialize images when component mounts or product changes
+  /* =======================
+     Initialize Media From Props (Edit Mode)
+  ======================== */
   useEffect(() => {
-    if (isEditMode && images.length > 0 && !initialImagesLoaded) {
-      // Sort: put is_primary image first
-      const sortedImages = [
-        ...images.filter((img) => img.is_primary),
-        ...images.filter((img) => !img.is_primary),
-      ];
+    if (!isEditMode || initialized || !images.length) return;
 
-      const initialImages = sortedImages.map((img) => ({
-        url: img.image_url,
-        type: "image",
-        id: img.image_id,
-        isCover: img.is_primary,
-      }));
+    const sortedImages = [
+      ...images.filter((img) => img.is_primary),
+      ...images.filter((img) => !img.is_primary),
+    ];
 
-      dispatch(setInitialImages(initialImages));
-      setInitialImagesLoaded(true);
-    }
-  }, [images, isEditMode, dispatch, initialImagesLoaded]);
+    const mappedImages = sortedImages.map((img) => ({
+      id: img.image_id,
+      url: img.image_url,
+      type: "image",
+      isCover: img.is_primary,
+    }));
 
-  // Helper function to get complete image URL
-  const getMediaUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http") || url.startsWith("blob:")) {
-      return url;
-    }
-    return `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+    dispatch(setInitialImages(mappedImages));
+    setInitialized(true);
+  }, [isEditMode, images, initialized, dispatch]);
+
+  /* =======================
+     Display Images (Single Source)
+  ======================== */
+  const displayImages = useMemo(() => {
+    return uploadedUrls.map((item) => ({
+      ...item,
+      url: getImageUrl(item.url),
+    }));
+  }, [uploadedUrls]);
+
+  /* =======================
+     Drag & Drop
+  ======================== */
+  const handleDrop = (from, to) => {
+    if (from === null || to === null || from === to) return;
+
+    const list = [...displayImages];
+    const moved = list.splice(from, 1)[0];
+    list.splice(to, 0, moved);
+
+    dispatch(reorderMedia(list));
   };
 
-  // Combine uploaded URLs with existing images
-  const displayImages = React.useMemo(() => {
-    // If we have uploaded URLs, use them (including reordered ones)
-    if (uploadedUrls?.length > 0) {
-      return uploadedUrls.map((item) => ({
-        ...item,
-        url: getMediaUrl(item?.url),
-        isCover: false,
-      }));
-    }
-
-    // Otherwise use the existing images from the product
-    if (images?.length > 0) {
-      const coverImage = images.find((img) => img.is_primary);
-      const otherImages = images.filter((img) => !img.is_primary);
-
-      return [
-        ...(coverImage
-          ? [
-            {
-              url: getMediaUrl(coverImage.image_url),
-              type: "image",
-              id: coverImage.image_id,
-              isCover: true,
-            },
-          ]
-          : []),
-        ...otherImages.map((img) => ({
-          url: getMediaUrl(img.image_url),
-          type: "image",
-          id: img.image_id,
-          isCover: false,
-        })),
-      ].filter((img) => img.url);
-    }
-
-    return [];
-  }, [uploadedUrls, images]);
-
-  // Drag and drop handlers
-  const handleDragStart = (index) => {
-    setDraggingIndex(index);
-  };
-  // console.log("first",uploadedUrls)
-  // const handleDropOnMain = (index) => {
-  //   if (index === null || index === 0) return;
-  //   const newList = [...displayImages];
-  //   [newList[0], newList[index]] = [newList[index], newList[0]];
-  //   dispatch(reorderMedia(newList));
-  // };
-
-  const handleDrop = (fromIndex, toIndex) => {
-    if (fromIndex === null || toIndex === null || fromIndex === toIndex) return;
-
-    const newList = [...displayImages];
-    const movedItem = newList.splice(fromIndex, 1)[0]; // Remove dragged item
-    newList.splice(toIndex, 0, movedItem); // Insert at dropped position
-
-    dispatch(reorderMedia(newList));
-  };
-
-
+  /* =======================
+     Media Actions
+  ======================== */
   const handleRemove = (index) => {
     dispatch(removeMedia(index));
   };
 
-  const handleDelete = (id, index) => {
-    dispatch(deleteMedia(id));
+  const handleDelete = async (id, index) => {
+    await deleteMedia(id).unwrap();
     dispatch(removeMedia(index));
   };
 
-  const handleFileUpload = (event) => {
-    const files = Array.from(event.target.files);
-    if (files.length === 0) return;
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-    const totalFiles = displayImages.length + files.length;
-    if (totalFiles > 8) {
+    if (displayImages.length + files.length > 8) {
       setErrorMessage("You can upload up to 8 media files only.");
       return;
     }
 
     setErrorMessage("");
-    dispatch(uploadMedia(files));
+    await uploadMedia(files).unwrap();
   };
 
+  /* =======================
+     Save / Update Images
+  ======================== */
+  const handleSaveImages = () => {
+    if (!displayImages.length) return;
 
-  const handleSaveImages = async () => {
-    if (displayImages.length === 0) {
-      alert("No images uploaded!");
-      return;
-    }
+    const coverImage = displayImages[0].url;
+    const mediaUrls = displayImages.slice(1).map((img) => img.url);
 
-    try {
-      const coverImage = displayImages[0]?.url || "";
-      const mediaUrls = displayImages
-        .slice(1)
-        .map((item) => item?.url)
-        .filter(Boolean);
-
-      dispatch(
-        updateNewProduct({
-          cover_image: coverImage,
-          mediaUrls: mediaUrls,
-        })
-      );
-
-      dispatch(
-        saveImages({
-          coverImage: coverImage,
-          otherImages: mediaUrls,
-        })
-      );
-
-      alert("Images saved successfully!");
-    } catch (error) {
-      console.error("Save error:", error);
-      alert("Failed to save images");
-    }
+    dispatch(saveImages({ coverImage, otherImages: mediaUrls }));
+    alert("Images saved successfully!");
   };
 
-  // Handle update for existing product
   const handleUpdateImages = async () => {
-    if (displayImages.length === 0) {
-      alert("No images to update!");
-      return;
-    }
+    if (!displayImages.length) return;
 
-    try {
-      // Prepare images data with their IDs and URLs
-      const imagesPayload = displayImages.map((img, index) => ({
-        image_url: img.url.replace(BASE_URL, ""),
-        image_id: img.id || null, // Keep existing ID or null for new images
-        is_primary: index === 0, // First image is cover
-      }));
+    const imagesPayload = displayImages.map((img, index) => ({
+      image_url: img.url.replace(BASE_URL, ""),
+      image_id: img.id || null,
+      is_primary: index === 0,
+    }));
 
-      // Separate cover image and other images
-      const coverImage = imagesPayload[0].image_url;
-      const otherImages = imagesPayload.slice(1);
+    await updateProduct({
+      images: imagesPayload,
+    }).unwrap();
 
-      // Prepare the payload for backend
-      const payload = {
-        cover_image: coverImage,
-        mediaUrls: otherImages.map((img) => img.image_url),
-        images: imagesPayload, // Send full images data including IDs
-      };
-
-      // Dispatch to update product state
-      dispatch(editProduct(payload));
-
-      alert("Images updated successfully!");
-    } catch (error) {
-      console.error("Update error:", error);
-      alert("Failed to update images");
-    }
+    alert("Images updated successfully!");
   };
 
+  /* =======================
+     UI
+  ======================== */
   return (
     <div className="image-video-manager">
       <h2 className="title">Images and Videos</h2>
+
       {error && <p className="error-message">{error}</p>}
       {errorMessage && <p className="error-message">{errorMessage}</p>}
       {loading && <p className="loading-message">Uploading files...</p>}
       {saving && <p className="loading-message">Saving images...</p>}
 
       <div className="media-wrapper">
-        {/* <div
-          className="main-image"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => handleDropOnMain(draggingIndex)}
-        >
-          {displayImages?.[0]?.url ? (
-            <img
-              src={displayImages[0].url}
-              alt="Main"
-              className="media-content"
-              onError={(e) => {
-                e.target.src = coverimg;
-              }}
-            />
-          ) : (
-            <img src={coverimg} alt="Placeholder" className="media-content" />
-          )}
-        </div> */}
         <div className="main-image">
-          {displayImages?.[0]?.url ? (
-            <img
-              src={displayImages[0].url}
-              alt="Main"
-              className="media-content"
-              onError={(e) => {
-                e.target.src = coverimg;
-              }}
-            />
-          ) : (
-            <img src={coverimg} alt="Placeholder" className="media-content" />
-          )}
+          <img
+            src={displayImages[0]?.url || coverimg}
+            alt="Cover"
+            className="media-content"
+            onError={(e) => (e.target.src = coverimg)}
+          />
         </div>
 
-
         <div className="media-container">
-
-          {/* {displayImages?.length > 1 ? (
-  displayImages.slice(1).map((media, index) => (
-    <div
-      key={media.id || index}
-      className="media-item"
-      draggable
-      onDragStart={() => handleDragStart(index + 1)}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={() => handleDropOnMain(index + 1)}
-    >
-      {media.type === "video" ? (
-        <video className="media-content" controls>
-          <source src={media.url} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      ) : (
-        <img
-          src={media.url}
-          alt="uploaded"
-          className="media-content"
-          onError={(e) => {
-            e.target.src = placeimg;
-          }}
-        />
-      )}
-      <div className="overlay">
-        <FaArrowsAlt className="drag-icon" />
-        <FaTimes
-          className="remove-icon"
-          onClick={() => {
-            if (isEditMode && media.id) {
-              handleDelete(media.id, index + 1);
-            } else {
-              handleRemove(index + 1);
-            }
-          }}
-        />
-      </div>
-    </div>
-  ))
-) : (
-  <div className="media-item">
-    <img src={placeimg} alt="Placeholder" className="media-content" />
-  </div>
-)} */}
           {displayImages.map((media, index) => (
             <div
               key={media.id || index}
               className="media-item"
               draggable
-              onDragStart={() => handleDragStart(index)}
+              onDragStart={() => setDraggingIndex(index)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop(draggingIndex, index)}
             >
-              {media.type === "video" ? (
-                <video className="media-content" controls>
-                  <source src={media.url} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <img
-                  src={media.url}
-                  alt="uploaded"
-                  className="media-content"
-                  onError={(e) => {
-                    e.target.src = placeimg;
-                  }}
-                />
-              )}
+              <img
+                src={media.url}
+                alt="media"
+                className="media-content"
+                onError={(e) => (e.target.src = placeimg)}
+              />
+
               <div className="overlay">
                 <FaArrowsAlt className="drag-icon" />
                 <FaTimes
                   className="remove-icon"
-                  onClick={() => {
-                    if (isEditMode && media.id) {
-                      handleDelete(media.id, index);
-                    } else {
-                      handleRemove(index);
-                    }
-                  }}
+                  onClick={() =>
+                    isEditMode && media.id
+                      ? handleDelete(media.id, index)
+                      : handleRemove(index)
+                  }
                 />
               </div>
             </div>
           ))}
 
-          {displayImages?.length < 8 && (
+          {displayImages.length < 8 && (
             <div className="upload-box">
               <input
                 type="file"
                 id="fileInput"
-                // accept="image/*"
                 accept="image/*,video/*"
                 multiple
+                hidden
                 onChange={handleFileUpload}
-                style={{ display: "none" }}
-                disabled={loading || saving}
               />
               <label htmlFor="fileInput" className="upload-btn">
-                <FaUpload className="upload-icon" />
+                <FaUpload />
                 <span>Upload</span>
               </label>
             </div>
@@ -375,26 +216,13 @@ const ImageVideoManager = () => {
         </div>
       </div>
 
-      <div className="save-images-container">
-        <p>Cover Image</p>
-        <button
-          onClick={isEditMode ? handleUpdateImages : handleSaveImages}
-          className="save-images-btn"
-          disabled={
-            loading ||
-            (isEditMode ? updating : saving) ||
-            displayImages.length === 0
-          }
-        >
-          {isEditMode
-            ? updating
-              ? "Updating..."
-              : "Update Images"
-            : saving
-              ? "Saving..."
-              : "Save Images"}
-        </button>
-      </div>
+      <button
+        onClick={isEditMode ? handleUpdateImages : handleSaveImages}
+        className="save-images-btn"
+        disabled={loading || saving || updating}
+      >
+        {isEditMode ? "Update Images" : "Save Images"}
+      </button>
     </div>
   );
 };

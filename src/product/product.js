@@ -5,7 +5,6 @@ import {
   useDeleteProductByIdMutation,
   setEditMode,
 } from "../Redux/Slices/productSlice";
-import "./product.scss";
 import { useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import imgg from "../assets/placehold.png";
@@ -190,6 +189,8 @@ const ProductTable = () => {
                       <img
                         src={primaryImage}
                         alt={product.product_name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-12 h-12 object-cover rounded"
                       />
                       <span>{product.product_name || "No Name"}</span>
