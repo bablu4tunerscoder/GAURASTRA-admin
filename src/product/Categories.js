@@ -125,11 +125,7 @@ const Categories = () => {
 
       <div className="space-y-4">
         {categories.map((category) => (
-<<<<<<< HEAD
           <div key={category.category_id} className="border-gray-200 pb-4 last:border-b-0">
-=======
-          <div key={category.category_id}>
->>>>>>> abdul-ahad
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="radio"
@@ -138,11 +134,7 @@ const Categories = () => {
                 onChange={() => handleCategorySelect(category)}
                 className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
               />
-<<<<<<< HEAD
               <span className="text-sm capitalize font-medium text-gray-700 group-hover:text-blue-600 transition">
-=======
-              <span className="text-sm font-medium capitalize text-gray-700 group-hover:text-blue-600 transition">
->>>>>>> abdul-ahad
                 {category.category_name}
               </span>
             </label>
