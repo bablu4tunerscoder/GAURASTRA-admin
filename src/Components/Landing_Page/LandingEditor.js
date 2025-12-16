@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   createLandingContent,
   resetLandingState,
 } from "../../Redux/Slices/landingSlice";
-import "./LandingEditor.scss";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "../Sidebar/sidebar";
 
 const LandingEditor = () => {
   const dispatch = useDispatch();

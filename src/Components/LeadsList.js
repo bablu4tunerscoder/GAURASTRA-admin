@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchLeads } from "../Redux/Slices/leadSlice";
-import Sidebar from "./Sidebar/sidebar";
-import "./LeadsList.scss";
 import axios from "axios";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchLeads } from "../Redux/Slices/leadSlice";
 
 dayjs.extend(relativeTime);
 
@@ -108,8 +106,8 @@ const LeadsList = () => {
                       <td className="px-4 py-3 flex justify-center">
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-semibold ${used
-                              ? "bg-red-100 text-red-700"
-                              : "bg-green-100 text-green-700"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
                             }`}
                         >
                           {used ? "Used" : "Not Used"}

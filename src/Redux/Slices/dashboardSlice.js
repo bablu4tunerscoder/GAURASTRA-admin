@@ -1,21 +1,25 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../offline-admin/axiosinstance";
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOffline from "./api/baseQueryOffline";
 
-// 👉 Fetch dashboard data
-export const fetchDashboardData = createAsyncThunk(
-  "dashboard/fetchDashboardData",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/offline/admin/dashboard`); 
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message || "Failed to load dashboard"
-      );
-    }
-  }
-);
+export const dashboardApi = createApi({
+  reducerPath: "dashboardApi",
+  baseQuery: baseQueryOffline,
+  tagTypes: ["Dashboard"],
+  endpoints: (builder) => ({
+    fetchDashboardData: builder.query({
+      query: () => "/api/offline/admin/dashboard",
+      providesTags: ["Dashboard"],
+    }),
+  }),
+});
+
+export const {
+  useFetchDashboardDataQuery,
+  useLazyFetchDashboardDataQuery,
+} = dashboardApi;
+
+
 
 const dashboardSlice = createSlice({
   name: "dashboard",
@@ -34,19 +38,28 @@ const dashboardSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchDashboardData.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchDashboardData.fulfilled, (state, action) => {
-        state.loading = false;
-        state.data = action.payload;
-        state.lastFetchedAt = new Date().toISOString();
-      })
-      .addCase(fetchDashboardData.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Something went wrong";
-      });
+      .addMatcher(
+        dashboardApi.endpoints.fetchDashboardData.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        dashboardApi.endpoints.fetchDashboardData.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.data = action.payload;
+          state.lastFetchedAt = new Date().toISOString();
+        }
+      )
+      .addMatcher(
+        dashboardApi.endpoints.fetchDashboardData.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || "Failed to load dashboard";
+        }
+      );
   },
 });
 

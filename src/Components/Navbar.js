@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import "./Navbar.scss";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import { logout } from "../Redux/Slices/userSlice";
 
 const Navbar = () => {
@@ -41,34 +40,35 @@ const Navbar = () => {
 
 
   return (
-    <header className="top-navbar">
-      <div className="brand">4Tuners Admin</div>
+    <header className="flex items-center justify-between bg-gray-900 p-4 text-white">
+      <div className="text-xl font-bold">4Tuners Admin</div>
 
-      <nav className="nav-tabs">
+      <nav className="flex space-x-4">
         <button
-          className="avtive online"
-          style={{ backgroundColor: "red", color: "white", fontWeight: 700 }}
+          className="bg-red-600 text-white font-bold px-4 py-2 rounded"
           onClick={handleLogout}
         >
           Logout
         </button>
 
         <button
-          className={activeTab === "online" ? "active online" : "online"}
+          className={`px-4 py-2 rounded font-medium ${activeTab === "online" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-200"
+            }`}
           onClick={handleOnline}
         >
           Online Admin
         </button>
 
         <button
-          className={activeTab === "offline" ? "active offline" : "offline"}
+          className={`px-4 py-2 rounded font-medium ${activeTab === "offline" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-200"
+            }`}
           onClick={handleOffline}
         >
           Offline Admin
         </button>
       </nav>
-
     </header>
+
   );
 };
 

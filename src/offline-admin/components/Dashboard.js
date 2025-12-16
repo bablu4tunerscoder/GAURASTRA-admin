@@ -1,19 +1,14 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchDashboardData } from "../../Redux/Slices/dashboardSlice";
-import "./dashboard.scss";
-
+import { useFetchDashboardDataQuery } from "../../Redux/Slices/dashboardSlice";
 const Dashboard = () => {
-  const dispatch = useDispatch();
-  const { data, loading, error, lastFetchedAt } = useSelector(
-    (state) => state.dashboard
-  );
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fulfilledTimeStamp,
+  } = useFetchDashboardDataQuery();
 
-  useEffect(() => {
-    dispatch(fetchDashboardData());
-  }, [dispatch]);
-
-  // Safe getters with fallback
   const realTime = data?.real_time_sales || {};
   const inventory = data?.inventory_status || {};
   const daily = data?.daily_summary || {};
@@ -24,72 +19,101 @@ const Dashboard = () => {
     typeof val === "number" ? `₹ ${val.toLocaleString()}` : val || "—";
 
   return (
-    <div className="dash-page">
-      <h1 className="dash-title">Offline Store Dashboard</h1>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Offline Store Dashboard</h1>
 
-      {loading && <div className="dash-loading">Loading dashboard...</div>}
-      {error && <div className="dash-error">Error: {error}</div>}
+        {isLoading && (
+          <div className="text-gray-500">Loading dashboard...</div>
+        )}
 
-      {!loading && !error && data && (
-        <>
-          <div className="dash-top-cards">
-            <div className="card">
-              <div className="card-title">Orders Today</div>
-              <div className="card-value">{realTime.orders_today ?? "0"}</div>
-            </div>
-
-            <div className="card">
-              <div className="card-title">Total Sales Today</div>
-              <div className="card-value">
-                {formatCurrency(realTime.total_sales_today ?? daily.totalSales)}
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-title">Items Sold Today</div>
-              <div className="card-value">{daily.totalItemsSold ?? "0"}</div>
-            </div>
-
-            <div className="card">
-              <div className="card-title">Avg Order Value (30 days)</div>
-              <div className="card-value">
-                {formatCurrency(perf.avgOrderValue ?? 0)}
-              </div>
-            </div>
+        {isError && (
+          <div className="text-red-600">
+            {error?.message || "Failed to load dashboard"}
           </div>
+        )}
 
-          <section className="dash-section">
-            <h2>Today's Orders</h2>
-            <div className="orders-table-wrapper">
-              <table className="orders-table">
-                <thead>
+        {!isLoading && !isError && data && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white p-5 rounded-xl shadow">
+                <div className="text-gray-500 text-sm">Orders Today</div>
+                <div className="text-2xl font-semibold">
+                  {realTime.orders_today ?? 0}
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-xl shadow">
+                <div className="text-gray-500 text-sm">Total Sales Today</div>
+                <div className="text-2xl font-semibold">
+                  {formatCurrency(
+                    realTime.total_sales_today ?? daily.totalSales
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-xl shadow">
+                <div className="text-gray-500 text-sm">Items Sold Today</div>
+                <div className="text-2xl font-semibold">
+                  {daily.totalItemsSold ?? 0}
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-xl shadow">
+                <div className="text-gray-500 text-sm">
+                  Avg Order Value (30 days)
+                </div>
+                <div className="text-2xl font-semibold">
+                  {formatCurrency(perf.avgOrderValue ?? 0)}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow mb-8 overflow-x-auto">
+              <div className="p-4 font-semibold border-b">
+                Today's Orders
+              </div>
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600">
                   <tr>
-                    <th>#</th>
-                    <th>Customer</th>
-                    <th>Phone</th>
-                    <th>Items</th>
-                    <th>Total</th>
-                    <th>Payment</th>
-                    <th>Created At</th>
+                    <th className="p-3 text-left">#</th>
+                    <th className="p-3 text-left">Customer</th>
+                    <th className="p-3 text-left">Phone</th>
+                    <th className="p-3 text-left">Items</th>
+                    <th className="p-3 text-left">Total</th>
+                    <th className="p-3 text-left">Payment</th>
+                    <th className="p-3 text-left">Created At</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {realTime.salesToday && realTime.salesToday.length > 0 ? (
+                  {realTime.salesToday?.length ? (
                     realTime.salesToday.map((o, idx) => (
-                      <tr key={o._id || idx}>
-                        <td>{idx + 1}</td>
-                        <td>{o.user_info?.full_name ?? "—"}</td>
-                        <td>{o.user_info?.phone ?? "—"}</td>
-                        <td>
+                      <tr
+                        key={o._id || idx}
+                        className="border-t hover:bg-gray-50"
+                      >
+                        <td className="p-3">{idx + 1}</td>
+                        <td className="p-3">
+                          {o.user_info?.full_name ?? "—"}
+                        </td>
+                        <td className="p-3">
+                          {o.user_info?.phone ?? "—"}
+                        </td>
+                        <td className="p-3 space-y-1">
                           {o.items?.map((it) => (
-                            <div key={it._id} className="order-item">
-                              {it.title} × {it.quantity} ({formatCurrency(it.line_total)})
+                            <div key={it._id}>
+                              {it.title} × {it.quantity} (
+                              {formatCurrency(it.line_total)})
                             </div>
                           ))}
                         </td>
-                        <td>{formatCurrency(o.total_amount)}</td>
-                        <td>{o.payment_method ?? "—"}</td>
-                        <td>
+                        <td className="p-3">
+                          {formatCurrency(o.total_amount)}
+                        </td>
+                        <td className="p-3">
+                          {o.payment_method ?? "—"}
+                        </td>
+                        <td className="p-3">
                           {o.createdAt
                             ? new Date(o.createdAt).toLocaleString()
                             : "—"}
@@ -98,7 +122,10 @@ const Dashboard = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="no-data">
+                      <td
+                        colSpan={7}
+                        className="p-6 text-center text-gray-500"
+                      >
                         No orders today
                       </td>
                     </tr>
@@ -106,15 +133,12 @@ const Dashboard = () => {
                 </tbody>
               </table>
             </div>
-          </section>
 
-          <section className="dash-section">
-            <h2>Inventory Status</h2>
-            <div className="inventory-grid">
-              <div className="inventory-card">
-                <h3>Low Stock</h3>
-                {inventory.lowStock && inventory.lowStock.length > 0 ? (
-                  <ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white p-5 rounded-xl shadow">
+                <h3 className="font-semibold mb-3">Low Stock</h3>
+                {inventory.lowStock?.length ? (
+                  <ul className="space-y-1 text-sm">
                     {inventory.lowStock.map((it, i) => (
                       <li key={i}>
                         <strong>{it.product}</strong> — {it.variant} (stock:{" "}
@@ -123,14 +147,16 @@ const Dashboard = () => {
                     ))}
                   </ul>
                 ) : (
-                  <div className="no-data">No low stock items</div>
+                  <div className="text-gray-500 text-sm">
+                    No low stock items
+                  </div>
                 )}
               </div>
 
-              <div className="inventory-card">
-                <h3>Out of Stock</h3>
-                {inventory.outOfStock && inventory.outOfStock.length > 0 ? (
-                  <ul>
+              <div className="bg-white p-5 rounded-xl shadow">
+                <h3 className="font-semibold mb-3">Out of Stock</h3>
+                {inventory.outOfStock?.length ? (
+                  <ul className="space-y-1 text-sm">
                     {inventory.outOfStock.map((it, i) => (
                       <li key={i}>
                         <strong>{it.product}</strong> — {it.variant}
@@ -138,54 +164,78 @@ const Dashboard = () => {
                     ))}
                   </ul>
                 ) : (
-                  <div className="no-data">No out of stock items</div>
+                  <div className="text-gray-500 text-sm">
+                    No out of stock items
+                  </div>
                 )}
               </div>
             </div>
-          </section>
 
-          <section className="dash-section small-cards">
-            <div className="small-card">
-              <div className="sc-title">Daily Summary</div>
-              <div className="sc-body">
-                <div>Total Sales: {formatCurrency(daily.totalSales)}</div>
-                <div>Total Tax: {formatCurrency(daily.totalTax)}</div>
-                <div>Top Selling: {daily.topSellingToday?.[0]?.title ?? "—"}</div>
-                <div>Qty: {daily.topSellingToday?.[0]?.qty ?? "—"}</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white p-5 rounded-xl shadow">
+                <div className="font-semibold mb-2">Daily Summary</div>
+                <div className="text-sm space-y-1">
+                  <div>Total Sales: {formatCurrency(daily.totalSales)}</div>
+                  <div>Total Tax: {formatCurrency(daily.totalTax)}</div>
+                  <div>
+                    Top Selling:{" "}
+                    {daily.topSellingToday?.[0]?.title ?? "—"}
+                  </div>
+                  <div>
+                    Qty: {daily.topSellingToday?.[0]?.qty ?? "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-xl shadow">
+                <div className="font-semibold mb-2">GST Report</div>
+                <div className="text-sm space-y-1">
+                  <div>
+                    Month/Year: {gst.month}/{gst.year}
+                  </div>
+                  <div>
+                    Monthly Sales: {formatCurrency(gst.monthlySales)}
+                  </div>
+                  <div>
+                    Monthly GST: {formatCurrency(gst.monthlyGST)}
+                  </div>
+                  <div>Bills: {gst.bills ?? 0}</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-xl shadow">
+                <div className="font-semibold mb-2">
+                  Store Performance (30d)
+                </div>
+                <div className="text-sm space-y-1">
+                  <div>Orders: {perf.last30_days_orders ?? 0}</div>
+                  <div>
+                    Revenue: {formatCurrency(perf.revenue30)}
+                  </div>
+                  <div>
+                    Repeat Customers: {perf.repeatCustomers ?? 0}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="small-card">
-              <div className="sc-title">GST Report</div>
-              <div className="sc-body">
-                <div>Month/Year: {gst.month}/{gst.year}</div>
-                <div>Monthly Sales: {formatCurrency(gst.monthlySales)}</div>
-                <div>Monthly GST: {formatCurrency(gst.monthlyGST)}</div>
-                <div>Bills: {gst.bills ?? 0}</div>
-              </div>
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <span>
+                Last updated:{" "}
+                {fulfilledTimeStamp
+                  ? new Date(fulfilledTimeStamp).toLocaleString()
+                  : "—"}
+              </span>
+              <button
+                onClick={refetch}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Refresh
+              </button>
             </div>
-
-            <div className="small-card">
-              <div className="sc-title">Store Performance (30d)</div>
-              <div className="sc-body">
-                <div>Orders (30d): {perf.last30_days_orders ?? 0}</div>
-                <div>Revenue (30d): {formatCurrency(perf.revenue30)}</div>
-                <div>Repeat Customers: {perf.repeatCustomers ?? 0}</div>
-              </div>
-            </div>
-          </section>
-
-          <div className="dash-footer">
-            <small>Last updated: {lastFetchedAt ? new Date(lastFetchedAt).toLocaleString() : "—"}</small>
-            <button
-              className="refresh-btn"
-              onClick={() => dispatch(fetchDashboardData())}
-            >
-              Refresh
-            </button>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

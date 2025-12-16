@@ -187,22 +187,11 @@ const NewProduct = () => {
           <div className="flex flex-col lg:flex-row gap-6 w-full">
             {/* LEFT SECTION */}
             <div className="flex flex-col gap-6 w-full lg:w-2/3">
-
               <ImageVideoManager images={productData?.images} />
-
-
-
               <ProductInfo />
-
-
-
               <Pricing />
-
-
-
               <ProductOptions />
             </div>
-
             {/* RIGHT SECTION */}
             <div className="flex flex-col gap-6 w-full lg:w-1/3">
               <Categories />
