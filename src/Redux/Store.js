@@ -8,7 +8,7 @@ import BlogSliceReducer, { blogApi } from "./Slices/BlogSlice";
 import OrderSliceReducer, { ordersApi } from "./Slices/orderSlice";
 import landingReducer from "./Slices/landingSlice";
 import couponsReducer, { couponApi } from "./Slices/couponSlice";
-import offerBannerReducer from "./Slices/offerBannerSlice";
+import offerBannerReducer, { offerBannerApi } from "./Slices/offerBannerSlice";
 import leadReducer from "./Slices/leadSlice";
 import offlineProductReducer from "./Slices/offlineProductSlice";
 import offlineUserReducer from "./Slices/offlineUserSlice";
@@ -38,6 +38,7 @@ const store = configureStore({
     [couponApi.reducerPath]: couponApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [mediaApi.reducerPath]: mediaApi.reducer,
+    [offerBannerApi.reducerPath]: offerBannerApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
@@ -48,6 +49,7 @@ const store = configureStore({
       .concat(couponApi.middleware)
       .concat(ordersApi.middleware)
       .concat(mediaApi.middleware)
+      .concat(offerBannerApi.middleware)
       .concat(productApi.middleware),
 });
 

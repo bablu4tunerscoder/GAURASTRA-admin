@@ -125,7 +125,7 @@ const Categories = () => {
 
       <div className="space-y-4">
         {categories.map((category) => (
-          <div key={category.category_id} className="border-b border-gray-200 pb-4 last:border-b-0">
+          <div key={category.category_id} className="border-gray-200 pb-4 last:border-b-0">
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="radio"
@@ -134,7 +134,7 @@ const Categories = () => {
                 onChange={() => handleCategorySelect(category)}
                 className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition">
+              <span className="text-sm capitalize font-medium text-gray-700 group-hover:text-blue-600 transition">
                 {category.category_name}
               </span>
             </label>
@@ -147,7 +147,6 @@ const Categories = () => {
                       key={sub.Subcategory_id}
                       className="flex items-center gap-3 cursor-pointer group"
                     >
-
                       <input
                         type="radio"
                         name="subcategory"
@@ -155,7 +154,7 @@ const Categories = () => {
                         onChange={() => handleSubcategorySelect(sub)}
                         className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-600 group-hover:text-blue-600 transition">
+                      <span className="text-sm capitalize text-gray-600 group-hover:text-blue-600 transition">
                         {renderSubcategoryLabel(sub)}
                       </span>
                     </label>
