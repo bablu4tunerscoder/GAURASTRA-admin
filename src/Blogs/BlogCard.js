@@ -5,7 +5,6 @@ function BlogCard({ data }) {
   const navigate = useNavigate();
   const url = data?.thumbnail?.secure_url?.replace(/\\/g, '/').replace(/^\/+/, '');
 
-
   return (
     <div
       onClick={() => navigate("/blog/description/", { state: { ...data } })}

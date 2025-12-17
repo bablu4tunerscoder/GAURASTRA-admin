@@ -110,7 +110,7 @@ const ImageVideoManager = ({ images = [] }) => {
       setErrorMessage("You can upload up to 8 media files only.");
       return;
     }
-
+    console.log(files)
     setErrorMessage("");
     await uploadMedia(files).unwrap();
   };

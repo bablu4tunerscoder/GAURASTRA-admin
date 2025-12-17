@@ -199,13 +199,13 @@ const NewProduct = () => {
             </div>
           </div>
 
-          {/* PRODUCT LIST ON RIGHT SIDE IF EXISTS */}
-          {productsToSubmit.length > 0 && !isEditMode && (
-            <div className="w-full lg:w-auto">
-              <ProductList products={productsToSubmit} />
-            </div>
-          )}
         </div>
+        {/* PRODUCT LIST ON RIGHT SIDE IF EXISTS */}
+        {productsToSubmit.length > 0 && !isEditMode && (
+          <div className="w-full mt-6 lg:w-auto">
+            <ProductList products={productsToSubmit} />
+          </div>
+        )}
       </div>
 
       {/* BOTTOM BUTTONS */}

@@ -1,19 +1,20 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  useGetCategoriesQuery,
-  useGetSubcategoriesQuery,
   setSelectedCategory,
   setSelectedSubcategory,
+  useGetCategoriesQuery,
+  useGetSubcategoriesQuery,
 } from "../Redux/Slices/categorySlice";
-import { updateFormData, selectFormData, selectIsEditMode } from "../Redux/Slices/productSlice";
+import { selectFormData, selectIsEditMode, updateFormData } from "../Redux/Slices/productSlice";
 
 const Categories = () => {
   const dispatch = useDispatch();
   const formData = useSelector(selectFormData);
   const isEditMode = useSelector(selectIsEditMode);
 
-  const { category_id, subcategory_id } = formData;
+  const { category_id, Subcategory_id } = formData;
+
 
 
   const { data: categories = [], isLoading, isError } = useGetCategoriesQuery();
@@ -75,6 +76,7 @@ const Categories = () => {
   };
 
   const handleSubcategorySelect = (subcategory) => {
+    console.log(subcategory)
     dispatch(
       setSelectedSubcategory({
         id: subcategory.Subcategory_id,
@@ -151,7 +153,7 @@ const Categories = () => {
                       <input
                         type="radio"
                         name="subcategory"
-                        checked={subcategory_id === sub.Subcategory_id}
+                        checked={Subcategory_id === sub.Subcategory_id}
                         onChange={() => handleSubcategorySelect(sub)}
                         className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                       />
