@@ -8,13 +8,15 @@ function BlogCard({ data }) {
   return (
     <div
       onClick={() => navigate("/blog/description/", { state: { ...data } })}
-      className="w-[20rem] shadow-lg rounded-lg cursor-pointer group overflow-hidden bg-white hover:scale-105 transition-transform duration-300"
+      className="shadow-lg rounded-lg cursor-pointer group overflow-hidden bg-white "
     >
       <div className="overflow-hidden relative">
         <img
-          className="h-48 w-full rounded-tl-lg rounded-tr-lg group-hover:scale-110 transition-all duration-300 object-cover"
+          className="min-h-64 w-full rounded-tl-lg rounded-tr-lg group-hover:scale-110 transition-all duration-300 object-cover"
           src={getImageUrl(url)}
           alt="course thumbnail"
+          loading="lazy"
+          decoding="async"
         />
         <div className="absolute top-2 left-2 bg-black text-white px-3 py-1 rounded-md text-sm font-semibold">
           {data.blog_status}
