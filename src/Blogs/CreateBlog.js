@@ -61,29 +61,33 @@ const CreateBlog = () => {
     try {
       const formData = new FormData();
 
-      // Append text fields
       formData.append("author", data.author);
       formData.append("blog_title", data.blogTitle);
       formData.append("blog_content", data.blogContent);
       formData.append("blog_status", data.blogStatus);
       formData.append("blog_published", data.blogPublished);
 
-      // Append SEO data
-      formData.append("seo[page_title]", data.seo.pageTitle);
-      formData.append("seo[meta_description]", data.seo.metaDescription);
-      formData.append("seo[meta_keywords]", JSON.stringify(data.seo.metaKeywords));
+      // ✅ SEO AS JSON STRING (MATCH POSTMAN)
+      formData.append(
+        "seo",
+        JSON.stringify({
+          meta_title: data.seo.pageTitle,
+          meta_description: data.seo.metaDescription,
+          keywords: data.seo.metaKeywords,
+        })
+      );
 
-      // Append thumbnail if new file uploaded
+      // ✅ File
       if (thumbnailFile) {
         formData.append("thumbnail", thumbnailFile);
       }
 
       await createBlog(formData).unwrap();
-      toast.success("Blog updated successfully!");
+      toast.success("Blog created successfully!");
       navigate("/blogs");
     } catch (err) {
-      console.log("Failed to update blog:", err);
-      toast.error(err?.data?.message || "Failed to update blog");
+      console.error(err);
+      toast.error(err?.data?.message || "Failed to create blog");
     }
   };
 

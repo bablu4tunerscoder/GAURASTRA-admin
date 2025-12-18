@@ -1,68 +1,76 @@
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import {
-  createLandingContent,
-  resetLandingState,
+  useCreateLandingContentMutation,
 } from "../../Redux/Slices/landingSlice";
 
 const LandingEditor = () => {
-  const dispatch = useDispatch();
-  const { loading, success, error } = useSelector((state) => state.landing);
   const navigate = useNavigate();
+  const [createLandingContent, { isLoading, isSuccess, error }] =
+    useCreateLandingContentMutation();
 
-  const [heading1, setHeading1] = useState("");
-  const [heading2, setHeading2] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
   const [preview, setPreview] = useState("");
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState("");
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+  } = useForm({
+    defaultValues: {
+      heading1: "",
+      heading2: "",
+      description: "",
+      image: null,
+    },
+  });
 
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
+  const imageFile = watch("image");
 
-    img.onload = () => {
-      if (img.width >= 1500 && img.height >= 900) {
-        setImage(file);
-        setPreview(img.src);
-        setImageError(false);
-      } else {
-        alert("Image must be at least 1500x900 pixels!");
-        e.target.value = "";
-        setImage(null);
-        setPreview("");
-        setImageError(true);
-      }
-    };
-  };
+  useEffect(() => {
+    if (imageFile && imageFile[0]) {
+      const file = imageFile[0];
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!image) return alert("Please upload a valid image!");
+      img.onload = () => {
+        if (img.width >= 1500 && img.height >= 900) {
+          setPreview(img.src);
+          setImageError("");
+        } else {
+          setImageError("Image must be at least 1500×900 pixels");
+          setPreview("");
+          setValue("image", null);
+        }
+      };
+    }
+  }, [imageFile, setValue]);
+
+  const onSubmit = async (data) => {
+    if (!data.image?.[0]) {
+      setImageError("Please upload a valid image");
+      return;
+    }
 
     const formData = new FormData();
-    formData.append("heading1", heading1);
-    formData.append("heading2", heading2);
-    formData.append("description", description);
-    formData.append("images", image);
+    formData.append("heading1", data.heading1);
+    formData.append("heading2", data.heading2);
+    formData.append("description", data.description);
+    formData.append("images", data.image[0]);
 
-    dispatch(createLandingContent(formData)).then((res) => {
-      if (res.meta.requestStatus === "fulfilled") {
-        alert("Content saved successfully!");
-        setHeading1("");
-        setHeading2("");
-        setDescription("");
-        setImage(null);
-        setPreview("");
-        dispatch(resetLandingState());
-        navigate("/lp-uploads-history"); // ✅ REDIRECT AFTER SUCCESS
-      }
-    });
+    await createLandingContent(formData);
   };
+
+  useEffect(() => {
+    if (isSuccess) {
+      reset();
+      setPreview("");
+      navigate("/lp-uploads-history");
+    }
+  }, [isSuccess, navigate, reset]);
 
   return (
     <div className="flex justify-center px-4">
@@ -71,96 +79,71 @@ const LandingEditor = () => {
           Landing Page Content Editor
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* Heading 1 */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="flex flex-col gap-1">
-            <label className="font-medium text-gray-700">Heading 1:</label>
+            <label className="font-medium text-gray-700">Heading 1</label>
             <input
-              type="text"
-              value={heading1}
-              onChange={(e) => setHeading1(e.target.value)}
-              className="border border-gray-300 rounded-lg p-2 outline-none focus:ring focus:ring-blue-300"
+              {...register("heading1", { required: true })}
+              className="border border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-300 outline-none"
             />
           </div>
 
-          {/* Heading 2 */}
           <div className="flex flex-col gap-1">
-            <label className="font-medium text-gray-700">Heading 2:</label>
+            <label className="font-medium text-gray-700">Heading 2</label>
             <input
-              type="text"
-              value={heading2}
-              onChange={(e) => setHeading2(e.target.value)}
-              className="border border-gray-300 rounded-lg p-2 outline-none focus:ring focus:ring-blue-300"
+              {...register("heading2", { required: true })}
+              className="border border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-300 outline-none"
             />
           </div>
 
-          {/* Description */}
           <div className="flex flex-col gap-1">
-            <label className="font-medium text-gray-700">Description:</label>
+            <label className="font-medium text-gray-700">Description</label>
             <textarea
-              rows="3"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="border border-gray-300 rounded-lg p-2 outline-none focus:ring focus:ring-blue-300"
+              rows={3}
+              {...register("description", { required: true })}
+              className="border border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-300 outline-none"
             />
           </div>
 
-          {/* Background Image */}
           <div className="flex flex-col gap-1">
             <label className="font-medium text-gray-700">
-              Background Image <span className="text-sm text-gray-500">(1920×1080)</span>
+              Background Image{" "}
+              <span className="text-sm text-gray-500">(≥1500×900)</span>
             </label>
             <input
               type="file"
               accept="image/*"
-              onChange={handleImageChange}
+              {...register("image")}
               className="border border-gray-300 rounded-lg p-2 bg-white"
             />
           </div>
 
-          {/* Preview Image */}
           {preview && (
-            <div>
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-full rounded-lg shadow-md border mb-2"
-              />
-            </div>
+            <img
+              src={preview}
+              alt="Preview"
+              className="w-full rounded-lg shadow border"
+            />
           )}
 
-          {/* Submit */}
           <button
             type="submit"
-            disabled={!image || loading}
+            disabled={isLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-lg transition disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Save Content"}
+            {isLoading ? "Saving..." : "Save Content"}
           </button>
         </form>
 
-        {/* Messages */}
         {imageError && (
-          <p className="text-red-500 mt-3">
-            Image must be at least 1920×1080 pixels!
-          </p>
+          <p className="text-red-500 mt-3">{imageError}</p>
         )}
 
         {error && (
-          <p className="text-red-500 mt-3">
-            {error}
-          </p>
-        )}
-
-        {success && (
-          <p className="text-green-600 mt-3">
-            Content saved successfully!
-          </p>
+          <p className="text-red-500 mt-3">Something went wrong</p>
         )}
       </div>
     </div>
-
   );
 };
 

@@ -71,17 +71,23 @@ const EditBlog = () => {
       formData.append("blog_status", data.blogStatus);
       formData.append("blog_published", data.blogPublished);
 
-      // Append SEO data
-      formData.append("seo[page_title]", data.seo.pageTitle);
-      formData.append("seo[meta_description]", data.seo.metaDescription);
-      formData.append("seo[meta_keywords]", JSON.stringify(data.seo.metaKeywords));
+      // ✅ SEO AS JSON STRING (MATCH POSTMAN)
+      formData.append(
+        "seo",
+        JSON.stringify({
+          meta_title: data.seo.pageTitle,
+          meta_description: data.seo.metaDescription,
+          keywords: data.seo.metaKeywords,
+        })
+      );
 
-      // Append thumbnail if new file uploaded
+      // ✅ File
+      console.log("thumbnail", thumbnailFile)
       if (thumbnailFile) {
         formData.append("thumbnail", thumbnailFile);
       }
 
-      await updateBlog({ id, formData }).unwrap();
+      await updateBlog(id, formData).unwrap();
       toast.success("Blog updated successfully!");
       navigate("/blogs");
     } catch (err) {
@@ -265,7 +271,6 @@ const EditBlog = () => {
                 type="file"
                 accept="image/jpeg,image/png,image/jpg"
                 onChange={handleImageUpload}
-                // The input is hidden
                 className="hidden"
               />
             </label>

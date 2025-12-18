@@ -1,73 +1,54 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOffline from "./api/baseQueryOffline";
 
-export const createLandingContent = createAsyncThunk(
-  "landing/createLandingContent",
-  async (formData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/api/landing/create`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      return response.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || "Server Error");
-    }
-  }
-);
+/* ================= RTK QUERY API ================= */
+export const landingApi = createApi({
+  reducerPath: "landingApi",
+  baseQuery: baseQueryOffline,
+  tagTypes: ["Landing"],
+  endpoints: (builder) => ({
+    createLandingContent: builder.mutation({
+      query: (formData) => ({
+        url: "/api/landing/create",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Landing"],
+    }),
 
-// ✅ GET Landing Content
-export const fetchLandingContent = createAsyncThunk(
-  "landing/fetchLandingContent",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/landing`);
-      return response.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || "Server Error");
-    }
-  }
-);
+    fetchLandingContent: builder.query({
+      query: () => "/api/landing",
+      providesTags: ["Landing"],
+    }),
 
-export const deleteLandingContent = createAsyncThunk(
-  "landing/deleteLandingContent",
-  async (id, { rejectWithValue }) => {
-    try {
-      await axios.delete(`${BASE_URL}/api/landing/delete/${id}`);
-      return id;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || "Server Error");
-    }
-  }
-);
+    deleteLandingContent: builder.mutation({
+      query: (id) => ({
+        url: `/api/landing/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Landing"],
+    }),
 
-// UPDATE
-export const updateLandingContent = createAsyncThunk(
-  "landing/updateLandingContent",
-  async ({ id, updatedData }, { rejectWithValue }) => {
-    try {
-      const response = await axios.put(
-        `${BASE_URL}/api/landing/update/${id}`,
-        updatedData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      return response.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || "Server Error");
-    }
-  }
-);
+    updateLandingContent: builder.mutation({
+      query: ({ id, updatedData }) => ({
+        url: `/api/landing/update/${id}`,
+        method: "PUT",
+        body: updatedData,
+      }),
+      invalidatesTags: ["Landing"],
+    }),
+  }),
+});
 
+export const {
+  useCreateLandingContentMutation,
+  useFetchLandingContentQuery,
+  useDeleteLandingContentMutation,
+  useUpdateLandingContentMutation,
+} = landingApi;
+
+/* ================= SLICE ================= */
 const landingSlice = createSlice({
   name: "landing",
   initialState: {
@@ -83,57 +64,87 @@ const landingSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    /* CREATE */
     builder
-      // CREATE
-      .addCase(createLandingContent.pending, (state) => {
-        state.loading = true;
-        state.success = false;
-      })
-      .addCase(createLandingContent.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = true;
-        state.content.unshift(action.payload.content);
-      })
-      .addCase(createLandingContent.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // FETCH
-      .addCase(fetchLandingContent.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchLandingContent.fulfilled, (state, action) => {
-        state.loading = false;
-        state.content = action.payload;
-      })
-      .addCase(fetchLandingContent.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // DELETE
-      .addCase(deleteLandingContent.fulfilled, (state, action) => {
-        state.content = state.content.filter(
-          (item) => item._id !== action.payload
-        );
-      })
-      .addCase(deleteLandingContent.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // UPDATE
-      .addCase(updateLandingContent.fulfilled, (state, action) => {
-        const index = state.content.findIndex(
-          (item) => item._id === action.payload._id
-        );
-        if (index !== -1) {
-          state.content[index] = action.payload;
+      .addMatcher(
+        landingApi.endpoints.createLandingContent.matchPending,
+        (state) => {
+          state.loading = true;
+          state.success = false;
         }
-      })
-      .addCase(updateLandingContent.rejected, (state, action) => {
-        state.error = action.payload;
-      });
+      )
+      .addMatcher(
+        landingApi.endpoints.createLandingContent.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.success = true;
+          state.content.unshift(action.payload.content);
+        }
+      )
+      .addMatcher(
+        landingApi.endpoints.createLandingContent.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error;
+        }
+      )
+
+      /* FETCH */
+      .addMatcher(
+        landingApi.endpoints.fetchLandingContent.matchPending,
+        (state) => {
+          state.loading = true;
+        }
+      )
+      .addMatcher(
+        landingApi.endpoints.fetchLandingContent.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.content = action.payload;
+        }
+      )
+      .addMatcher(
+        landingApi.endpoints.fetchLandingContent.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error;
+        }
+      )
+
+      /* DELETE */
+      .addMatcher(
+        landingApi.endpoints.deleteLandingContent.matchFulfilled,
+        (state, action) => {
+          state.content = state.content.filter(
+            (item) => item._id !== action.meta.arg.originalArgs
+          );
+        }
+      )
+      .addMatcher(
+        landingApi.endpoints.deleteLandingContent.matchRejected,
+        (state, action) => {
+          state.error = action.error;
+        }
+      )
+
+      /* UPDATE */
+      .addMatcher(
+        landingApi.endpoints.updateLandingContent.matchFulfilled,
+        (state, action) => {
+          const index = state.content.findIndex(
+            (item) => item._id === action.payload._id
+          );
+          if (index !== -1) {
+            state.content[index] = action.payload;
+          }
+        }
+      )
+      .addMatcher(
+        landingApi.endpoints.updateLandingContent.matchRejected,
+        (state, action) => {
+          state.error = action.error;
+        }
+      );
   },
 });
 

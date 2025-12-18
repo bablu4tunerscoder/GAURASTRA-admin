@@ -1,97 +1,57 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useWatch } from "react-hook-form";
 import {
   useGetCategoriesQuery,
   useGetSubcategoriesQuery,
-  setSelectedCategory,
-  setSelectedSubcategory,
 } from "../Redux/Slices/categorySlice";
-import { updateFormData, selectFormData, selectIsEditMode } from "../Redux/Slices/productSlice";
 
-const Categories = () => {
-  const dispatch = useDispatch();
-  const formData = useSelector(selectFormData);
-  const isEditMode = useSelector(selectIsEditMode);
-
-  const { category_id, subcategory_id } = formData;
-
-
-  const { data: categories = [], isLoading, isError } = useGetCategoriesQuery();
-  const { data: subcategories = [] } = useGetSubcategoriesQuery(category_id, {
-    skip: !category_id,
+const Categories = ({ control, setValue, errors }) => {
+  // ✅ Watch selected category
+  const categoryId = useWatch({
+    control,
+    name: "category_id",
   });
 
-  // Initialize selected category/subcategory in edit mode
-  useEffect(() => {
-    if (isEditMode && formData.category_id) {
-      dispatch(
-        setSelectedCategory({
-          id: formData.category_id,
-          name: formData.category_name,
-        })
-      );
+  // ✅ Watch selected subcategory
+  const subcategoryId = useWatch({
+    control,
+    name: "subcategory_id",
+  });
 
-      if (formData.Subcategory_id) {
-        dispatch(
-          setSelectedSubcategory({
-            id: formData.Subcategory_id,
-            name: formData.Subcategory_name,
-          })
-        );
-      }
-    }
-  }, [dispatch, isEditMode, formData]);
+  const {
+    data: categories = [],
+    isLoading,
+    isError,
+  } = useGetCategoriesQuery();
 
+  const { data: subcategories = [] } = useGetSubcategoriesQuery(categoryId, {
+    skip: !categoryId,
+  });
 
   const handleCategorySelect = (category) => {
-    if (category_id === category.category_id) {
-      dispatch(setSelectedCategory(null));
-      dispatch(setSelectedSubcategory(null));
-      dispatch(
-        updateFormData({
-          category_id: "",
-          category_name: "",
-          Subcategory_id: "",
-          Subcategory_name: "",
-        })
-      );
+    if (categoryId === category.category_id) {
+      // Deselect
+      setValue("category_id", "", { shouldValidate: true });
+      setValue("subcategory_id", "", { shouldValidate: true });
     } else {
-      dispatch(
-        setSelectedCategory({
-          id: category.category_id,
-          name: category.category_name,
-        })
-      );
-      dispatch(setSelectedSubcategory(null));
-      dispatch(
-        updateFormData({
-          category_id: category.category_id,
-          category_name: category.category_name,
-          Subcategory_id: "",
-          Subcategory_name: "",
-        })
-      );
+      setValue("category_id", category.category_id, {
+        shouldValidate: true,
+      });
+      setValue("subcategory_id", "", { shouldValidate: true });
     }
   };
 
   const handleSubcategorySelect = (subcategory) => {
-    dispatch(
-      setSelectedSubcategory({
-        id: subcategory.Subcategory_id,
-        name: subcategory.Subcategory_name,
-      })
-    );
-    dispatch(
-      updateFormData({
-        Subcategory_id: subcategory.Subcategory_id,
-        Subcategory_name: subcategory.Subcategory_name,
-      })
-    );
+    setValue("subcategory_id", subcategory.Subcategory_id, {
+      shouldValidate: true,
+    });
   };
 
   const renderSubcategoryLabel = (sub) => {
-    const selectedCat = categories.find((cat) => cat.category_id === category_id);
-    if (selectedCat?.category_name === "Ethnic Wear") {
+    const selectedCat = categories.find(
+      (cat) => cat.category_id === categoryId
+    );
+
+    if (selectedCat?.category_name?.toLowerCase() === "ethnic wear") {
       return `${sub.Subcategory_name} - ${sub.gender || "Unisex"}`;
     }
     return sub.Subcategory_name;
@@ -99,20 +59,16 @@ const Categories = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full bg-white rounded-xl p-6 shadow-sm">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-gray-500">Loading Categories...</div>
-        </div>
+      <div className="w-full bg-white rounded-xl p-6 shadow-sm text-center text-gray-500">
+        Loading Categories...
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="w-full bg-white rounded-xl p-6 shadow-sm">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-red-500">Failed to load categories</div>
-        </div>
+      <div className="w-full bg-white rounded-xl p-6 shadow-sm text-center text-red-500">
+        Failed to load categories
       </div>
     );
   }
@@ -125,12 +81,16 @@ const Categories = () => {
 
       <div className="space-y-4">
         {categories.map((category) => (
-          <div key={category.category_id} className="border-gray-200 pb-4 last:border-b-0">
+          <div
+            key={category.category_id}
+            className="border-b border-gray-200 pb-4 last:border-b-0"
+          >
+            {/* Category */}
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="radio"
                 name="category"
-                checked={category_id === category.category_id}
+                checked={categoryId === category.category_id}
                 onChange={() => handleCategorySelect(category)}
                 className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
               />
@@ -139,7 +99,8 @@ const Categories = () => {
               </span>
             </label>
 
-            {category_id === category.category_id && (
+            {/* Subcategories */}
+            {categoryId === category.category_id && (
               <div className="ml-7 mt-3 space-y-2 bg-gray-50 rounded-lg p-3">
                 {subcategories.length > 0 ? (
                   subcategories.map((sub) => (
@@ -150,7 +111,7 @@ const Categories = () => {
                       <input
                         type="radio"
                         name="subcategory"
-                        checked={subcategory_id === sub.Subcategory_id}
+                        checked={subcategoryId === sub.Subcategory_id}
                         onChange={() => handleSubcategorySelect(sub)}
                         className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                       />
@@ -160,13 +121,27 @@ const Categories = () => {
                     </label>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500 italic">No subcategories found</p>
+                  <p className="text-sm text-gray-500 italic">
+                    No subcategories found
+                  </p>
                 )}
               </div>
             )}
           </div>
         ))}
       </div>
+
+      {/* Errors */}
+      {errors?.category_id && (
+        <p className="text-red-500 text-xs mt-2">
+          {errors.category_id.message}
+        </p>
+      )}
+      {errors?.subcategory_id && (
+        <p className="text-red-500 text-xs mt-2">
+          {errors.subcategory_id.message}
+        </p>
+      )}
     </div>
   );
 };

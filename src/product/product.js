@@ -17,7 +17,6 @@ const ProductTable = () => {
   const { data: products = [], isLoading, isError, error } = useFetchProductsQuery();
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductByIdMutation();
 
-
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

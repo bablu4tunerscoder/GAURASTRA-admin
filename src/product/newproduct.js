@@ -1,20 +1,17 @@
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect } from "react";
+import { toast } from "react-hot-toast";
 import { clearMedia } from "../Redux/Slices/mediaSlice";
 import {
-  useAddBulkProductsMutation,
-  useUpdateProductByIdMutation,
-  useFetchProductByIdQuery,
   addToSubmitQueue,
   clearSubmitQueue,
   resetFormData,
-  loadProductToForm,
-  selectFormData,
   selectProductsToSubmit,
-  selectLoading,
-  selectError,
-  selectIsEditMode,
+  useAddBulkProductsMutation,
+  useFetchProductByIdQuery,
+  useUpdateProductByIdMutation
 } from "../Redux/Slices/productSlice";
 import Categories from "./Categories";
 import ImageVideoManager from "./ImageVideoManager";
@@ -24,20 +21,14 @@ import ProductInfo from "./ProductInfo";
 import ProductList from "./ProductList";
 import ProductOptions from "./ProductOptions";
 import SeoSection from "./SeoSection";
-import { toast } from "react-toastify";
 
 const NewProduct = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id: productId } = useParams();
 
-
   // Redux state
-  const formData = useSelector(selectFormData);
   const productsToSubmit = useSelector(selectProductsToSubmit);
-  const loading = useSelector(selectLoading);
-  const error = useSelector(selectError);
-  const isEditMode = useSelector(selectIsEditMode);
 
   // RTK Query mutations
   const [addBulkProducts, { isLoading: isAdding }] = useAddBulkProductsMutation();
@@ -49,17 +40,95 @@ const NewProduct = () => {
     isLoading: isLoadingProduct,
     isError
   } = useFetchProductByIdQuery(productId, {
-    skip: !productId, // Skip query if no productId
+    skip: !productId,
   });
 
 
+  // ✅ Single source of truth for edit mode
+  const isEditMode = Boolean(productId && productData);
+
+  // React Hook Form setup
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      product_name: "",
+      brand: "Gaurastra",
+      status: "Active",
+      featuredSection: "All Products",
+      description: "",
+      category_id: "",
+      subcategory_id: "",
+      attributes: {
+        gender: "",
+        sleeve_length: "",
+        size: []
+      },
+      seo: {
+        slug: "",
+        metaTitle: "",
+        metaDescription: "",
+        keywords: [],
+        canonicalURL: ""
+      },
+      pricing: {
+        currency: "INR",
+        sku: "",
+        original_price: "",
+        discount_percent: "",
+        discounted_price: "",
+      },
+      images: []
+    }
+  });
 
   // Load product data into form when editing
   useEffect(() => {
-    if (productData && productId) {
-      dispatch(loadProductToForm(productData));
+    if (isEditMode) {
+      reset({
+        product_id: productData.product_id || "",
+        productUniqueId: productData.productUniqueId || "",
+        product_name: productData.product_name || "",
+        brand: productData.brand || "Gaurastra",
+        status: productData.status || "Active",
+        featuredSection: productData.featuredSection || "All Products",
+        description: productData.description || "",
+        category_id: productData.category_id || "",
+        subcategory_id: productData.subcategory_id || "",
+        attributes: {
+          gender: productData.attributes?.gender || "",
+          sleeve_length: productData.attributes?.sleeve_length || "",
+          size: productData.attributes?.size || [],
+        },
+        seo: {
+          slug: productData.seo?.slug || "",
+          metaTitle: productData.seo?.metaTitle || "",
+          metaDescription: productData.seo?.metaDescription || "",
+          keywords: productData.seo?.keywords || [],
+          canonicalURL: productData.seo?.canonicalURL || "",
+        },
+        pricing: {
+          currency: productData.latest_pricing?.currency || "INR",
+          sku: productData.latest_pricing?.sku || "",
+          original_price:
+            productData.latest_pricing?.price_detail?.original_price || "",
+          discount_percent:
+            productData.latest_pricing?.price_detail?.discount_percent || "",
+          discounted_price:
+            productData.latest_pricing?.price_detail?.discounted_price || "",
+        },
+        stock_details: productData.stock_details || [],
+        images: productData.images || [],
+      });
     }
-  }, [productData, productId, dispatch]);
+  }, [isEditMode, productData, reset]);
+
+
 
   // Cleanup on unmount
   useEffect(() => {
@@ -69,29 +138,16 @@ const NewProduct = () => {
     };
   }, [dispatch]);
 
-  // Validate form data
-  const validateForm = () => {
-    if (!formData.product_name) {
-      toast.error("Product name is required!");
-      return false;
-    }
-    if (!formData.category_id) {
-      alert("Category is required!");
-      return false;
-    }
-    if (!formData.Subcategory_id) {
-      alert("Subcategory is required!");
-      return false;
-    }
-    return true;
-  };
+  // Save current product to queue (for bulk submission)
+  const onSaveProduct = (data) => {
 
-  // Save current product to queue for bulk submission
-  const handleSaveCurrentProduct = () => {
-    if (!validateForm()) return;
+    // Add to Redux queue for bulk submission
+    dispatch(addToSubmitQueue(data));
 
-    dispatch(addToSubmitQueue());
+    // Clear form and media
+    reset();
     dispatch(clearMedia());
+
     toast.success("Product saved locally. You can now add another product.");
   };
 
@@ -108,20 +164,21 @@ const NewProduct = () => {
       )
     ) {
       try {
-        await addBulkProducts(productsToSubmit).unwrap();
+        const response = await addBulkProducts(productsToSubmit).unwrap();
+        console.log(response)
         toast.success("All products submitted successfully!");
+        dispatch(clearSubmitQueue());
         dispatch(clearMedia());
         navigate("/products");
       } catch (error) {
         console.error("Error submitting products:", error);
-        toast.error(` ${error?.data?.message || error.message || "Error submitting products"}`);
+        toast.error(`${error?.data?.message || error.message || "Error submitting products"}`);
       }
     }
   };
 
   // Update existing product
-  const handleUpdateProduct = async () => {
-    if (!validateForm()) return;
+  const onUpdateProduct = async (data) => {
 
     if (!productId) {
       toast.error("Product ID is missing!");
@@ -131,7 +188,7 @@ const NewProduct = () => {
     try {
       await updateProduct({
         product_id: productId,
-        productData: formData,
+        productData: data,
       }).unwrap();
 
       toast.success("Product updated successfully!");
@@ -139,7 +196,7 @@ const NewProduct = () => {
       navigate("/products");
     } catch (error) {
       console.error("Error updating product:", error);
-      toast.error(` ${error?.data?.message || error.message || "Error updating product"}`);
+      toast.error(`${error?.data?.message || error.message || "Error updating product"}`);
     }
   };
 
@@ -150,14 +207,14 @@ const NewProduct = () => {
         "Are you sure you want to cancel? Any unsaved changes will be lost."
       )
     ) {
-      dispatch(resetFormData());
+      reset();
       dispatch(clearSubmitQueue());
       dispatch(clearMedia());
-      navigate("/products");
+      navigate(-1);
     }
   };
 
-  const isProcessing = isAdding || isUpdating || loading;
+  const isProcessing = isAdding || isUpdating;
 
   // Show loading state while fetching product data
   if (isLoadingProduct) {
@@ -180,38 +237,69 @@ const NewProduct = () => {
   }
 
   return (
-    <>
-      <div className="w-full px-4">
+    <form onSubmit={handleSubmit(isEditMode ? onUpdateProduct : onSaveProduct)}>
+      <div className="w-full">
         <div className="flex gap-6">
           {/* LEFT + RIGHT SECTIONS */}
           <div className="flex flex-col lg:flex-row gap-6 w-full">
             {/* LEFT SECTION */}
             <div className="flex flex-col gap-6 w-full lg:w-2/3">
-              <ImageVideoManager images={productData?.images} />
-              <ProductInfo />
-              <Pricing />
-              <ProductOptions />
+              <ImageVideoManager
+                register={register}
+                control={control}
+                errors={errors}
+                setValue={setValue}
+              />
+              <ProductInfo
+                register={register}
+                control={control}
+                errors={errors}
+                isEditMode={isEditMode}
+              />
+              <Pricing
+                register={register}
+                control={control}
+                errors={errors}
+              />
+              <ProductOptions
+                setValue={setValue}
+                register={register}
+                control={control}
+                errors={errors}
+              />
             </div>
+
             {/* RIGHT SECTION */}
             <div className="flex flex-col gap-6 w-full lg:w-1/3">
-              <Categories />
-              <SeoSection />
+              <Categories
+                register={register}
+                control={control}
+                setValue={setValue}
+                errors={errors}
+              />
+              <SeoSection
+                register={register}
+                control={control}
+                errors={errors}
+              />
             </div>
           </div>
-
-          {/* PRODUCT LIST ON RIGHT SIDE IF EXISTS */}
-          {productsToSubmit.length > 0 && !isEditMode && (
-            <div className="w-full lg:w-auto">
-              <ProductList products={productsToSubmit} />
-            </div>
-          )}
         </div>
+
+        {/* PRODUCT LIST ON RIGHT SIDE IF EXISTS */}
+        {productsToSubmit.length > 0 && !isEditMode && (
+          <div className="w-full mt-6 lg:w-auto">
+            <ProductList products={productsToSubmit} />
+          </div>
+        )}
+
       </div>
 
       {/* BOTTOM BUTTONS */}
       {isEditMode ? (
         <div className="w-full bg-white py-4 px-6 flex justify-end gap-4 mt-6 shadow-sm">
           <button
+            type="button"
             className="bg-gray-500 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
             onClick={handleCancel}
             disabled={isProcessing}
@@ -220,8 +308,8 @@ const NewProduct = () => {
           </button>
 
           <button
+            type="submit"
             className="bg-blue-500 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
-            onClick={handleUpdateProduct}
             disabled={isProcessing}
           >
             {isUpdating ? "Updating..." : "Update Product"}
@@ -230,6 +318,7 @@ const NewProduct = () => {
       ) : (
         <div className="w-full bg-white py-4 px-6 flex justify-end gap-4 mt-6 shadow-sm">
           <button
+            type="button"
             className="bg-red-500 flex-1 hover:bg-red-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
             onClick={handleCancel}
             disabled={isProcessing}
@@ -238,8 +327,8 @@ const NewProduct = () => {
           </button>
 
           <button
-            className="bg-blue-500  flex-1 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
-            onClick={handleSaveCurrentProduct}
+            type="submit"
+            className="bg-blue-500 flex-1 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
             disabled={isProcessing}
           >
             {isAdding ? "Saving..." : "Save Product"}
@@ -247,6 +336,7 @@ const NewProduct = () => {
 
           {productsToSubmit.length > 0 && (
             <button
+              type="button"
               className="bg-green-500 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
               onClick={handleSubmitAllProducts}
               disabled={isProcessing}
@@ -258,14 +348,7 @@ const NewProduct = () => {
           )}
         </div>
       )}
-
-      {/* Error Display */}
-      {error && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg">
-          {error}
-        </div>
-      )}
-    </>
+    </form>
   );
 };
 

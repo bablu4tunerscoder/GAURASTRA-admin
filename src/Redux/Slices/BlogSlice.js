@@ -46,10 +46,10 @@ export const blogApi = createApi({
 
     // ---------------- 5. UPDATE BLOG (Mutation) ----------------
     updateBlog: builder.mutation({
-      query: ({ id, formData }) => ({
+      query: (id, formData) => ({
         url: `/api/blogs/updateBlog/${id}`,
         method: "PUT",
-        body: formData, // ✅ FormData is correct
+        body: formData,
       }),
 
       invalidatesTags: (result, error, { id }) => [

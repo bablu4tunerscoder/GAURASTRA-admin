@@ -1,51 +1,28 @@
-import { useDispatch, useSelector } from "react-redux";
-import { selectFormData, selectIsEditMode, updateFormData } from "../Redux/Slices/productSlice";
+import { useWatch } from "react-hook-form";
 
-const Pricing = () => {
-  const dispatch = useDispatch();
-  const formData = useSelector(selectFormData);
-  const isEditMode = useSelector(selectIsEditMode);
+const Pricing = ({ register, control, errors }) => {
+  // Watch pricing fields to calculate sale price in real-time
+  const originalPrice = useWatch({
+    control,
+    name: "pricing.original_price",
+    defaultValue: 0
+  });
 
-  const handleChange = (field, value) => {
-    dispatch(
-      updateFormData({
-        pricing: {
-          ...formData.pricing,
-          [field]: value,
-        },
-      })
-    );
-  };
+  const discountPercent = useWatch({
+    control,
+    name: "pricing.discount_percent",
+    defaultValue: 0
+  });
 
-  const handlePriceDetailChange = (field, value) => {
-    dispatch(
-      updateFormData({
-        pricing: {
-          ...formData.pricing,
-          price_detail: {
-            ...formData.pricing.price_detail,
-            [field]: parseFloat(value) || 0,
-          },
-        },
-      })
-    );
-  };
-
-
+  // Calculate sale price automatically
   const calculateSalePrice = () => {
-    if (isEditMode && formData.pricing?.price_detail) {
-      const { original_price, discount_percent } = formData.pricing.price_detail;
-      if (original_price && discount_percent) {
-        return original_price - (original_price * discount_percent) / 100;
-      }
-      return original_price || 0;
-    } else {
-      const { original_price, discount_percent } = formData.pricing || {};
-      if (original_price && discount_percent) {
-        return original_price - (original_price * discount_percent) / 100;
-      }
-      return original_price || 0;
+    const price = parseFloat(originalPrice) || 0;
+    const discount = parseFloat(discountPercent) || 0;
+
+    if (price && discount) {
+      return price - (price * discount) / 100;
     }
+    return price;
   };
 
   const salePrice = calculateSalePrice();
@@ -55,78 +32,124 @@ const Pricing = () => {
       <h2 className="text-xl font-semibold mb-6 text-gray-800">Pricing</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Original Price */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-gray-700">
             Price <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
-            value={
-              isEditMode
-                ? formData.latest_pricing?.price_detail?.original_price || ""
-                : formData.pricing?.original_price || ""
-            }
-            onChange={(e) =>
-              isEditMode
-                ? handlePriceDetailChange("original_price", e.target.value)
-                : handleChange("original_price", parseFloat(e.target.value) || 0)
-            }
+            {...register("pricing.original_price", {
+              required: "Price is required",
+              min: {
+                value: 0.01,
+                message: "Price must be greater than 0"
+              },
+              valueAsNumber: true
+            })}
             min="0"
             step="0.01"
             placeholder="0.00"
             className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           />
+          {errors?.pricing?.original_price && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.pricing.original_price.message}
+            </p>
+          )}
         </div>
 
+        {/* SKU */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-gray-700">SKU</label>
           <input
             type="text"
-            value={formData.pricing?.sku || ""}
-            onChange={(e) => handleChange("sku", e.target.value)}
+            {...register("pricing.sku", {
+              pattern: {
+                value: /^[A-Za-z0-9-_]+$/,
+                message: "SKU can only contain letters, numbers, hyphens and underscores"
+              }
+            })}
             placeholder="Product SKU"
             className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           />
+          {errors?.pricing?.sku && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.pricing.sku.message}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Discount Percent */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-gray-700">
             Discount %
           </label>
           <input
             type="number"
-            value={
-              isEditMode
-                ? formData.latest_pricing?.price_detail?.discount_percent || ""
-                : formData.pricing?.discount_percent || ""
-            }
-            onChange={(e) =>
-              isEditMode
-                ? handlePriceDetailChange("discount_percent", e.target.value)
-                : handleChange("discount_percent", parseFloat(e.target.value) || null)
-            }
+            {...register("pricing.discount_percent", {
+              min: {
+                value: 0,
+                message: "Discount cannot be negative"
+              },
+              max: {
+                value: 100,
+                message: "Discount cannot exceed 100%"
+              },
+              valueAsNumber: true
+            })}
             min="0"
             max="100"
             step="1"
             placeholder="0"
             className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           />
+          {errors?.pricing?.discount_percent && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.pricing.discount_percent.message}
+            </p>
+          )}
         </div>
 
+        {/* Sale Price (Calculated) */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-gray-700">
-            Sale Price
+            Sale Price (Calculated)
           </label>
-          <input
-            type="number"
-            value={salePrice.toFixed(2)}
-            readOnly
-            className="border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-600"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={salePrice.toFixed(2)}
+              readOnly
+              className="border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed text-gray-600 w-full"
+            />
+            {discountPercent > 0 && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 font-medium">
+                {discountPercent}% OFF
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500">
+            Automatically calculated based on price and discount
+          </p>
         </div>
       </div>
+
+      {/* Currency (Hidden field) */}
+      <input
+        type="hidden"
+        {...register("pricing.currency")}
+        value="INR"
+      />
+
+      {/* Discounted Price (Hidden field for backend) */}
+      <input
+        type="hidden"
+        {...register("pricing.discounted_price")}
+        value={salePrice.toFixed(2)}
+      />
     </div>
   );
 };

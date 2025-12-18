@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Controller, useWatch } from "react-hook-form";
 import {
   removeMedia,
   reorderMedia,
-  saveImages,
   setInitialImages,
 } from "../Redux/Slices/mediaSlice";
 import {
   useDeleteMediaMutation,
   useUploadMediaMutation,
 } from "../Redux/Slices/mediaSlice";
-import { useUpdateProductByIdMutation } from "../Redux/Slices/productSlice";
 import { FaArrowsAlt, FaTimes, FaUpload } from "react-icons/fa";
 import coverimg from "../assets/coverimg.png";
 import placeimg from "../assets/placehold.png";
@@ -18,25 +17,32 @@ import { BASE_URL } from "../Components/Helper/axiosinstance";
 import { getImageUrl } from "../utils/getImageUrl";
 import "./ImageVideoManager.scss";
 
-const ImageVideoManager = ({ images = [] }) => {
+const ImageVideoManager = ({ control, errors, setValue }) => {
   const dispatch = useDispatch();
 
   /* =======================
      Redux State
   ======================== */
-  const { uploadedUrls, loading, saving, error } = useSelector(
+  const { uploadedUrls, loading, error } = useSelector(
     (state) => state.media
   );
 
   const isEditMode = useSelector((state) => state.product.isEditMode);
 
   /* =======================
+     Watch form value for images
+  ======================== */
+  const formImages = useWatch({
+    control,
+    name: "images",
+    defaultValue: []
+  });
+
+  /* =======================
      RTK Query Hooks
   ======================== */
   const [uploadMedia] = useUploadMediaMutation();
   const [deleteMedia] = useDeleteMediaMutation();
-  const [updateProduct, { isLoading: updating }] =
-    useUpdateProductByIdMutation();
 
   /* =======================
      Local State
@@ -46,26 +52,41 @@ const ImageVideoManager = ({ images = [] }) => {
   const [initialized, setInitialized] = useState(false);
 
   /* =======================
-     Initialize Media From Props (Edit Mode)
+     Initialize images from form value when in edit mode
   ======================== */
   useEffect(() => {
-    if (!isEditMode || initialized || !images.length) return;
+    if (isEditMode && formImages && formImages.length > 0 && !initialized && uploadedUrls.length === 0) {
+      const mappedImages = formImages.map((img) => ({
+        id: img.image_id,
+        url: img.image_url.startsWith('http') ? img.image_url : `${BASE_URL}${img.image_url}`,
+        type: "image",
+        isCover: img.is_primary,
+      }));
+      dispatch(setInitialImages(mappedImages));
+      setInitialized(true);
+    }
+  }, [isEditMode, formImages, initialized, dispatch, uploadedUrls.length]);
 
-    const sortedImages = [
-      ...images.filter((img) => img.is_primary),
-      ...images.filter((img) => !img.is_primary),
-    ];
+  /* =======================
+     Sync Redux uploadedUrls to form
+  ======================== */
+  useEffect(() => {
+    if (uploadedUrls.length > 0) {
+      const imagesPayload = uploadedUrls.map((img, index) => ({
+        image_url: img.url.replace(BASE_URL, ""),
+        image_id: img.id || null,
+        is_primary: index === 0,
+      }));
 
-    const mappedImages = sortedImages.map((img) => ({
-      id: img.image_id,
-      url: img.image_url,
-      type: "image",
-      isCover: img.is_primary,
-    }));
+      // Only update if different from current form value
+      const currentPayload = JSON.stringify(imagesPayload);
+      const formPayload = JSON.stringify(formImages);
 
-    dispatch(setInitialImages(mappedImages));
-    setInitialized(true);
-  }, [isEditMode, images, initialized, dispatch]);
+      if (currentPayload !== formPayload) {
+        setValue("images", imagesPayload, { shouldValidate: true });
+      }
+    }
+  }, [uploadedUrls, setValue, formImages]);
 
   /* =======================
      Display Images (Single Source)
@@ -88,6 +109,14 @@ const ImageVideoManager = ({ images = [] }) => {
     list.splice(to, 0, moved);
 
     dispatch(reorderMedia(list));
+
+    // Update React Hook Form value
+    const imagesPayload = list.map((img, index) => ({
+      image_url: img.url.replace(BASE_URL, ""),
+      image_id: img.id || null,
+      is_primary: index === 0,
+    }));
+    setValue("images", imagesPayload, { shouldValidate: true });
   };
 
   /* =======================
@@ -95,11 +124,33 @@ const ImageVideoManager = ({ images = [] }) => {
   ======================== */
   const handleRemove = (index) => {
     dispatch(removeMedia(index));
+
+    // Update React Hook Form value
+    const updatedImages = displayImages.filter((_, i) => i !== index);
+    const imagesPayload = updatedImages.map((img, i) => ({
+      image_url: img.url.replace(BASE_URL, ""),
+      image_id: img.id || null,
+      is_primary: i === 0,
+    }));
+    setValue("images", imagesPayload, { shouldValidate: true });
   };
 
   const handleDelete = async (id, index) => {
-    await deleteMedia(id).unwrap();
-    dispatch(removeMedia(index));
+    try {
+      await deleteMedia(id).unwrap();
+      dispatch(removeMedia(index));
+
+      // Update React Hook Form value
+      const updatedImages = displayImages.filter((_, i) => i !== index);
+      const imagesPayload = updatedImages.map((img, i) => ({
+        image_url: img.url.replace(BASE_URL, ""),
+        image_id: img.id || null,
+        is_primary: i === 0,
+      }));
+      setValue("images", imagesPayload, { shouldValidate: true });
+    } catch (err) {
+      setErrorMessage(err?.data?.message || "Delete failed");
+    }
   };
 
   const handleFileUpload = async (e) => {
@@ -112,36 +163,15 @@ const ImageVideoManager = ({ images = [] }) => {
     }
 
     setErrorMessage("");
-    await uploadMedia(files).unwrap();
-  };
 
-  /* =======================
-     Save / Update Images
-  ======================== */
-  const handleSaveImages = () => {
-    if (!displayImages.length) return;
-
-    const coverImage = displayImages[0].url;
-    const mediaUrls = displayImages.slice(1).map((img) => img.url);
-
-    dispatch(saveImages({ coverImage, otherImages: mediaUrls }));
-    alert("Images saved successfully!");
-  };
-
-  const handleUpdateImages = async () => {
-    if (!displayImages.length) return;
-
-    const imagesPayload = displayImages.map((img, index) => ({
-      image_url: img.url.replace(BASE_URL, ""),
-      image_id: img.id || null,
-      is_primary: index === 0,
-    }));
-
-    await updateProduct({
-      images: imagesPayload,
-    }).unwrap();
-
-    alert("Images updated successfully!");
+    try {
+      // Upload media - Redux will update automatically via the mutation
+      await uploadMedia(files).unwrap();
+      // The useEffect above will sync the uploadedUrls to form automatically
+    } catch (err) {
+      console.error("Upload error:", err);
+      setErrorMessage(err?.data?.message || err?.message || "Upload failed");
+    }
   };
 
   /* =======================
@@ -153,10 +183,11 @@ const ImageVideoManager = ({ images = [] }) => {
 
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
       {errorMessage && <p className="text-red-500 text-sm mb-2">{errorMessage}</p>}
+      {errors?.images && <p className="text-red-500 text-sm mb-2">{errors.images.message}</p>}
       {loading && <p className="text-blue-500 text-sm mb-2">Uploading files...</p>}
-      {saving && <p className="text-blue-500 text-sm mb-2">Saving images...</p>}
 
       <div className="flex flex-col lg:flex-row gap-6">
+        {/* Cover Image */}
         <div className="w-full lg:w-1/3">
           <div className="aspect-square border rounded-lg overflow-hidden">
             <img
@@ -168,6 +199,7 @@ const ImageVideoManager = ({ images = [] }) => {
           </div>
         </div>
 
+        {/* Image Grid */}
         <div className="w-full lg:w-2/3">
           <div className="flex flex-wrap gap-4">
             {displayImages.map((media, index) => (
@@ -200,6 +232,7 @@ const ImageVideoManager = ({ images = [] }) => {
               </div>
             ))}
 
+            {/* Upload Button */}
             {displayImages.length < 8 && (
               <div className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center">
                 <input
@@ -222,18 +255,7 @@ const ImageVideoManager = ({ images = [] }) => {
           </div>
         </div>
       </div>
-
-      <div className="mt-6">
-        <button
-          onClick={isEditMode ? handleUpdateImages : handleSaveImages}
-          disabled={loading || saving || updating}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 transition"
-        >
-          {isEditMode ? "Update Images" : "Save Images"}
-        </button>
-      </div>
     </div>
-
   );
 };
 

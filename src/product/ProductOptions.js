@@ -1,156 +1,154 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { updateFormData, selectFormData } from "../Redux/Slices/productSlice";
-import { FaPen, FaTrash, FaCheck, FaTimes } from "react-icons/fa";
+import { useWatch } from "react-hook-form";
+import { FaTrash } from "react-icons/fa";
 
 const selectableOptions = {
   size: ["S", "M", "L", "XL", "XXL"],
   gender: ["Men", "Women", "Unisex"],
   sleeve_length: ["Full Sleeve", "Half Sleeve", "Sleeveless"],
 };
+const singleSelectOptions = ["gender", "sleeve_length"];
 
-const ProductOptions = () => {
-  const dispatch = useDispatch();
-  const formData = useSelector(selectFormData);
-  const { attributes = {} } = formData;
 
-  const [editing, setEditing] = useState(null);
-  const [inputValue, setInputValue] = useState("");
-  const [quantityValue, setQuantityValue] = useState("");
+const ProductOptions = ({ control, setValue }) => {
+  const [inputValues, setInputValues] = useState({});
+  const [quantityValues, setQuantityValues] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [newOptionKey, setNewOptionKey] = useState("");
   const [newOptionTags, setNewOptionTags] = useState([]);
+  const [modalInputValue, setModalInputValue] = useState("");
+  const [modalQuantityValue, setModalQuantityValue] = useState("");
+
+  // Watch attributes from form
+  const attributes = useWatch({
+    control,
+    name: "attributes",
+    defaultValue: {}
+  });
 
   // Convert attributes to display format
   const getDisplayAttributes = () => {
     const displayAttrs = {};
-    Object.keys(attributes).forEach((key) => {
-      if (key === "size" && Array.isArray(attributes[key])) {
-        displayAttrs[key] = attributes[key]
-          .map((item) => `${item.name} (Qty: ${item.quantity})`)
-          .join(", ");
-      } else if (Array.isArray(attributes[key])) {
-        displayAttrs[key] = attributes[key].join(", ");
-      } else {
-        displayAttrs[key] = attributes[key];
+
+    Object.keys(attributes || {}).forEach((key) => {
+      const value = attributes[key];
+
+      if (key === "size") {
+        displayAttrs[key] = Array.isArray(value) ? value : [];
+      }
+      else if (singleSelectOptions.includes(key)) {
+        displayAttrs[key] = value ? [value] : [];
+      }
+      else {
+        displayAttrs[key] = Array.isArray(value) ? value : value ? [value] : [];
       }
     });
+
     return displayAttrs;
   };
 
   const displayAttributes = getDisplayAttributes();
 
-  // Start Editing
-  const handleEdit = (key) => {
-    setEditing(key);
-    if (key === "size" && attributes[key]) {
-      setNewOptionTags([...attributes[key]]);
-    } else if (attributes[key]) {
-      setNewOptionTags(
-        Array.isArray(attributes[key]) ? [...attributes[key]] : [attributes[key]]
-      );
-    } else {
-      setNewOptionTags([]);
-    }
+  // Remove Tag
+  const removeTag = (key) => {
+    const updatedAttributes = { ...attributes };
+    delete updatedAttributes[key];
+    setValue("attributes", updatedAttributes, { shouldValidate: true });
   };
 
-  // Remove Tag
-  const removeTag = (index) => {
-    setNewOptionTags(newOptionTags.filter((_, i) => i !== index));
-  };
 
   // Add tag for size (with quantity)
-  const handleAddSize = () => {
+  const handleAddSize = (key) => {
+    const inputValue = inputValues[key] || "";
+    const quantityValue = quantityValues[key] || "";
+
     if (inputValue && quantityValue && !isNaN(quantityValue)) {
-      setNewOptionTags([
-        ...newOptionTags,
-        {
-          name: inputValue.trim(),
-          quantity: parseInt(quantityValue),
-        },
-      ]);
-      setInputValue("");
-      setQuantityValue("");
+      const currentValues = attributes[key] || [];
+      const newValue = {
+        name: inputValue.trim(),
+        quantity: parseInt(quantityValue),
+      };
+
+      const updatedValues = [...(Array.isArray(currentValues) ? currentValues : [currentValues]), newValue];
+      setValue(`attributes.${key}`, updatedValues, { shouldValidate: true });
+
+      // Clear inputs
+      setInputValues({ ...inputValues, [key]: "" });
+      setQuantityValues({ ...quantityValues, [key]: "" });
     }
   };
 
   // Add tag for other options
-  const handleAddOption = () => {
-    if (inputValue.trim()) {
-      setNewOptionTags([...newOptionTags, inputValue.trim()]);
-      setInputValue("");
+  const handleAddOption = (key) => {
+    const inputValue = inputValues[key]?.trim();
+    if (!inputValue) return;
+
+    // SINGLE select → replace value
+    if (singleSelectOptions.includes(key)) {
+      setValue(`attributes.${key}`, inputValue, { shouldValidate: true });
     }
+    // MULTI select → array
+    else {
+      const currentValues = attributes[key];
+      const updatedValues = Array.isArray(currentValues)
+        ? [...currentValues, inputValue]
+        : currentValues
+          ? [currentValues, inputValue]
+          : [inputValue];
+
+      setValue(`attributes.${key}`, updatedValues, { shouldValidate: true });
+    }
+
+    setInputValues({ ...inputValues, [key]: "" });
   };
 
-  // Save Changes
-  const handleSave = (key) => {
-    let valueToSave;
-    if (key === "size") {
-      valueToSave = newOptionTags;
-    } else {
-      valueToSave = newOptionTags.length === 1 ? newOptionTags[0] : newOptionTags;
-    }
-
-    dispatch(
-      updateFormData({
-        attributes: { ...attributes, [key]: valueToSave },
-      })
-    );
-    setEditing(null);
-  };
 
   // Delete Custom Attribute
   const handleDelete = (key) => {
     if (selectableOptions[key]) return;
     const updatedAttributes = { ...attributes };
     delete updatedAttributes[key];
-    dispatch(updateFormData({ attributes: updatedAttributes }));
+    setValue("attributes", updatedAttributes, { shouldValidate: true });
   };
 
   // Add New Custom Option from Modal
   const handleAddNewOption = () => {
     if (newOptionKey.trim() && newOptionTags.length > 0) {
-      let valueToSave;
-      if (newOptionKey === "size") {
-        valueToSave = newOptionTags;
-      } else {
-        valueToSave = newOptionTags.length === 1 ? newOptionTags[0] : newOptionTags;
-      }
-
-      dispatch(
-        updateFormData({
-          attributes: { ...attributes, [newOptionKey]: valueToSave },
-        })
-      );
+      setValue(`attributes.${newOptionKey}`, newOptionTags, { shouldValidate: true });
       setShowModal(false);
       setNewOptionKey("");
       setNewOptionTags([]);
-      setInputValue("");
-      setQuantityValue("");
+      setModalInputValue("");
+      setModalQuantityValue("");
     }
   };
 
   // Handle Enter key for adding tags in modal
   const handleModalKeyDown = (e) => {
-    if (e.key === "Enter" && inputValue.trim()) {
+    if (e.key === "Enter" && modalInputValue.trim()) {
       e.preventDefault();
       if (newOptionKey === "size") {
-        if (quantityValue && !isNaN(quantityValue)) {
+        if (modalQuantityValue && !isNaN(modalQuantityValue)) {
           setNewOptionTags([
             ...newOptionTags,
             {
-              name: inputValue.trim(),
-              quantity: parseInt(quantityValue),
+              name: modalInputValue.trim(),
+              quantity: parseInt(modalQuantityValue),
             },
           ]);
-          setInputValue("");
-          setQuantityValue("");
+          setModalInputValue("");
+          setModalQuantityValue("");
         }
       } else {
-        setNewOptionTags([...newOptionTags, inputValue.trim()]);
-        setInputValue("");
+        setNewOptionTags([...newOptionTags, modalInputValue.trim()]);
+        setModalInputValue("");
       }
     }
+  };
+
+  // Remove tag from modal
+  const removeModalTag = (index) => {
+    setNewOptionTags(newOptionTags.filter((_, i) => i !== index));
   };
 
   return (
@@ -165,105 +163,67 @@ const ProductOptions = () => {
         {Object.keys(selectableOptions).map((key) => (
           <div
             key={key}
-            className="flex items-start justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition"
+            className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition"
           >
-            <div className="flex-1">
-              <span className="font-medium text-gray-700 uppercase text-sm block mb-2">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-medium text-gray-700 uppercase text-sm">
                 {key.replace("_", " ")}
               </span>
-
-              {editing === key ? (
-                <div className="space-y-3">
-                  {/* Tags Display */}
-                  <div className="flex flex-wrap gap-2">
-                    {newOptionTags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                      >
-                        {key === "size" ? `${tag.name} (Qty: ${tag.quantity})` : tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(index)}
-                          className="hover:text-blue-900 font-bold"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Input Controls */}
-                  <div className="flex flex-wrap gap-2">
-                    <select
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-[150px]"
-                    >
-                      <option value="">Select {key}</option>
-                      {selectableOptions[key].map((val) => (
-                        <option key={val} value={val}>
-                          {val}
-                        </option>
-                      ))}
-                    </select>
-
-                    {key === "size" && (
-                      <input
-                        type="number"
-                        value={quantityValue}
-                        onChange={(e) => setQuantityValue(e.target.value)}
-                        placeholder="Quantity"
-                        min="0"
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={key === "size" ? handleAddSize : handleAddOption}
-                      disabled={!inputValue || (key === "size" && !quantityValue)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-600">
-                  {displayAttributes[key] || "Not set"}
-                </p>
-              )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2 ml-4">
-              {editing === key ? (
-                <>
-                  <button
-                    onClick={() => handleSave(key)}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
-                    title="Save"
-                  >
-                    <FaCheck />
-                  </button>
-                  <button
-                    onClick={() => setEditing(null)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                    title="Cancel"
-                  >
-                    <FaTimes />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => handleEdit(key)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                  title="Edit"
+            {/* Tags Display */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {displayAttributes[key]?.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
                 >
-                  <FaPen />
-                </button>
+                  {key === "size" ? `${tag.name} (Qty: ${tag.quantity})` : tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(key, index)}
+                    className="hover:text-blue-900 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            {/* Input Controls */}
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={inputValues[key] || ""}
+                onChange={(e) => setInputValues({ ...inputValues, [key]: e.target.value })}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-[150px]"
+              >
+                <option value="">Select {key}</option>
+                {selectableOptions[key].map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </select>
+
+              {key === "size" && (
+                <input
+                  type="number"
+                  value={quantityValues[key] || ""}
+                  onChange={(e) => setQuantityValues({ ...quantityValues, [key]: e.target.value })}
+                  placeholder="Quantity"
+                  min="0"
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               )}
+
+              <button
+                type="button"
+                onClick={() => key === "size" ? handleAddSize(key) : handleAddOption(key)}
+                disabled={!inputValues[key] || (key === "size" && !quantityValues[key])}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
             </div>
           </div>
         ))}
@@ -274,115 +234,75 @@ const ProductOptions = () => {
           .map((key) => (
             <div
               key={key}
-              className="flex items-start justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition"
+              className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition"
             >
-              <div className="flex-1">
-                <span className="font-medium text-gray-700 uppercase text-sm block mb-2">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-gray-700 uppercase text-sm">
                   {key.replace("_", " ")}
                 </span>
-
-                {editing === key ? (
-                  <div className="space-y-3">
-                    {/* Tags Display */}
-                    <div className="flex flex-wrap gap-2">
-                      {newOptionTags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                        >
-                          {key === "size" ? `${tag.name} (Qty: ${tag.quantity})` : tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(index)}
-                            className="hover:text-blue-900 font-bold"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Input Controls */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder={
-                          key === "size" ? "Size (e.g., S, M)" : "Type value"
-                        }
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      {key === "size" && (
-                        <input
-                          type="number"
-                          value={quantityValue}
-                          onChange={(e) => setQuantityValue(e.target.value)}
-                          placeholder="Quantity"
-                          min="0"
-                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={key === "size" ? handleAddSize : handleAddOption}
-                        disabled={!inputValue || (key === "size" && !quantityValue)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition disabled:bg-gray-300"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-600">
-                    {displayAttributes[key] || "Not set"}
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={() => handleDelete(key)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                  title="Delete"
+                >
+                  <FaTrash />
+                </button>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2 ml-4">
-                {editing === key ? (
-                  <>
+              {/* Tags Display */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {displayAttributes[key]?.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
+                  >
+                    {key === "size" ? `${tag.name} (Qty: ${tag.quantity})` : tag}
                     <button
-                      onClick={() => handleSave(key)}
-                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
-                      title="Save"
+                      type="button"
+                      onClick={() => removeTag(key, index)}
+                      className="hover:text-blue-900 font-bold"
                     >
-                      <FaCheck />
+                      ×
                     </button>
-                    <button
-                      onClick={() => setEditing(null)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                      title="Cancel"
-                    >
-                      <FaTimes />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleEdit(key)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                      title="Edit"
-                    >
-                      <FaPen />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(key)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                      title="Delete"
-                    >
-                      <FaTrash />
-                    </button>
-                  </>
+                  </span>
+                ))}
+              </div>
+
+              {/* Input Controls */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={inputValues[key] || ""}
+                  onChange={(e) => setInputValues({ ...inputValues, [key]: e.target.value })}
+                  placeholder={key === "size" ? "Size (e.g., S, M)" : "Type value"}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {key === "size" && (
+                  <input
+                    type="number"
+                    value={quantityValues[key] || ""}
+                    onChange={(e) => setQuantityValues({ ...quantityValues, [key]: e.target.value })}
+                    placeholder="Quantity"
+                    min="0"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 )}
+                <button
+                  type="button"
+                  onClick={() => key === "size" ? handleAddSize(key) : handleAddOption(key)}
+                  disabled={!inputValues[key] || (key === "size" && !quantityValues[key])}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition disabled:bg-gray-300"
+                >
+                  Add
+                </button>
               </div>
             </div>
           ))}
 
         {/* Add New Option Button */}
         <button
+          type="button"
           onClick={() => setShowModal(true)}
           className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition font-medium"
         >
@@ -419,7 +339,7 @@ const ProductOptions = () => {
                       : tag}
                     <button
                       type="button"
-                      onClick={() => removeTag(index)}
+                      onClick={() => removeModalTag(index)}
                       className="hover:text-blue-900 font-bold"
                     >
                       ×
@@ -432,8 +352,8 @@ const ProductOptions = () => {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  value={modalInputValue}
+                  onChange={(e) => setModalInputValue(e.target.value)}
                   onKeyDown={handleModalKeyDown}
                   placeholder={
                     newOptionKey === "size"
@@ -445,8 +365,8 @@ const ProductOptions = () => {
                 {newOptionKey === "size" && (
                   <input
                     type="number"
-                    value={quantityValue}
-                    onChange={(e) => setQuantityValue(e.target.value)}
+                    value={modalQuantityValue}
+                    onChange={(e) => setModalQuantityValue(e.target.value)}
                     onKeyDown={handleModalKeyDown}
                     placeholder="Qty"
                     min="0"
@@ -458,6 +378,7 @@ const ProductOptions = () => {
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={handleAddNewOption}
                 disabled={!newOptionKey.trim() || newOptionTags.length === 0}
                 className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
@@ -465,12 +386,13 @@ const ProductOptions = () => {
                 Add Option
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setShowModal(false);
                   setNewOptionKey("");
                   setNewOptionTags([]);
-                  setInputValue("");
-                  setQuantityValue("");
+                  setModalInputValue("");
+                  setModalQuantityValue("");
                 }}
                 className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition font-medium"
               >
