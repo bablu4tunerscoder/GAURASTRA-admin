@@ -140,31 +140,49 @@ const productSlice = createSlice({
     },
 
     // Products to Submit
-    addToSubmitQueue: (state) => {
-      const { formData } = state;
+    addToSubmitQueue: (state, action) => {
+      const formData = action.payload; // ✅ USE PAYLOAD
 
-      // Validate
-      if (!formData.product_name || !formData.category_id || !formData.Subcategory_id) {
+      // ✅ Validate required fields
+      if (
+        !formData.product_name ||
+        !formData.category_id ||
+        !formData.subcategory_id
+      ) {
         return;
       }
 
       state.productsToSubmit.push({
         ...formData,
+        Subcategory_id: formData.subcategory_id,
+        // ✅ Normalize pricing
         pricing: {
           ...formData.pricing,
-          original_price: parseFloat(formData.pricing.original_price) || 0,
-          discount_percent: formData.pricing.discount_percent !== null
-            ? parseFloat(formData.pricing.discount_percent)
-            : null,
+          original_price: Number(formData.pricing.original_price) || 0,
+          discount_percent:
+            formData.pricing.discount_percent !== ""
+              ? Number(formData.pricing.discount_percent)
+              : null,
+          discounted_price: Number(formData.pricing.discounted_price) || 0,
         },
-        stock: {
-          quantity: parseInt(formData.stock.quantity) || 0,
+
+        // ✅ Normalize attributes
+        attributes: {
+          gender: formData.attributes.gender || null,
+          sleeve_length: formData.attributes.sleeve_length || null,
+          size: Array.isArray(formData.attributes.size)
+            ? formData.attributes.size
+            : [],
         },
+
+        // ✅ Images safety
+        images: Array.isArray(formData.images) ? formData.images : [],
       });
 
-      // Reset form
+      // ✅ Reset form data
       state.formData = { ...initialProductState };
     },
+
 
     removeFromSubmitQueue: (state, action) => {
       state.productsToSubmit = state.productsToSubmit.filter(

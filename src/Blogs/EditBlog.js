@@ -82,6 +82,7 @@ const EditBlog = () => {
       );
 
       // ✅ File
+      console.log("thumbnail", thumbnailFile)
       if (thumbnailFile) {
         formData.append("thumbnail", thumbnailFile);
       }
@@ -270,7 +271,6 @@ const EditBlog = () => {
                 type="file"
                 accept="image/jpeg,image/png,image/jpg"
                 onChange={handleImageUpload}
-                // The input is hidden
                 className="hidden"
               />
             </label>
