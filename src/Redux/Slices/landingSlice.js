@@ -8,35 +8,52 @@ export const landingApi = createApi({
   baseQuery: baseQueryOffline,
   tagTypes: ["Landing"],
   endpoints: (builder) => ({
+
+    // CREATE
     createLandingContent: builder.mutation({
       query: (formData) => ({
         url: "/api/landing/create",
         method: "POST",
         body: formData,
       }),
-      invalidatesTags: ["Landing"],
+      invalidatesTags: [{ type: "Landing", id: "LIST" }],
     }),
 
+    // READ (LIST)
     fetchLandingContent: builder.query({
       query: () => "/api/landing",
-      providesTags: ["Landing"],
+      providesTags: (result) =>
+        result?.data
+          ? [
+            ...result.data.map(({ _id }) => ({ type: "Landing", id: _id })),
+            { type: "Landing", id: "LIST" },
+          ]
+          : [{ type: "Landing", id: "LIST" }],
     }),
 
+    // DELETE
     deleteLandingContent: builder.mutation({
       query: (id) => ({
         url: `/api/landing/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Landing"],
+      invalidatesTags: (result, error, id) => [
+        { type: "Landing", id },
+        { type: "Landing", id: "LIST" },
+      ],
     }),
 
+    // UPDATE
     updateLandingContent: builder.mutation({
       query: ({ id, updatedData }) => ({
         url: `/api/landing/update/${id}`,
         method: "PUT",
         body: updatedData,
       }),
-      invalidatesTags: ["Landing"],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Landing", id },
+        { type: "Landing", id: "LIST" },
+      ],
     }),
   }),
 });
@@ -130,13 +147,8 @@ const landingSlice = createSlice({
       /* UPDATE */
       .addMatcher(
         landingApi.endpoints.updateLandingContent.matchFulfilled,
-        (state, action) => {
-          const index = state.content.findIndex(
-            (item) => item._id === action.payload._id
-          );
-          if (index !== -1) {
-            state.content[index] = action.payload;
-          }
+        (state) => {
+          state.success = true;
         }
       )
       .addMatcher(

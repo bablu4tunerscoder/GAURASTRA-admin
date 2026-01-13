@@ -164,6 +164,7 @@ const NewProduct = () => {
       )
     ) {
       try {
+        console.log(productsToSubmit)
         const response = await addBulkProducts(productsToSubmit).unwrap();
         console.log(response)
         toast.success("All products submitted successfully!");
