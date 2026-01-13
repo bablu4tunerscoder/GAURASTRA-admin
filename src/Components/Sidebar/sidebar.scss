@@ -8,7 +8,7 @@ $scrollbar-track: #f0f0f0;
     display: flex;
     flex-direction: column;
     position: absolute;
-    z-index: 2;
+    z-index: 999;
 }
 
 .menu-toggle {
@@ -17,23 +17,19 @@ $scrollbar-track: #f0f0f0;
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #000;
+    color: #fff;
+    padding-top: 10px;
     transition: transform 0.3s ease-in-out;
-
-    &:hover {
-        transform: rotate(90deg);
-    }
 }
 
 .sidebar {
-    position: fixed;
-    top: 60;
-    left: 0;
-    width: 260px;
-    height: 100vh;
-    background-color: $page-bg;
+    margin-top: 60px;
+    min-height: calc(100vh - 60px);
+    // background-color: $page-bg;
     overflow-y: auto;
     z-index: 999;
+    width: 260px;
+    transition: transform 0.3s ease-in-out;
 
     h2 {
         margin-bottom: 0;
@@ -109,6 +105,11 @@ $scrollbar-track: #f0f0f0;
     }
 }
 
+.sidebar.open {
+    width: 260px;
+    height: 100vh;
+}
+
 @media (max-width: 768px) {
     .menu-toggle {
         display: block;
@@ -120,8 +121,8 @@ $scrollbar-track: #f0f0f0;
     }
 
     .sidebar {
-        transform: translateX(-100%);
-        opacity: 0;
+        // transform: translateX(-100%);
+        // opacity: 0;
         transition: transform 0.3s ease, opacity 0.3s ease;
 
         &.open {

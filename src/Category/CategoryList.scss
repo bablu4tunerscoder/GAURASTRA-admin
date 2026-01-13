@@ -4,6 +4,7 @@
   margin-left: 0; /* NO SIDEBAR NOW */
   transition: all 0.3s ease;
 
+<<<<<<< HEAD
   @media (max-width: 768px) {
     padding: 15px;
   }
@@ -11,6 +12,12 @@
   @media (max-width: 480px) {
     padding: 10px;
   }
+=======
+  .category-container {
+    flex-grow: 1;
+    // padding: 20px;
+    // margin-left: 270px;
+>>>>>>> 7406ecfdb1b496bf8f9af7b0d29d04cb3b66a3a6
 
   /* Header */
   .category-header {
@@ -109,10 +116,56 @@
     @media (max-width: 768px) {
       font-size: 14px;
 
+<<<<<<< HEAD
       .edit-btn,
       .delete-btn {
         padding: 5px 10px;
         font-size: 13px;
+=======
+    @media (max-width: 600px) {
+      margin-left: 0;
+      padding: 10px;
+    }
+
+    .category-header {
+      text-align: center;
+      /* Centering heading */
+      margin-bottom: 20px;
+      padding: 10px;
+
+      h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        /* Space between heading and button */
+
+        @media (max-width: 600px) {
+          font-size: 20px;
+        }
+      }
+
+      .category-button {
+        display: flex;
+        justify-content: end;
+
+        .create-btn {
+          background-color: #007bff;
+          color: white;
+          padding: 10px 15px;
+          border: none;
+          cursor: pointer;
+          border-radius: 5px;
+
+          &:hover {
+            background-color: #0056b3;
+          }
+
+          @media (max-width: 600px) {
+            width: 40%;
+            text-align: center;
+          }
+        }
+>>>>>>> 7406ecfdb1b496bf8f9af7b0d29d04cb3b66a3a6
       }
     }
 
@@ -121,7 +174,37 @@
 
       th,
       td {
+<<<<<<< HEAD
         padding: 8px;
+=======
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+      }
+
+
+      .edit-btn {
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        margin-right: 5px;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+
+        &:hover {
+          background-color: #218838;
+        }
+>>>>>>> 7406ecfdb1b496bf8f9af7b0d29d04cb3b66a3a6
       }
 
       .edit-btn,
@@ -131,6 +214,7 @@
       }
     }
   }
+<<<<<<< HEAD
 
   /* Error & Info Messages */
   .error-message,
@@ -141,3 +225,6 @@
     margin-top: 15px;
   }
 }
+=======
+}
+>>>>>>> 7406ecfdb1b496bf8f9af7b0d29d04cb3b66a3a6

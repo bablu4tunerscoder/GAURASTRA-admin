@@ -1,98 +1,119 @@
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { updateNewProduct, editProduct } from "../Redux/Slices/productSlice";
+import { Controller } from "react-hook-form";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import "./ProductInfo.scss";
-const ProductInfo = () => {
-  const dispatch = useDispatch();
-  const { product_name, brand, description, featuredSection } = useSelector(
-    (state) => state.product.currentProduct
-  );
 
-  const isEditMode = useSelector((state) => state.product.isEditMode);
-
-  const product = useSelector((state) => state.product.updateProduct);
-
-const handleChange = (e) => {
-  const value = e.target.value;
-  dispatch(updateNewProduct({ product_name: value }));
-};
-
-const handleUpdate = (e) => {
-  const value = e.target.value;
-  dispatch(editProduct({ product_name: value }));
-};
-
-  const defaultBrand = brand || "Gaurastra";
-  const handleBrandChange = (e) => {
-    dispatch(updateNewProduct({ brand: e.target.value }));
-  };
-  const handleSectionChange = (e) => {
-    if (isEditMode) {
-      dispatch(editProduct({ featuredSection: e.target.value }));
-    } else {
-      dispatch(updateNewProduct({ featuredSection: e.target.value }));
-    }
-  };
-
-  const handleDescriptionChange = (value) => {
-    if (isEditMode) {
-      dispatch(editProduct({ description: value }));
-    } else {
-      dispatch(updateNewProduct({ description: value }));
-    }
-  };
-
-
-
-
+const ProductInfo = ({ register, control, errors }) => {
   return (
-    <div className="product-info-container">
-      <h2>Product info</h2>
-      <div className="basic-info">
-        <div style={{ display: "flex", gap: "30px" }}>
-          {isEditMode ? (<div>
-            <label>Name</label>
-            <input type="text" value={product.product_name} onChange={handleUpdate} />
-          </div>) : (<div>
-            <label>Name</label>
-            <input type="text" value={product_name} onChange={handleChange} />
-          </div>)}
-          <div>
-            <label>Brand</label>
-            <input type="text" value={defaultBrand} onChange={handleBrandChange} disabled />
-          </div>
-          {isEditMode ? (<div>
-            <label>Section</label>
-            <select value={product.featuredSection} onChange={handleSectionChange}>
-              <option value="All Products">All Products</option>
-              <option value="New Arrivals">New Arrivals</option>
-              <option value="Our Collection">Our Collection</option>
-              <option value="Limited Edition">Limited Edition</option>
-            </select>
-          </div>) : (<div>
-            <label>Section</label>
-            <select value={featuredSection} onChange={handleSectionChange}>
-              <option value="All Products">All Products</option>
-              <option value="New Arrivals">New Arrivals</option>
-              <option value="Our Collection">Our Collection</option>
-              <option value="Limited Edition">Limited Edition</option>
-            </select>
-          </div>)}
+    <div className="w-full bg-white rounded-xl p-6 shadow-sm">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">
+        Product Info
+      </h2>
+
+      {/* Top Fields */}
+      <div className="flex flex-col flex-wrap lg:flex-row gap-6 mb-6">
+        {/* Product Name */}
+        <div className="flex flex-col gap-2 w-full">
+          <label className="text-sm font-medium text-gray-700">
+            Product Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            {...register("product_name", {
+              required: "Product name is required",
+              minLength: {
+                value: 3,
+                message: "Product name must be at least 3 characters",
+              },
+            })}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter product name"
+          />
+          {errors?.product_name && (
+            <p className="text-red-500 text-xs">
+              {errors.product_name.message}
+            </p>
+          )}
         </div>
-        <label>Description</label>
-        {isEditMode ? (<ReactQuill
-          value={product.description}
-          onChange={handleDescriptionChange}
-          theme="snow"
-        />) : (<ReactQuill
-          value={description}
-          onChange={handleDescriptionChange}
-          theme="snow"
-        />)}
+
+        {/* Brand */}
+        <div className="flex flex-col gap-2 w-full">
+          <label className="text-sm font-medium text-gray-700">
+            Brand
+          </label>
+          <input
+            type="text"
+            {...register("brand")}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter brand name"
+          />
+        </div>
+
+        {/* Featured Section */}
+        <div className="flex flex-col gap-2 w-full">
+          <label className="text-sm font-medium text-gray-700">
+            Featured Section
+          </label>
+          <select
+            {...register("featuredSection")}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="All Products">All Products</option>
+            <option value="New Arrivals">New Arrivals</option>
+            <option value="Our Collection">Our Collection</option>
+            <option value="Limited Edition">Limited Edition</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Description (ALWAYS QUILL) */}
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium text-gray-700">
+          Description <span className="text-red-500">*</span>
+        </label>
+
+        <Controller
+          name="description"
+          control={control}
+          rules={{
+            required: "Description is required",
+            validate: (value) => {
+              const textOnly = value
+                ?.replace(/<[^>]*>/g, "")
+                .trim();
+              if (!textOnly || textOnly.length < 10) {
+                return "Description must be at least 10 characters";
+              }
+              return true;
+            },
+          }}
+          render={({ field: { onChange, value } }) => (
+            <ReactQuill
+              value={value || ""}
+              onChange={onChange}
+              theme="snow"
+              placeholder="Enter product description..."
+              className="bg-white"
+              modules={{
+                toolbar: [
+                  [{ header: [1, 2, 3, false] }],
+                  ["bold", "italic", "underline", "strike"],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                  ["link"],
+                  ["clean"],
+                ],
+              }}
+            />
+          )}
+        />
+
+        {errors?.description && (
+          <p className="text-red-500 text-xs">
+            {errors.description.message}
+          </p>
+        )}
       </div>
     </div>
   );
 };
+
 export default ProductInfo;

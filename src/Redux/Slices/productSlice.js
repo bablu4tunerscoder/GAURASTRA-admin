@@ -1,404 +1,371 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOnline from "./api/baseQuery";
 
-export const fetchProducts = createAsyncThunk(
-  "product/fetchProducts",
-  async () => {
-    const response = await axios.get(`${BASE_URL}/api/Productes/ProductDetail`);
-    return response.data;
-  }
-);
+// ==================== RTK Query API ====================
+export const productApi = createApi({
+  reducerPath: "productApi",
+  baseQuery: baseQueryOnline,
+  tagTypes: ["Product", "ProductList"],
 
-export const addBulkProducts = createAsyncThunk(
-  "product/addBulkProducts",
-  async (_, { getState }) => {
-    const { productsToSubmit } = getState().product;
-    const response = await axios.post(
-      `${BASE_URL}/api/Productes/addBulk-products`,
-      { products: productsToSubmit },
-      { headers: { "Content-Type": "application/json" } }
-    );
-    return response.data;
-  }
-);
+  endpoints: (builder) => ({
+    // Fetch all products
+    fetchProducts: builder.query({
+      query: () => "/api/Productes/ProductDetail",
+      transformResponse: (response) => response.data || [],
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.map(({ product_id }) => ({
+              type: "Product",
+              id: product_id,
+            })),
+            { type: "ProductList", id: "LIST" },
+          ]
+          : [{ type: "ProductList", id: "LIST" }],
+    }),
 
-// Get Product By Id
-export const fetchProductById = createAsyncThunk(
-  "product/fetchProductDetailsById",
-  async (productId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/Productes/product/${productId}`
-      );
-      return response.data.data; // Assuming product details are under `data` field
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch product details"
-      );
-    }
-  }
-);
+    // Fetch product by ID
+    fetchProductById: builder.query({
+      query: (productId) => `/api/Productes/product/${productId}`,
+      transformResponse: (response) => response.data,
+      providesTags: (result, error, productId) => [
+        { type: "Product", id: productId },
+      ],
+    }),
 
-// Update Product By ID
-export const updateProductById = createAsyncThunk(
-  "product/updateProductById",
-  async ({ product_id }, { rejectWithValue, getState }) => {
-    console.log("Product id from slice : ");
-    try {
-      const { productToUpdate } = getState().product;
-      console.log("Product to update : ", productToUpdate);
-      const response = await axios.put(
-        `${BASE_URL}/api/Productes/update-products/${product_id}`,
-        productToUpdate,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update product"
-      );
-    }
-  }
-);
+    // Add bulk products
+    addBulkProducts: builder.mutation({
+      query: (products) => ({
+        url: "/api/Productes/addBulk-products",
+        method: "POST",
+        body: { products },
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: [{ type: "ProductList", id: "LIST" }],
+    }),
 
-// Delete Product
-export const deleteProductById = createAsyncThunk(
-  "product/deleteById",
-  async (productId, { rejectWithValue }) => {
-    try {
-      const response = await axios.delete(
-        `${BASE_URL}/api/Productes/delete-products/${productId}`
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to delete product"
-      );
-    }
-  }
-);
+    // Update product by ID
+    updateProductById: builder.mutation({
+      query: ({ product_id, productData }) => ({
+        url: `/api/Productes/update-products/${product_id}`,
+        method: "PUT",
+        body: productData,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: (result, error, { product_id }) => [
+        { type: "Product", id: product_id },
+        { type: "ProductList", id: "LIST" },
+      ],
+    }),
+
+    // Delete product by ID
+    deleteProductById: builder.mutation({
+      query: (productId) => ({
+        url: `/api/Productes/delete-products/${productId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, productId) => [
+        { type: "Product", id: productId },
+        { type: "ProductList", id: "LIST" },
+      ],
+    }),
+  }),
+});
+
+// Export hooks
+export const {
+  useFetchProductsQuery,
+  useLazyFetchProductsQuery,
+  useFetchProductByIdQuery,
+  useLazyFetchProductByIdQuery,
+  useAddBulkProductsMutation,
+  useUpdateProductByIdMutation,
+  useDeleteProductByIdMutation,
+} = productApi;
+
+// ==================== Product Slice ====================
+const initialProductState = {
+  product_name: "",
+  description: "",
+  brand: "",
+  featuredSection: "All Products",
+  category_id: "",
+  category_name: "",
+  Subcategory_id: "",
+  Subcategory_name: "",
+  attributes: {},
+  pricing: {
+    sku: "",
+    original_price: 0,
+    discount_percent: null,
+    currency: "INR",
+  },
+  stock: {
+    quantity: 0,
+  },
+  mediaUrls: [],
+  cover_image: "",
+  seo: {
+    metaTitle: "",
+    metaDescription: "",
+    keywords: [],
+  },
+};
 
 const productSlice = createSlice({
   name: "product",
   initialState: {
+    // Data from API
     products: [],
-    productsToSubmit: [],
-    productToUpdate: {},
-    currentProduct: {
-      product_name: "",
-      description: "",
-      brand: "",
-      featuredSection: "All Products",
-      category_id: "",
-      category_name: "",
-      Subcategory_id: "",
-      Subcategory_name: "",
-      attributes: {},
-      pricing: {
-        sku: "",
-        original_price: 0,
-        discount_percent: null,
-        currency: "INR",
-      },
-      stock: {
-        quantity: 0,
-      },
-      mediaUrls: [],
-      cover_image: "",
-      seo: {
-        metaTitle: "",
-        metaDescription: "",
-        keywords: [],
-      },
-    },
-    updateProduct: {
-      product_name: "",
-      description: "",
-      brand: "Gaurastra",
-      featuredSection: "All Products",
-      category_id: "",
-      category_name: "",
-      Subcategory_id: "",
-      Subcategory_name: "",
-      attributes: {},
-      pricing: {
-        sku: "",
-        original_price: 0,
-        discount_percent: null,
-        currency: "INR",
-      },
-      stock: {
-        quantity: 0,
-      },
-      mediaUrls: [],
-      images: [], // Add this to track images with IDs
-      cover_image: "",
-      seo: {
-        metaTitle: "",
-        metaDescription: "",
-        keywords: [],
-      },
-    },
-    isEditMode: false,
-    status: "idle",
+    currentProduct: null,
+
+    // UI State
+    loading: false,
     error: null,
+    isEditMode: false,
+
+    // Form State
+    formData: { ...initialProductState },
+    productsToSubmit: [],
   },
   reducers: {
-    // Create New Products
-    updateNewProduct: (state, action) => {
-      state.currentProduct = {
-        ...state.currentProduct,
-        ...action.payload,
-      };
+    // Form Management
+    updateFormData: (state, action) => {
+      state.formData = { ...state.formData, ...action.payload };
     },
-    saveCurrentProduct: (state) => {
-      // Validate required fields
+
+    resetFormData: (state) => {
+      state.formData = { ...initialProductState };
+    },
+
+    // Products to Submit
+    addToSubmitQueue: (state, action) => {
+      const formData = action.payload; // ✅ USE PAYLOAD
+
+      // ✅ Validate required fields
       if (
-        !state.currentProduct.product_name ||
-        !state.currentProduct.category_id ||
-        !state.currentProduct.Subcategory_id
+        !formData.product_name ||
+        !formData.category_id ||
+        !formData.subcategory_id
       ) {
         return;
       }
 
-      // Add current product to productsToSubmit array
-      state.productsToSubmit = [
-        ...state.productsToSubmit,
-        {
-          ...state.currentProduct,
-          pricing: {
-            ...state.currentProduct.pricing,
-            original_price:
-              parseFloat(state.currentProduct.pricing.original_price) || 0,
-            discount_percent:
-              state.currentProduct.pricing.discount_percent !== null
-                ? parseFloat(state.currentProduct.pricing.discount_percent)
-                : null,
-          },
-          stock: {
-            quantity: parseInt(state.currentProduct.stock.quantity) || 0,
-          },
-        },
-      ];
-
-      // Reset current product for new entry
-      state.currentProduct = {
-        product_name: "",
-        description: "",
-        brand: "",
-        category_id: "",
-        category_name: "",
-        Subcategory_id: "",
-        Subcategory_name: "",
-        attributes: {},
+      state.productsToSubmit.push({
+        ...formData,
+        Subcategory_id: formData.subcategory_id,
+        // ✅ Normalize pricing
         pricing: {
-          sku: "",
-          original_price: 0,
-          discount_percent: null,
-          currency: "INR",
+          ...formData.pricing,
+          original_price: Number(formData.pricing.original_price) || 0,
+          discount_percent:
+            formData.pricing.discount_percent !== ""
+              ? Number(formData.pricing.discount_percent)
+              : null,
+          discounted_price: Number(formData.pricing.discounted_price) || 0,
         },
-        stock: {
-          quantity: 0,
+
+        // ✅ Normalize attributes
+        attributes: {
+          gender: formData.attributes.gender || null,
+          sleeve_length: formData.attributes.sleeve_length || null,
+          size: Array.isArray(formData.attributes.size)
+            ? formData.attributes.size
+            : [],
         },
-        mediaUrls: [],
-        cover_image: "",
-        seo: {
-          metaTitle: "",
-          metaDescription: "",
-          keywords: [],
-        },
-      };
+
+        // ✅ Images safety
+        images: Array.isArray(formData.images) ? formData.images : [],
+      });
+
+      // ✅ Reset form data
+      state.formData = { ...initialProductState };
     },
-    clearProductsToSubmit: (state) => {
+
+
+    removeFromSubmitQueue: (state, action) => {
+      state.productsToSubmit = state.productsToSubmit.filter(
+        (_, index) => index !== action.payload
+      );
+    },
+
+    clearSubmitQueue: (state) => {
       state.productsToSubmit = [];
     },
-    // Update New Products
-    editProduct: (state, action) => {
-      state.updateProduct = {
-        ...state.updateProduct,
-        ...action.payload,
-      };
-    },
-    editCurrentProduct: (state) => {
-      if (
-        !state.updateProduct.product_name ||
-        !state.updateProduct.category_id ||
-        !state.updateProduct.Subcategory_id
-      ) {
-        return;
-      }
 
-      const { price_detail, ...restPricing } = state.updateProduct.pricing;
-
-      state.productToUpdate = {
-        ...state.updateProduct,
-        pricing: {
-          ...restPricing,
-          original_price: parseFloat(price_detail?.original_price) || 0,
-          discount_percent:
-            price_detail?.discount_percent !== null
-              ? parseFloat(price_detail?.discount_percent)
-              : null,
-        },
-      };
-
-      // Reset
-      state.updateProduct = {
-        product_name: "",
-        description: "",
-        brand: "",
-        category_id: "",
-        category_name: "",
-        Subcategory_id: "",
-        Subcategory_name: "",
-        attributes: {},
-        pricing: {
-          sku: "",
-          original_price: 0,
-          discount_percent: null,
-          currency: "INR",
-        },
-        stock: {
-          quantity: 0,
-        },
-        mediaUrls: [],
-        cover_image: "",
-        seo: {
-          metaTitle: "",
-          metaDescription: "",
-          keywords: [],
-        },
-      };
-    },
-
-    clearProductToEdit: (state) => {
-      state.productToUpdate = [];
-    },
+    // Edit Mode
     setEditMode: (state, action) => {
       state.isEditMode = action.payload;
     },
-    resetCurrentProductMedia: (state) => {
-      state.updateProduct.mediaUrls = [];
-      state.updateProduct.cover_image = "";
+
+    loadProductToForm: (state, action) => {
+      const data = action.payload;
+      state.formData = {
+        ...data,
+        pricing: {
+          sku: data?.latest_pricing?.sku || "",
+          currency: data?.latest_pricing?.currency || "INR",
+          original_price: data?.latest_pricing?.price_detail?.original_price || 0,
+          discount_percent: data?.latest_pricing?.price_detail?.discount_percent || null,
+        },
+        stock: {
+          quantity: data?.stock_details?.[0]?.quantity || 0,
+        },
+      };
+      state.isEditMode = true;
+    },
+
+    clearError: (state) => {
+      state.error = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
-      // fetch all products
-      .addCase(fetchProducts.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.products = action.payload?.data || [];
-      })
-      .addCase(fetchProducts.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-      })
-      // Add Products In Bulk
-      .addCase(addBulkProducts.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(addBulkProducts.fulfilled, (state) => {
-        state.status = "succeeded";
-        state.productsToSubmit = [];
-      })
-      .addCase(addBulkProducts.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-      })
-      // Fetch Single Product
-      .addCase(fetchProductById.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchProductById.fulfilled, (state, action) => {
-        state.status = "succeeded";
-
-        const data = action.payload;
-
-        state.updateProduct = {
-          ...data,
-          pricing: {
-            sku: data?.latest_pricing?.sku || "",
-            currency: data?.latest_pricing?.currency || "INR",
-            price_detail: {
-              original_price:
-                data?.latest_pricing?.price_detail?.original_price || 0,
-              discount_percent:
-                data?.latest_pricing?.price_detail?.discount_percent || 0,
-            },
-          },
-          stock: {
-            quantity: data?.stock_details?.[0]?.quantity || 0,
-          },
-        };
-      })
-
-      .addCase(fetchProductById.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || "Failed to fetch product";
-      })
-
-      // 🔼 Update product by ID cases
-      .addCase(updateProductById.pending, (state) => {
-        state.loading = true;
-        state.success = false;
-        state.message = "";
-      })
-      .addCase(updateProductById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = true;
-        state.message = action.payload.message;
-        // Optional: Update the product in the list if needed
-        const index = state.products.findIndex(
-          (p) => p.product_id === action.meta.arg.product_id
-        );
-        if (index !== -1) {
-          state.products[index] = {
-            ...state.products[index],
-            ...action.meta.arg.updatedData,
-          };
+      // ========== FETCH PRODUCTS ==========
+      .addMatcher(
+        productApi.endpoints.fetchProducts.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
         }
-      })
-      .addCase(updateProductById.rejected, (state, action) => {
-        state.loading = false;
-        state.success = false;
-        state.message = action.payload || "Error updating product";
-      })
+      )
+      .addMatcher(
+        productApi.endpoints.fetchProducts.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.products = action.payload;
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.fetchProducts.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || "Failed to fetch products";
+        }
+      )
 
-      // Delete Product By Id
-      .addCase(deleteProductById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.success = false;
-      })
-      .addCase(deleteProductById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = true;
-        state.message = action.payload.message;
-      })
-      .addCase(deleteProductById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Something went wrong";
-        state.success = false;
-      });
+      // ========== FETCH PRODUCT BY ID ==========
+      .addMatcher(
+        productApi.endpoints.fetchProductById.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.fetchProductById.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.currentProduct = action.payload;
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.fetchProductById.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || "Failed to fetch product";
+        }
+      )
+
+      // ========== ADD BULK PRODUCTS ==========
+      .addMatcher(
+        productApi.endpoints.addBulkProducts.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.addBulkProducts.matchFulfilled,
+        (state) => {
+          state.loading = false;
+          state.productsToSubmit = [];
+          state.formData = { ...initialProductState };
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.addBulkProducts.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || "Failed to add products";
+        }
+      )
+
+      // ========== UPDATE PRODUCT ==========
+      .addMatcher(
+        productApi.endpoints.updateProductById.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.updateProductById.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.currentProduct = action.payload;
+          state.formData = { ...initialProductState };
+          state.isEditMode = false;
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.updateProductById.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || "Failed to update product";
+        }
+      )
+
+      // ========== DELETE PRODUCT ==========
+      .addMatcher(
+        productApi.endpoints.deleteProductById.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.deleteProductById.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          const deletedId = action.meta.arg.originalArgs;
+          state.products = state.products.filter(
+            (p) => p.product_id !== deletedId
+          );
+        }
+      )
+      .addMatcher(
+        productApi.endpoints.deleteProductById.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || "Failed to delete product";
+        }
+      );
   },
 });
 
+// Export actions
 export const {
-  updateNewProduct,
-  saveCurrentProduct,
-  clearProductsToSubmit,
-  resetCurrentProductMedia,
-  clearProductToEdit,
-  editCurrentProduct,
-  editProduct,
+  updateFormData,
+  resetFormData,
+  addToSubmitQueue,
+  removeFromSubmitQueue,
+  clearSubmitQueue,
   setEditMode,
+  loadProductToForm,
+  clearError,
 } = productSlice.actions;
+
+// Export reducer
 export default productSlice.reducer;
+
+// ==================== Selectors ====================
+export const selectProducts = (state) => state.product.products;
+export const selectCurrentProduct = (state) => state.product.currentProduct;
+export const selectFormData = (state) => state.product.formData;
+export const selectProductsToSubmit = (state) => state.product.productsToSubmit;
+export const selectLoading = (state) => state.product.loading;
+export const selectError = (state) => state.product.error;
+export const selectIsEditMode = (state) => state.product.isEditMode;

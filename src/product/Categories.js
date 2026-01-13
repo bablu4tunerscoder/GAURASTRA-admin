@@ -1,258 +1,146 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useWatch } from "react-hook-form";
 import {
-  fetchCategories,
-  fetchSubcategories,
-  setSelectedCategory,
-  setSelectedSubcategory,
+  useGetCategoriesQuery,
+  useGetSubcategoriesQuery,
 } from "../Redux/Slices/categorySlice";
-import { updateNewProduct, editProduct } from "../Redux/Slices/productSlice";
-import "./Categories.scss";
 
-const Categories = () => {
-  const dispatch = useDispatch();
+const Categories = ({ control, setValue, errors }) => {
+  // ✅ Watch selected category
+  const categoryId = useWatch({
+    control,
+    name: "category_id",
+  });
 
-  const updateProduct = useSelector((state) => state.product.updateProduct);
-
-  const isEditMode = useSelector((state) => state.product.isEditMode);
+  // ✅ Watch selected subcategory
+  const subcategoryId = useWatch({
+    control,
+    name: "subcategory_id",
+  });
 
   const {
-    categories,
-    subcategories,
-    selectedCategory,
-    selectedSubcategory,
+    data: categories = [],
     isLoading,
-    error,
-  } = useSelector((state) => state.category);
+    isError,
+  } = useGetCategoriesQuery();
 
-  const { category_id, Subcategory_id } = useSelector((state) =>
-    isEditMode ? state.product.updateProduct : state.product.currentProduct
-  );
-
-  useEffect(() => {
-    dispatch(fetchCategories()).then(() => {
-      if (isEditMode && updateProduct?.category_id) {
-        dispatch(
-          setSelectedCategory({
-            id: updateProduct.category_id,
-            name: updateProduct.category_name,
-          })
-        );
-        dispatch(
-          editProduct({
-            category_id: updateProduct.category_id,
-            category_name: updateProduct.category_name,
-          })
-        );
-
-        dispatch(fetchSubcategories(updateProduct.category_id)).then(() => {
-          if (updateProduct.subcategory_id) {
-            dispatch(
-              setSelectedSubcategory({
-                id: updateProduct.subcategory_id,
-                name: updateProduct.subcategory_name,
-              })
-            );
-            dispatch(
-              editProduct({
-                Subcategory_id: updateProduct.subcategory_id,
-                Subcategory_name: updateProduct.subcategory_name,
-              })
-            );
-          }
-        });
-      }
-    });
-  }, [dispatch, isEditMode]);
+  const { data: subcategories = [] } = useGetSubcategoriesQuery(categoryId, {
+    skip: !categoryId,
+  });
 
   const handleCategorySelect = (category) => {
-    if (selectedCategory?.id === category.category_id) {
-      dispatch(setSelectedCategory(null));
-      dispatch(setSelectedSubcategory(null));
-      dispatch(
-        updateNewProduct({
-          category_id: "",
-          Subcategory_id: "",
-        })
-      );
+    if (categoryId === category.category_id) {
+      // Deselect
+      setValue("category_id", "", { shouldValidate: true });
+      setValue("subcategory_id", "", { shouldValidate: true });
     } else {
-      dispatch(fetchSubcategories(category.category_id));
-      dispatch(
-        setSelectedCategory({
-          id: category.category_id,
-          name: category.category_name,
-        })
-      );
-      dispatch(setSelectedSubcategory(null));
-      dispatch(
-        updateNewProduct({
-          category_id: category.category_id,
-          Subcategory_id: "",
-          category_name: category.category_name,
-        })
-      );
+      setValue("category_id", category.category_id, {
+        shouldValidate: true,
+      });
+      setValue("subcategory_id", "", { shouldValidate: true });
     }
   };
 
   const handleSubcategorySelect = (subcategory) => {
-    dispatch(
-      setSelectedSubcategory({
-        id: subcategory.Subcategory_id,
-        name: subcategory.Subcategory_name,
-      })
-    );
-    dispatch(
-      updateNewProduct({
-        Subcategory_id: subcategory.Subcategory_id,
-        Subcategory_name: subcategory.Subcategory_name,
-      })
-    );
-  };
-
-  const editCategorySelect = (category) => {
-    if (selectedCategory?.id === category.category_id) {
-      dispatch(setSelectedCategory(null));
-      dispatch(setSelectedSubcategory(null));
-      dispatch(
-        editProduct({
-          category_id: "",
-          Subcategory_id: "",
-        })
-      );
-    } else {
-      dispatch(fetchSubcategories(category.category_id));
-      dispatch(
-        setSelectedCategory({
-          id: category.category_id,
-          name: category.category_name,
-        })
-      );
-      dispatch(setSelectedSubcategory(null));
-      dispatch(
-        editProduct({
-          category_id: category.category_id,
-          Subcategory_id: "",
-          category_name: category.category_name,
-        })
-      );
-    }
-  };
-
-  const editSubcategorySelect = (subcategory) => {
-    dispatch(
-      setSelectedSubcategory({
-        id: subcategory.Subcategory_id,
-        name: subcategory.Subcategory_name,
-      })
-    );
-    dispatch(
-      editProduct({
-        Subcategory_id: subcategory.Subcategory_id,
-        Subcategory_name: subcategory.Subcategory_name,
-      })
-    );
+    setValue("subcategory_id", subcategory.Subcategory_id, {
+      shouldValidate: true,
+    });
   };
 
   const renderSubcategoryLabel = (sub) => {
     const selectedCat = categories.find(
-      (cat) => cat.category_id === category_id
+      (cat) => cat.category_id === categoryId
     );
-    if (selectedCat?.category_name === "Ethnic Wear") {
+
+    if (selectedCat?.category_name?.toLowerCase() === "ethnic wear") {
       return `${sub.Subcategory_name} - ${sub.gender || "Unisex"}`;
     }
     return sub.Subcategory_name;
   };
 
+  if (isLoading) {
+    return (
+      <div className="w-full bg-white rounded-xl p-6 shadow-sm text-center text-gray-500">
+        Loading Categories...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="w-full bg-white rounded-xl p-6 shadow-sm text-center text-red-500">
+        Failed to load categories
+      </div>
+    );
+  }
+
   return (
-    <div className="categories-container">
-      <h2>Categories & Subcategories</h2>
+    <div className="w-full bg-white rounded-xl p-6 shadow-sm">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">
+        Categories & Subcategories
+      </h2>
 
-      {isLoading ? (
-        <p>Loading Categories...</p>
-      ) : error ? (
-        <p className="error">{error}</p>
-      ) : (
-        <>
-          {isEditMode ? (
-            <div className="categories-list">
-              {categories.map((category) => (
-                <div key={category.category_id} className="category-item">
-                  <label>
-                    <input
-                      type="radio"
-                      name="category"
-                      checked={category_id === category.category_id}
-                      onChange={() => editCategorySelect(category)}
-                    />{" "}
-                    {category.category_name}
-                  </label>
+      <div className="space-y-4">
+        {categories.map((category) => (
+          <div
+            key={category.category_id}
+            className="border-b border-gray-200 pb-4 last:border-b-0"
+          >
+            {/* Category */}
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="radio"
+                name="category"
+                checked={categoryId === category.category_id}
+                onChange={() => handleCategorySelect(category)}
+                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm capitalize font-medium text-gray-700 group-hover:text-blue-600 transition">
+                {category.category_name}
+              </span>
+            </label>
 
-                  {category_id === category.category_id && (
-                    <div className="subcategories-list">
-                      {subcategories[category.category_id]?.length > 0 ? (
-                        subcategories[category.category_id].map((sub) => (
-                          <label
-                            key={sub.Subcategory_id}
-                            className="subcategory-item"
-                          >
-                            <input
-                              type="radio"
-                              name="subcategory"
-                              checked={Subcategory_id === sub.Subcategory_id}
-                              onChange={() => editSubcategorySelect(sub)}
-                            />{" "}
-                            {renderSubcategoryLabel(sub)}
-                          </label>
-                        ))
-                      ) : (
-                        <p>No subcategories found</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="categories-list">
-              {categories.map((category) => (
-                <div key={category.category_id} className="category-item">
-                  <label>
-                    <input
-                      type="radio"
-                      name="category"
-                      checked={category_id === category.category_id}
-                      onChange={() => handleCategorySelect(category)}
-                    />{" "}
-                    {category.category_name}
-                  </label>
+            {/* Subcategories */}
+            {categoryId === category.category_id && (
+              <div className="ml-7 mt-3 space-y-2 bg-gray-50 rounded-lg p-3">
+                {subcategories.length > 0 ? (
+                  subcategories.map((sub) => (
+                    <label
+                      key={sub.Subcategory_id}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <input
+                        type="radio"
+                        name="subcategory"
+                        checked={subcategoryId === sub.Subcategory_id}
+                        onChange={() => handleSubcategorySelect(sub)}
+                        className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-sm capitalize text-gray-600 group-hover:text-blue-600 transition">
+                        {renderSubcategoryLabel(sub)}
+                      </span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 italic">
+                    No subcategories found
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
 
-                  {category_id === category.category_id && (
-                    <div className="subcategories-list">
-                      {subcategories[category.category_id]?.length > 0 ? (
-                        subcategories[category.category_id].map((sub) => (
-                          <label
-                            key={sub.Subcategory_id}
-                            className="subcategory-item"
-                          >
-                            <input
-                              type="radio"
-                              name="subcategory"
-                              checked={Subcategory_id === sub.Subcategory_id}
-                              onChange={() => handleSubcategorySelect(sub)}
-                            />{" "}
-                            {renderSubcategoryLabel(sub)}
-                          </label>
-                        ))
-                      ) : (
-                        <p>No subcategories found</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
+      {/* Errors */}
+      {errors?.category_id && (
+        <p className="text-red-500 text-xs mt-2">
+          {errors.category_id.message}
+        </p>
+      )}
+      {errors?.subcategory_id && (
+        <p className="text-red-500 text-xs mt-2">
+          {errors.subcategory_id.message}
+        </p>
       )}
     </div>
   );

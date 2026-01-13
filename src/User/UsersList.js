@@ -1,70 +1,87 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {useNavigate} from "react-router-dom"
-import { fetchAllUsers } from "../Redux/Slices/userSlice"; 
-import "./UsersList.scss";
-import Sidebar from "../Components/Sidebar/sidebar";
+import { useNavigate } from "react-router-dom";
+import {
+  useGetAllUsersQuery,
+} from "../Redux/Slices/userSlice"; // RTK Query API
 
 const UsersList = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { allUsers, isLoading, error } = useSelector((state) => state.user);
 
-  useEffect(() => {
-    dispatch(fetchAllUsers());
-  }, [dispatch]);
+  // Fetch users with RTK Query (Auto-fetches, caching, loading & error handled)
+  const {
+    data: allUsers = [],
+    success,
+  } = useGetAllUsersQuery();
+
 
   const handleEdit = (user) => {
-    navigate(`/users/${user.user_id}`)
+    navigate(`/users/${user.user_id}`);
   };
 
   return (
-    <div className="layout">
-      {/* Sidebar */}
-      <Sidebar />
-
-      {/* Main Content */}
-      <div className="user-container">
-        <div className="user-header">
-          <h1>All User's</h1>
+    <div className="w-full">
+      <div className="bg-white shadow rounded-lg p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">All Users</h1>
         </div>
 
-        {isLoading ? (
-          <p>Loading users...</p>
-        ) : error ? (
-          <p className="error-message">{`Something Went Wrong`}</p>
-        ) : allUsers.length === 0 ? (
-          <p className="info-message">No User's Found</p>
+        {/* States */}
+        {success ? (
+          <p className="text-red-600 font-medium">Something went wrong</p>
+        ) : allUsers.count === 0 ? (
+          <p className="text-gray-600 italic">No Users Found</p>
         ) : (
-          <div className="table-container">
-            <table className="user-table">
-              <thead>
+          <div className="overflow-x-auto">
+            <table className="w-full rounded-lg overflow-hidden">
+              <thead className="bg-gray-600">
                 <tr>
-                  <th>S.No</th>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Actions</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">S.No</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Name</th>
+                  <th className="px-4 py-3 text-white font-medium text-left">Email</th>
+                  <th className="px-4 py-3 text-white font-medium text-center">
+                    Actions
+                  </th>
                 </tr>
               </thead>
+
               <tbody>
-                {allUsers.map((users, index) => (
-                  <tr key={users.user_id}>
-                    <td>{index + 1}</td>
-                    <td>{users.name}</td>
-                    <td>{users.email}</td>
-                    <td>
-                      <button className="view-btn" onClick={() => handleEdit(users)}>
-                        View Details
-                      </button>
+                {allUsers.data && allUsers.data.length > 0 ? (
+                  allUsers.data.map((user, index) => (
+                    <tr
+                      key={user.user_id}
+                      className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
+                    >
+                      <td className="px-4 py-3">{index + 1}</td>
+                      <td className="px-4 py-3">{user.name}</td>
+                      <td className="px-4 py-3">{user.email}</td>
+                      <td className="px-4 py-3 flex justify-center">
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="px-3 py-1 bg-blue-500 text-white border border-blue-500 rounded hover:bg-blue-600 hover:border-blue-600 text-sm"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-4 py-6 text-center text-gray-600"
+                    >
+                      No Users Found
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
         )}
       </div>
     </div>
+
+
   );
 };
 

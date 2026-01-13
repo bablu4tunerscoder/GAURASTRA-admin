@@ -1,73 +1,116 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { updateCategory } from "../Redux/Slices/categorySlice"; // Import Redux action
-import "./AddCategory.scss";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useUpdateCategoryMutation } from "../Redux/Slices/categorySlice";
 
 const EditCategory = ({ onClose, category }) => {
-  const dispatch = useDispatch();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
 
-  // Prefill form with category data
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState(null);
+  const [updateCategory, { isLoading }] = useUpdateCategoryMutation();
 
   useEffect(() => {
     if (category) {
-      setName(category.category_name || "");
-      setDescription(category.category_description || "");
+      reset({
+        category_name: category.category_name || "",
+        category_description: category.category_description || "",
+      });
     }
-  }, [category]);
+  }, [category, reset]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!name.trim() || !description.trim()) {
-      setError("All fields are required!");
-      return;
-    }
-
+  const onSubmit = async (data) => {
     try {
-      await dispatch(
-        updateCategory({
-          id: category.category_id,
-          category_name: name,
-          category_description: description,
-        })
-      ).unwrap();
-      onClose(); // Close modal after successful update
+      await updateCategory({
+        id: category.category_id,
+        category_name: data.category_name,
+        category_description: data.category_description,
+      }).unwrap();
+
+      onClose();
     } catch (err) {
-      setError(err || "Failed to update category");
+      console.error(err);
     }
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h2>Edit Category</h2>
-        <form onSubmit={handleSubmit}>
-          {error && <p className="error-message">{error}</p>}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+        <h2 className="mb-4 text-xl font-semibold text-gray-800">
+          Edit Category
+        </h2>
 
-          <label>Category Name:</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Category Name */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Category Name
+            </label>
+            <input
+              type="text"
+              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${errors.category_name
+                  ? "border-red-500"
+                  : "border-gray-300 focus:border-blue-500"
+                }`}
+              {...register("category_name", {
+                required: "Category name is required",
+                minLength: {
+                  value: 3,
+                  message: "Minimum 3 characters required",
+                },
+              })}
+            />
+            {errors.category_name && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.category_name.message}
+              </p>
+            )}
+          </div>
 
-          <label>Description:</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          ></textarea>
+          {/* Description */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              rows={3}
+              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${errors.category_description
+                  ? "border-red-500"
+                  : "border-gray-300 focus:border-blue-500"
+                }`}
+              {...register("category_description", {
+                required: "Description is required",
+                minLength: {
+                  value: 10,
+                  message: "Minimum 10 characters required",
+                },
+              })}
+            />
+            {errors.category_description && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.category_description.message}
+              </p>
+            )}
+          </div>
 
-          <div className="modal-actions">
-            <button type="submit" className="submit-btn">
-              Update
-            </button>
-            <button type="button" className="close-btn" onClick={onClose}>
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
               Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {isLoading ? "Updating..." : "Update"}
             </button>
           </div>
         </form>

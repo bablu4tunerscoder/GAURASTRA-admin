@@ -1,10 +1,17 @@
 import axios from "axios";
 
-// export const BASE_URL = "http://localhost:9090";
-export const BASE_URL = "https://backend.gaurastra.com";
-// export const BASE_URL = "https://offlinedev.gaurastra.com";
+// export const BASE_URL = "http://192.168.1.9:9090";
+export const IMG_BASE_URL = "https://backend.gaurastra.com";
 
-const axiosInstance = axios.create();
+export const BASE_URL = "https://testbackend.gaurastra.com";
+
+
+const axiosInstance = axios.create({
+    headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+    },
+});
 
 axiosInstance.defaults.baseURL = BASE_URL;
 axiosInstance.defaults.withCredentials = true;

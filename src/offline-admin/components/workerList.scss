@@ -3,8 +3,13 @@
   background: #ffffff; // white card
   padding: 15px;
   border-radius: 15px;
+<<<<<<< HEAD
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
   color: #2d2d2d;
+=======
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  color: #e4e4e4;
+>>>>>>> 7406ecfdb1b496bf8f9af7b0d29d04cb3b66a3a6
 
   h2 {
     margin-bottom: 20px;
@@ -140,6 +145,7 @@
   .table-wrapper {
     overflow-x: auto;
   }
+<<<<<<< HEAD
 }
 
 @media (max-width: 500px) {
@@ -313,3 +319,6 @@
     }
   }
 }
+=======
+}
+>>>>>>> 7406ecfdb1b496bf8f9af7b0d29d04cb3b66a3a6

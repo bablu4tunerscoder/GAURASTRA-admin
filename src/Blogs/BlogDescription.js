@@ -1,89 +1,105 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { deleteBlog } from "../Redux/Slices/BlogSlice";
-import { BASE_URL } from "../Components/Helper/axiosinstance";
-import Sidebar from "../Components/Sidebar/sidebar";
+import { useDeleteBlogMutation } from "../Redux/Slices/BlogSlice";
+import { getImageUrl } from "../utils/getImageUrl";
 
 function BlogDescription() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+
+  const [deleteBlog, { isLoading: isDeleting }] =
+    useDeleteBlogMutation();
 
   const url = state?.thumbnail?.secure_url
     ?.replace(/\\/g, "/")
     .replace(/^\/+/, "");
+
+
   const content = state?.blog_content;
 
-  async function onBlogDelete(id) {
-    if (window.confirm("Are you sure you want to delete the blog?")) {
-      await dispatch(deleteBlog(id));
+  const handleDelete = async (id) => {
+    if (!id) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete the blog?"
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteBlog(id).unwrap();
       navigate("/blogs");
+    } catch (err) {
+      alert(err?.data?.message || "Failed to delete blog");
     }
-  }
+  };
 
   return (
-    
-      <div className="min-h-[90vh] mb-8 pt-12 md:px-20 flex flex-col items-center justify-center text-gray-800">
-        <div className="w-full max-w-3xl bg-white p-8 rounded-lg shadow-lg">
-          {/* Blog Title */}
-          <h1 className="text-4xl font-semibold text-blue-600 mb-4 text-center">
-            {state?.blog_title}
-          </h1>
+    <div className="min-h-[90vh] mb-8 pt-12 md:px-20 flex flex-col items-center justify-center text-gray-800">
+      <div className="w-full max-w-3xl bg-white p-8 rounded-lg shadow-lg">
+        {/* BLOG TITLE */}
+        <h1 className="text-4xl font-semibold text-blue-600 mb-4 text-center">
+          {state?.blog_title}
+        </h1>
 
-          {/* Blog Thumbnail */}
-          {url && (
-            <div className="mb-6">
-              <img
-                className="w-full h-72 object-cover rounded-lg shadow-md"
-                alt="thumbnail"
-                src={`${BASE_URL}/${url}`}
-              />
-            </div>
-          )}
-
-          {/* Blog Content */}
-          <div className="text-lg text-gray-700 mb-6">
-            <p className="text-blue-600 font-semibold">Content:</p>
-            <p
-              className="text-gray-600 whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: content }}
+        {/* BLOG THUMBNAIL */}
+        {url && (
+          <div className="mb-6">
+            <img
+              className="w-full object-cover rounded-lg shadow-md"
+              alt="thumbnail"
+              src={getImageUrl(url)}
             />
           </div>
+        )}
 
-          {/* Thin Black Line */}
-          <div className="w-full border-t border-black my-4"></div>
+        {/* BLOG CONTENT */}
+        <div className="text-lg text-gray-700 mb-6">
+          <p className="text-blue-600 font-semibold">Content:</p>
+          <div
+            className="text-gray-600 whitespace-pre-line"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
+        </div>
 
-          {/* Author and Published Date */}
-          <div className="flex justify-start items-start">
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500">{state?.author}</p>
-              <p className="text-xs text-gray-400">{state?.blog_published}</p>
-            </div>
-          </div>
-          <div className="flex justify-end gap-4">
-            {/* Edit Button */}
-            <button
-              onClick={() =>
-                navigate(`/blog/edit/${state?.blog_id}`, {
-                  state: { ...state },
-                })
-              }
-              className="text-white font-semibold px-4 py-2 border-2 bg-blue-500 border-blue-500 rounded-lg hover:bg-blue-600 transition-all ease-in-out duration-300"
-            >
-              Edit
-            </button>
+        {/* DIVIDER */}
+        <div className="w-full border-t border-black my-4"></div>
 
-            {/* Delete Button */}
-            <button
-              onClick={() => onBlogDelete(state?.blog_id)}
-              className="text-white font-semibold px-4 py-2 border-2 bg-red-500 border-red-500 rounded-lg hover:bg-red-600 transition-all ease-in-out duration-300"
-            >
-              Delete
-            </button>
+        {/* AUTHOR INFO */}
+        <div className="flex justify-start items-start mb-4">
+          <div className="space-y-1">
+            <p className="text-sm text-gray-500">{state?.author}</p>
+            <p className="text-xs text-gray-400">
+              {state?.blog_published}
+            </p>
           </div>
         </div>
-      </div>
 
+        {/* ACTION BUTTONS */}
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={() =>
+              navigate(`/blog/edit/${state?.blog_id}`, {
+                state: { ...state },
+              })
+            }
+            className="text-white font-semibold px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 transition"
+          >
+            Edit
+          </button>
+
+          <button
+            onClick={() => handleDelete(state?.blog_id)}
+            disabled={isDeleting}
+            className={`text-white font-semibold px-4 py-2 rounded-lg transition
+              ${isDeleting
+                ? "bg-red-300 cursor-not-allowed"
+                : "bg-red-500 hover:bg-red-600"
+              }`}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

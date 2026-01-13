@@ -1,40 +1,68 @@
-import React from "react";
+// App.jsx
+import { Toaster } from "react-hot-toast";
 import { Provider } from "react-redux";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import store from "./Redux/Store";
-import NewProduct from "./product/newproduct";
-import ProductTable from "./product/product";
-import OrderList from "./Order/OrderList";
-import CategoryList from "./Category/CategoryList";
-import SubCategoryList from "./SubCategory/SubCategoryList";
-import UsersList from "./User/UsersList";
-import UserDetails from "./User/UserDetails";
-import BlogList from "./Blogs/BlogList";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import "./App.css";
+import Login from "./auth/Login";
 import BlogDescription from "./Blogs/BlogDescription";
+import BlogList from "./Blogs/BlogList";
 import CreateBlog from "./Blogs/CreateBlog";
 import EditBlog from "./Blogs/EditBlog";
+import CategoryList from "./Category/CategoryList";
+import HomeComponent from "./Components/home";
 import LandingEditor from "./Components/Landing_Page/LandingEditor";
 import LPUploadsHistory from "./Components/Landing_Page/LPUploadsHistory";
-import CouponsList from "./Coupons/CouponsList";
+import LeadsList from "./Components/LeadsList";
 import OfferBannerForm from "./Components/OfferBannerForm";
 import OfferBannerHistory from "./Components/OfferBannerHistory";
-import DownloadQR from "./product/DownloadQR";
-import LeadsList from "./Components/LeadsList";
-import AddProduct from "./offline-admin/pages/AddProduct";
-import OfflineProductTable from "./offline-admin/pages/OfflineProductTable";
-import CreateWorkerAccount from "./offline-admin/components/CreateAccount";
-import WorkerList from "./offline-admin/components/WorkerList";
-import HomeComponent from "./Components/home";
-import Navbar from "./Components/Navbar";
-import "./App.css";
-import Sidebar from "./Components/Sidebar/sidebar";
 import OfflineLayout from "./Components/OfflineLayout";
 import OnlineLayout from "./Components/OnlineLayout";
+import CouponsList from "./Coupons/CouponsList";
+import CreateWorkerAccount from "./offline-admin/components/CreateAccount";
 import Dashboard from "./offline-admin/components/Dashboard";
+import WorkerList from "./offline-admin/components/WorkerList";
+import AddProduct from "./offline-admin/pages/AddProduct";
+import OfflineProductTable from "./offline-admin/pages/OfflineProductTable";
+import OrderList from "./Order/OrderList";
+import DownloadQR from "./product/DownloadQR";
+import NewProduct from "./product/newproduct";
+import ProductTable from "./product/product";
+import ProtectedRoute from "./ProtectedRoute";
+import store from "./Redux/Store";
+import SubCategoryList from "./SubCategory/SubCategoryList";
+import UserDetails from "./User/UserDetails";
+import UsersList from "./User/UsersList";
+
+export const onlineAdminRoutes = [
+  { path: "/OnlineAdmin", element: <HomeComponent /> },
+  { path: "/NewProduct", element: <NewProduct /> },
+  { path: "/edit-product/:id", element: <NewProduct /> },
+  { path: "/blog/description", element: <BlogDescription /> },
+
+  { path: "/blogs", element: <BlogList /> },
+  { path: "/blog/create", element: <CreateBlog /> },
+  { path: "/blog/edit/:id", element: <EditBlog /> },
+  { path: "/users", element: <UsersList /> },
+  { path: "/users/:id", element: <UserDetails /> },
+  { path: "/DownloadQR", element: <DownloadQR /> },
+  { path: "/products", element: <ProductTable /> },
+  { path: "/OfferBanner", element: <OfferBannerForm /> },
+  { path: "/OfferBannerHistory", element: <OfferBannerHistory /> },
+  { path: "/category", element: <CategoryList /> },
+  { path: "/Coupons", element: <CouponsList /> },
+  { path: "/sub_category", element: <SubCategoryList /> },
+  { path: "/OrderList", element: <OrderList /> },
+  { path: "/LandingEditor", element: <LandingEditor /> },
+  { path: "/lp-uploads-history", element: <LPUploadsHistory /> },
+  { path: "/leads", element: <LeadsList /> },
+];
+
 
 function App() {
+
   return (
     <Provider store={store}>
+      <Toaster />
       <BrowserRouter>
         <Navbar />
         <div className="page-wrapper">
@@ -55,14 +83,14 @@ function App() {
             <Route path="/products" element={<ProductTable />} />
             <Route path="/OfferBanner" element={<OfferBannerForm />} />
             <Route path="/OfferBannerHistory" element={<OfferBannerHistory />} />
-            <Route path="/category" element={<OnlineLayout><CategoryList /></OnlineLayout>} />
+            <Route path="/category" element={<CategoryList />} />
             <Route path="/Coupons" element={<CouponsList />} />
             <Route path="/sub_category" element={<SubCategoryList />} />
             <Route path="/NewProduct" element={<OnlineLayout><NewProduct /></OnlineLayout>} />
             <Route path="/OnlineAdmin" element={<OnlineLayout><HomeComponent /></OnlineLayout>} />
             <Route path="/OrderList" element={<OrderList />} />
-            <Route path="/LandingEditor" element={<OnlineLayout><LandingEditor /></OnlineLayout>} />
-            <Route path="/lp-uploads-history" element={<OnlineLayout><LPUploadsHistory /></OnlineLayout>} />
+            <Route path="/LandingEditor" element={<LandingEditor />} />
+            <Route path="/lp-uploads-history" element={<LPUploadsHistory />} />
             <Route path="/OfflineAdmin" element={<OfflineLayout><Dashboard /></OfflineLayout>} />
             <Route path="/AddProduct" element={<OfflineLayout><AddProduct /></OfflineLayout>} />
             <Route path="/OffProductTable" element={<OfflineLayout><OfflineProductTable /></OfflineLayout>} />
@@ -70,10 +98,10 @@ function App() {
             <Route path="/all-workers" element={<OfflineLayout><WorkerList /></OfflineLayout>} />
 
             {/* ✅ ADD THIS NEW ROUTE */}
-            <Route path="/leads" element={<OnlineLayout><LeadsList /></OnlineLayout>} />
+            <Route path="/leads" element={<LeadsList />} />
 
-          </Routes>
-        </div>
+        </Routes>
+
       </BrowserRouter>
     </Provider>
   );

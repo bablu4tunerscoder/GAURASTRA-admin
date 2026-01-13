@@ -1,112 +1,99 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
 import {
-  fetchLandingContent,
-  deleteLandingContent,
-  updateLandingContent,
+  useFetchLandingContentQuery,
+  useDeleteLandingContentMutation,
+  useUpdateLandingContentMutation,
 } from "../../Redux/Slices/landingSlice";
 import { BASE_URL } from "../Helper/axiosinstance";
-import Sidebar from "../Sidebar/sidebar";
+import { getImageUrl } from "../../utils/getImageUrl";
 
 const LPUploadsHistory = () => {
-  const dispatch = useDispatch();
-  const { content, loading, error } = useSelector((state) => state.landing);
+  const { data: content = [], isLoading, error } = useFetchLandingContentQuery();
+  const [deleteLandingContent] = useDeleteLandingContentMutation();
+  const [updateLandingContent] = useUpdateLandingContentMutation();
 
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [formData, setFormData] = useState({
-    heading1: "",
-    heading2: "",
-    description: "",
-    newImage: null,
-    imagePreview: "",
+  const [imagePreview, setImagePreview] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+  } = useForm({
+    defaultValues: {
+      heading1: "",
+      heading2: "",
+      description: "",
+      image: null,
+    },
   });
 
-  useEffect(() => {
-    dispatch(fetchLandingContent());
-  }, [dispatch]);
+  const imageFile = watch("image");
 
-  const handleDelete = (id) => {
+  useEffect(() => {
+    if (imageFile && imageFile[0]) {
+      setImagePreview(URL.createObjectURL(imageFile[0]));
+    }
+  }, [imageFile]);
+
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this content?")) {
-      dispatch(deleteLandingContent(id));
+      await deleteLandingContent(id);
     }
   };
 
   const handleOpenModal = (item) => {
     setEditItem(item);
-    setFormData({
+    reset({
       heading1: item.heading1,
       heading2: item.heading2,
       description: item.description,
-      newImage: null,
-      imagePreview: item.images?.[0] ? `${BASE_URL}${item.images[0]}` : "",
+      image: null,
     });
+    setImagePreview(
+      item.images?.[0] ? `${BASE_URL}${item.images[0]}` : ""
+    );
     setShowModal(true);
   };
 
-  const handleInputChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        newImage: file,
-        imagePreview: URL.createObjectURL(file),
-      }));
-    }
-  };
-
   const handleImageDelete = () => {
-    setFormData((prev) => ({
-      ...prev,
-      newImage: null,
-      imagePreview: "",
-    }));
+    setValue("image", null);
+    setImagePreview("");
   };
 
-  const handleUpdateSubmit = async () => {
+  const onSubmit = async (data) => {
     if (!editItem) return;
 
-    const updatedForm = new FormData();
-    updatedForm.append("heading1", formData.heading1);
-    updatedForm.append("heading2", formData.heading2);
-    updatedForm.append("description", formData.description);
-    if (formData.newImage) {
-      updatedForm.append("images", formData.newImage);
+    const formData = new FormData();
+    formData.append("heading1", data.heading1);
+    formData.append("heading2", data.heading2);
+    formData.append("description", data.description);
+    if (data.image?.[0]) {
+      formData.append("images", data.image[0]);
     }
 
-    await dispatch(
-      updateLandingContent({ id: editItem._id, updatedData: updatedForm })
-    );
-    dispatch(fetchLandingContent());
+    await updateLandingContent({
+      id: editItem._id,
+      updatedData: formData,
+    });
+
     setShowModal(false);
   };
 
   return (
+    <div>
+      <Sidebar/>
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-4" style={{ textAlign: "center" }}>Landing Page Upload History</h2>
+        <h2 className="text-2xl font-bold mb-4" style={{textAlign : "center"}}>Landing Page Upload History</h2>
 
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">Error: {error}</p>}
 
-<div
-  className="
-    grid grid-cols-1
-    sm:grid-cols-2
-    lg:grid-cols-3
-    gap-4
-    w-full
-    px-4
-    md:pl-[17rem]
-  "
->
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{maxWidth:"70%", marginLeft:"18rem"}}>
           {content?.length > 0 ? (
             content.map((item, index) => (
               <div key={index} className="border rounded-lg shadow-md p-4">
@@ -116,133 +103,73 @@ const LPUploadsHistory = () => {
                   Description: {item.description}
                 </p>
 
-                {item.images && item.images.length > 0 && (
-                  <img
-                    src={`${BASE_URL}${item.images[0]}`}
-                    alt={`upload-${index}`}
-                    style={{ marginBottom: "10px" }}
-                  />
-                )}
+              {item.images?.[0] && (
+                <img
+                  src={getImageUrl(item.images[0])}
+                  alt="landing"
+                  className="w-full rounded mb-3"
+                />
+              )}
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                  }}
+              <div className="flex justify-between gap-2">
+                <button
+                  onClick={() => handleDelete(item._id)}
+                  className="bg-red-500 flex-1 hover:bg-red-600 text-white px-3 py-1 rounded"
                 >
-                  <button
-                    style={{
-                      backgroundColor: "#ef4444",
-                      color: "white",
-                      padding: "6px 12px",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleDelete(item._id)}
-                  >
-                    Delete
-                  </button>
-
-                  <button
-                    style={{
-                      backgroundColor: "#3b82f6",
-                      color: "white",
-                      padding: "6px 12px",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleOpenModal(item)}
-                  >
-                    Update
-                  </button>
-                </div>
+                  Delete
+                </button>
+                <button
+                  onClick={() => handleOpenModal(item)}
+                  className="bg-blue-500 flex-1 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                >
+                  Update
+                </button>
               </div>
-            ))
-          ) : (
-            <p>No uploads found.</p>
-          )}
-        </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center col-span-full">No uploads found.</p>
+        )}
+      </div>
 
-        {/* MODAL */}
-        {showModal && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              background: "rgba(0,0,0,0.5)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
-            }}
-          >
-            <div
-              style={{
-                background: "white",
-                padding: "20px",
-                borderRadius: "8px",
-                width: "400px",
-              }}
-            >
-              <h3 className="text-lg font-semibold mb-4">
-                Update Landing Content
-              </h3>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              Update Landing Content
+            </h3>
 
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
               <input
-                type="text"
-                name="heading1"
-                value={formData.heading1}
-                onChange={handleInputChange}
+                {...register("heading1")}
                 placeholder="Heading 1"
-                style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
+                className="w-full border rounded px-3 py-2"
               />
 
               <input
-                type="text"
-                name="heading2"
-                value={formData.heading2}
-                onChange={handleInputChange}
+                {...register("heading2")}
                 placeholder="Heading 2"
-                style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
+                className="w-full border rounded px-3 py-2"
               />
 
               <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
+                {...register("description")}
                 placeholder="Description"
                 rows={3}
-                style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
+                className="w-full border rounded px-3 py-2"
               />
 
-              {/* Image Preview */}
-              {formData.imagePreview && (
-                <div style={{ position: "relative", marginBottom: "10px" }}>
+              {imagePreview && (
+                <div className="relative">
                   <img
-                    src={formData.imagePreview}
-                    alt="Preview"
-                    style={{ width: "100%", height: "auto", borderRadius: "8px" }}
+                    src={imagePreview}
+                    alt="preview"
+                    className="w-full rounded"
                   />
                   <button
+                    type="button"
                     onClick={handleImageDelete}
-                    style={{
-                      position: "absolute",
-                      top: "5px",
-                      right: "5px",
-                      background: "red",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: "24px",
-                      height: "24px",
-                      cursor: "pointer",
-                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full"
                   >
                     ×
                   </button>
@@ -252,32 +179,21 @@ const LPUploadsHistory = () => {
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleImageChange}
-                style={{ marginBottom: "10px" }}
+                {...register("image")}
+                className="w-full"
               />
 
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="flex justify-between pt-2">
                 <button
-                  onClick={handleUpdateSubmit}
-                  style={{
-                    backgroundColor: "#10b981",
-                    color: "white",
-                    padding: "6px 12px",
-                    border: "none",
-                    borderRadius: "4px",
-                  }}
+                  type="submit"
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
                 >
                   Save
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowModal(false)}
-                  style={{
-                    backgroundColor: "#9ca3af",
-                    color: "white",
-                    padding: "6px 12px",
-                    border: "none",
-                    borderRadius: "4px",
-                  }}
+                  className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
                 >
                   Cancel
                 </button>
@@ -286,6 +202,7 @@ const LPUploadsHistory = () => {
           </div>
         )}
       </div>
+    </div>
   );
 };
 

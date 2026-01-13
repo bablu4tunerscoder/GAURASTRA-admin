@@ -51,58 +51,17 @@ export const deleteWorkerById = createAsyncThunk(
 
 export const updatePasswordById = createAsyncThunk(
   "offlineUser/updatePassword",
-  async ({ id, newPassword  }, { rejectWithValue }) => {
+  async ({ id, password }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
         `${BASE_URL}/api/offline/user/updatepassword/${id}`,
-        { newPassword  }
+        { password }
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Password update failed!"
-      );
-    }
-  }
-);
-
-export const downloadWorkersCSV = createAsyncThunk(
-  "offlineUser/downloadWorkersCSV",
-  async ({ month, year } = {}, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/offline/download/user/csv`,
-        {
-          params: { month, year },
-          responseType: "blob",
-        }
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Download failed!"
-      );
-    }
-  }
-);
-
-
-export const downloadBillingCSV = createAsyncThunk(
-  "offlineUser/downloadBillingCSV",
-  async ({ month, year } = {}, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/offline/download/billing/csv`,
-        {
-          params: { month, year },
-          responseType: "blob",
-        }
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Download failed!"
       );
     }
   }
@@ -123,34 +82,56 @@ const offlineUserSlice = createSlice({
       state.error = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
-      .addCase(createOfflineWorker.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.success = false;
-      })
-      .addCase(createOfflineWorker.fulfilled, (state) => {
-        state.loading = false;
-        state.success = true;
-      })
-      .addCase(createOfflineWorker.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(getAllWorkers.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getAllWorkers.fulfilled, (state, action) => {
-        state.loading = false;
-        state.workers = action.payload.users || [];
-      })
 
-      .addCase(getAllWorkers.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      /* GET ALL WORKERS */
+      .addMatcher(
+        offlineUserApi.endpoints.getAllWorkers.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.getAllWorkers.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.workers = action.payload?.users || [];
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.getAllWorkers.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      )
+
+      /* CREATE WORKER */
+      .addMatcher(
+        offlineUserApi.endpoints.createOfflineWorker.matchPending,
+        (state) => {
+          state.loading = true;
+          state.success = false;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.createOfflineWorker.matchFulfilled,
+        (state) => {
+          state.loading = false;
+          state.success = true;
+        }
+      )
+      .addMatcher(
+        offlineUserApi.endpoints.createOfflineWorker.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message;
+        }
+      )
 
       .addCase(deleteWorkerById.fulfilled, (state, action) => {
   state.workers = state.workers.filter(
@@ -170,15 +151,21 @@ const offlineUserSlice = createSlice({
   state.loading = false;
   state.error = action.payload;
 })
-      .addCase(downloadWorkersCSV.pending, (state) => { state.loading = true; })
-      .addCase(downloadWorkersCSV.fulfilled, (state) => { state.loading = false; })
-      .addCase(downloadWorkersCSV.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-      .addCase(downloadBillingCSV.pending, (state) => { state.loading = true; })
-      .addCase(downloadBillingCSV.fulfilled, (state) => { state.loading = false; })
-      .addCase(downloadBillingCSV.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
+
 
   },
 });
 
 export const { resetStatus } = offlineUserSlice.actions;
 export default offlineUserSlice.reducer;
+
+/* =======================
+   RTK QUERY HOOKS
+======================= */
+
+export const {
+  useCreateOfflineWorkerMutation,
+  useGetAllWorkersQuery,
+  useDeleteWorkerByIdMutation,
+  useUpdatePasswordByIdMutation,
+} = offlineUserApi;

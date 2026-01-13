@@ -1,138 +1,184 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../Components/Helper/axiosinstance";
+// src/Redux/Slices/offerBannerSlice.js
 
-// ✅ Upload Banner
-export const uploadOfferBanner = createAsyncThunk(
-  "offerBanner/upload",
-  async (formData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${BASE_URL}/api/banner/create`, formData, {
+import { createSlice } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOnline from "./api/baseQuery";
+
+/* =============== RTK QUERY API =============== */
+export const offerBannerApi = createApi({
+  reducerPath: "offerBannerApi",
+  baseQuery: baseQueryOnline,
+  tagTypes: ["OfferBanner"],
+  endpoints: (builder) => ({
+    uploadOfferBanner: builder.mutation({
+      query: (formData) => ({
+        url: "/api/banner/create",
+        method: "POST",
+        data: formData,
         headers: { "Content-Type": "multipart/form-data" },
-      });
-      return response.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
-  }
-);
+      }),
+      invalidatesTags: [{ type: "OfferBanner", id: "LIST" }],
+    }),
 
-// ✅ Get All Banners
-export const fetchOfferBanners = createAsyncThunk(
-  "offerBanner/fetchAll",
-  async (_, thunkAPI) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/banner/all`);
-      return response.data;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
-    }
-  }
-);
+    fetchOfferBanners: builder.query({
+      query: () => ({
+        url: "/api/banner/all",
+        method: "GET",
+      }),
+      providesTags: [{ type: "OfferBanner", id: "LIST" }],
+    }),
 
-// ✅ Delete Banner
-export const deleteOfferBanner = createAsyncThunk(
-  "offerBanner/delete",
-  async (id, thunkAPI) => {
-    try {
-      await axios.delete(`${BASE_URL}/api/banner/delete/${id}`);
-      return id;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
-    }
-  }
-);
 
-// ✅ Update Banner (for future use)
-export const updateOfferBanner = createAsyncThunk(
-  "offerBanner/update",
-  async ({ id, formData }, thunkAPI) => {
-    try {
-      const response = await axios.put(`${BASE_URL}/api/banner/update/${id}`, formData, {
+    deleteOfferBanner: builder.mutation({
+      query: (id) => ({
+        url: `/api/banner/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: "OfferBanner", id },
+        { type: "OfferBanner", id: "LIST" },
+      ],
+    }),
+
+    updateOfferBanner: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: `/api/banner/update/${id}`,
+        method: "PUT",
+        data: formData,
         headers: { "Content-Type": "multipart/form-data" },
-      });
-      return response.data;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
-    }
-  }
-);
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "OfferBanner", id },
+        { type: "OfferBanner", id: "LIST" },
+      ],
+    }),
+  }),
+});
 
-// ✅ Initial State
-const initialState = {
-  loading: false,
-  error: null,
-  banner: null,
-  banners: [],
-};
+export const {
+  useUploadOfferBannerMutation,
+  useFetchOfferBannersQuery,
+  useDeleteOfferBannerMutation,
+  useUpdateOfferBannerMutation,
+} = offerBannerApi;
 
-// ✅ Slice
+/* =============== SLICE =============== */
 const offerBannerSlice = createSlice({
   name: "offerBanner",
-  initialState,
-  reducers: {},
+  initialState: {
+    banners: [],
+    banner: null,
+    loading: false,
+    error: null,
+  },
+  reducers: {
+    clearOfferBannerError: (state) => {
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
 
-      // 🔽 Upload
-      .addCase(uploadOfferBanner.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(uploadOfferBanner.fulfilled, (state, action) => {
-        state.loading = false;
-        state.banner = action.payload;
-      })
-      .addCase(uploadOfferBanner.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // 🔽 Fetch All
-      .addCase(fetchOfferBanners.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchOfferBanners.fulfilled, (state, action) => {
-        state.loading = false;
-        state.banners = action.payload;
-      })
-      .addCase(fetchOfferBanners.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // 🔽 Delete
-      .addCase(deleteOfferBanner.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(deleteOfferBanner.fulfilled, (state, action) => {
-        state.loading = false;
-        state.banners = state.banners.filter(b => b._id !== action.payload);
-      })
-      .addCase(deleteOfferBanner.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // 🔽 Update (future use)
-      .addCase(updateOfferBanner.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateOfferBanner.fulfilled, (state, action) => {
-        state.loading = false;
-        const index = state.banners.findIndex(b => b._id === action.payload._id);
-        if (index !== -1) {
-          state.banners[index] = action.payload;
+      /* ========== UPLOAD ========== */
+      .addMatcher(
+        offerBannerApi.endpoints.uploadOfferBanner.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
         }
-      })
-      .addCase(updateOfferBanner.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.uploadOfferBanner.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.banner = action.payload;
+        }
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.uploadOfferBanner.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || null;
+        }
+      )
+
+      /* ========== FETCH ALL ========== */
+      .addMatcher(
+        offerBannerApi.endpoints.fetchOfferBanners.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.fetchOfferBanners.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.banners = action.payload;
+        }
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.fetchOfferBanners.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || null;
+        }
+      )
+
+      /* ========== DELETE ========== */
+      .addMatcher(
+        offerBannerApi.endpoints.deleteOfferBanner.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.deleteOfferBanner.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.banners = state.banners.filter(
+            (b) => b._id !== action.meta.arg.originalArgs
+          );
+        }
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.deleteOfferBanner.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || null;
+        }
+      )
+
+      /* ========== UPDATE ========== */
+      .addMatcher(
+        offerBannerApi.endpoints.updateOfferBanner.matchPending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.updateOfferBanner.matchFulfilled,
+        (state, action) => {
+          state.loading = false;
+          const index = state.banners.findIndex(
+            (b) => b._id === action.payload._id
+          );
+          if (index !== -1) {
+            state.banners[index] = action.payload;
+          }
+        }
+      )
+      .addMatcher(
+        offerBannerApi.endpoints.updateOfferBanner.matchRejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.error?.message || null;
+        }
+      );
   },
 });
 
+export const { clearOfferBannerError } = offerBannerSlice.actions;
 export default offerBannerSlice.reducer;

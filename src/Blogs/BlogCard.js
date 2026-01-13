@@ -1,20 +1,19 @@
 import { useNavigate } from "react-router-dom";
-import { BASE_URL  } from "../Components/Helper/axiosinstance";
+import { getImageUrl } from "../utils/getImageUrl";
 
 function BlogCard({ data }) {
   const navigate = useNavigate();
-  const url = data.thumbnail.secure_url.replace(/\\/g, '/').replace(/^\/+/, ''); 
-
+  const url = data?.thumbnail?.secure_url?.replace(/\\/g, '/').replace(/^\/+/, '');
 
   return (
     <div
       onClick={() => navigate("/blog/description/", { state: { ...data } })}
-      className="w-[20rem] h-[450px] shadow-lg rounded-lg cursor-pointer group overflow-hidden bg-white hover:scale-105 transition-transform duration-300"
+      className="w-[20rem] shadow-lg rounded-lg cursor-pointer group overflow-hidden bg-white hover:scale-105 transition-transform duration-300"
     >
       <div className="overflow-hidden relative">
         <img
           className="h-48 w-full rounded-tl-lg rounded-tr-lg group-hover:scale-110 transition-all duration-300 object-cover"
-          src={`${BASE_URL}/${url}`}
+          src={getImageUrl(url)}
           alt="course thumbnail"
         />
         <div className="absolute top-2 left-2 bg-black text-white px-3 py-1 rounded-md text-sm font-semibold">

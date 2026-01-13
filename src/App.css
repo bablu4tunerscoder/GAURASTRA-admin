@@ -1,6 +1,4 @@
-.page-wrapper {
-  padding-top: 60px;
-}
+
 
 .layout-container {
   display: flex;
@@ -8,8 +6,6 @@
 
 .content-area {
   flex: 1;
-  padding: 20px;
-  margin-left: 260px; 
 }
 
 @media (max-width: 768px) {

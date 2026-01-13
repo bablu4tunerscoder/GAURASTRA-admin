@@ -1,96 +1,59 @@
-import React, { useState, useEffect } from "react";
-import "./createWorker.scss";
-import OfflineSidebar from "./OfflineSidebar";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  createOfflineWorker,
-  updatePasswordById,
-  resetStatus,
-  getAllWorkers
-} from "../../Redux/Slices/offlineUserSlice";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import 'react-toastify/dist/ReactToastify.css';
+import {
+  useCreateOfflineWorkerMutation,
+  useUpdatePasswordByIdMutation,
+  useGetAllWorkersQuery
+} from "../../Redux/Slices/offlineUserSlice";
+import toast from "react-hot-toast";
 
 const CreateWorkerAccount = () => {
   const location = useLocation();
   const editData = location.state || null;
-const [latestWorker, setLatestWorker] = useState(null);
 
-  const [workerName, setWorkerName] = useState("");
-  const [workerId, setWorkerId] = useState("");
-  const [password, setPassword] = useState("");
-  const [role] = useState("worker");
-
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [showPass, setShowPass] = useState(false);
+  const [latestWorker, setLatestWorker] = useState(null);
 
-  const dispatch = useDispatch();
-  const { loading, success, error } = useSelector((state) => state.offlineUser);
-
-  useEffect(() => {
-  if (success && !editData) {
-    
-    // Worker create hua → ab latest worker fetch karo
-    dispatch(getAllWorkers()).then((res) => {
-      const users = res.payload?.users || [];
-      if (users.length > 0) {
-        const lastCreated = users[users.length - 1]; // latest worker
-        setLatestWorker(lastCreated);
-      }
-    });
-
-    alert("🎉 Worker Created Successfully!");
-
-    setWorkerName("");
-    setWorkerId("");
-    setPassword("");
-
-    setTimeout(() => dispatch(resetStatus()), 1500);
-  }
-}, [success]);
+  const [createWorker, { isLoading: creating, isSuccess: created, error: createError }] = useCreateOfflineWorkerMutation();
+  const [updatePassword, { isLoading: updating, isSuccess: updated, error: updateError }] = useUpdatePasswordByIdMutation();
+  const { data: allWorkers } = useGetAllWorkersQuery();
 
   useEffect(() => {
-    if (editData) {
-      setWorkerName(editData.name);
-      setWorkerId(editData.email);
-      setPassword("");
+    if (created && !editData) {
+      toast.success("🎉 Worker Created Successfully!");
+      const lastCreated = allWorkers?.users?.[allWorkers.users.length - 1];
+      if (lastCreated) setLatestWorker(lastCreated);
+      reset();
     }
-  }, [editData]);
+  }, [created, allWorkers, editData, reset]);
 
-  // 🛑 PASSWORD VALIDATION FUNCTION
+  useEffect(() => {
+    if (updated && editData) {
+      toast.success("✅ Password Updated Successfully!");
+      reset();
+    }
+  }, [updated, editData, reset]);
+
+  useEffect(() => {
+    if (createError) toast.error(createError);
+    if (updateError) toast.error(updateError);
+  }, [createError, updateError]);
+
   const validatePassword = (pwd) => {
-    if (pwd.length < 6 || pwd.length > 8) {
-      alert("⚠️ Password must be 6 to 8 characters long!");
-      return false;
-    }
-
-    const onlyNumbers = /^[0-9]+$/;
-    if (onlyNumbers.test(pwd)) {
-      alert("⚠️ Password cannot be only numbers!");
-      return false;
-    }
-
-    const onlyLetters = /^[a-zA-Z]+$/;
-    if (onlyLetters.test(pwd)) {
-      alert("⚠️ Password cannot be only letters!");
-      return false;
-    }
-
+    if (pwd.length < 6) return "Password must be 6 or more characters long";
+    if (/^[0-9]+$/.test(pwd)) return "Password cannot be only numbers";
+    if (/^[a-zA-Z]+$/.test(pwd)) return "Password cannot be only letters";
     return true;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = (data) => {
+    const { workerName, workerId, password } = data;
 
-    // ⭐ CREATE MODE ⭐
     if (!editData) {
-      if (!workerName || !workerId || !password) {
-        alert("⚠️ Please fill all fields!");
-        return;
-      }
-
-      // 🚫 Validate password rules
-      if (!validatePassword(password)) return;
-
-      const newWorker = {
+      createWorker({
         name: workerName,
         email: workerId,
         password,
@@ -113,7 +76,7 @@ const [latestWorker, setLatestWorker] = useState(null);
     // 🚫 Validate password rules
     if (!validatePassword(password)) return;
 
-dispatch(updatePasswordById({ id: editData._id, newPassword: password }));
+    dispatch(updatePasswordById({ id: editData._id, password }));
   };
 
   useEffect(() => {
@@ -136,64 +99,65 @@ dispatch(updatePasswordById({ id: editData._id, newPassword: password }));
   }, [error]);
 
   return (
+    <div className="create-worker-layout">
+      <OfflineSidebar />
+
       <div className="create-worker-container">
         <h2>{editData ? "Change Worker Password" : "Create Worker Login"}</h2>
 
-        <form onSubmit={handleSubmit} className="worker-form">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {!editData && (
+            <>
+              <div>
+                <label className="block font-medium mb-1">Worker Name</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  {...register("workerName", { required: "Worker Name is required" })}
+                />
+                {errors.workerName && <p className="text-red-500 text-sm mt-1">{errors.workerName.message}</p>}
+              </div>
 
-          <div className="form-group">
-            <label>Worker Name</label>
-            <input
-              type="text"
-              placeholder="Enter worker full name"
-              value={workerName}
-              onChange={(e) => setWorkerName(e.target.value)}
-              disabled={editData}
-            />
-          </div>
+              <div>
+                <label className="block font-medium mb-1">Email ID</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  {...register("workerId", { required: "Email is required" })}
+                />
+                {errors.workerId && <p className="text-red-500 text-sm mt-1">{errors.workerId.message}</p>}
+              </div>
+            </>
+          )}
 
-          <div className="form-group">
-            <label>Email ID</label>
-            <input
-              type="text"
-              placeholder="Enter worker email"
-              value={workerId}
-              onChange={(e) => setWorkerId(e.target.value)}
-              disabled={editData}
-            />
-          </div>
-
-          {/* Password Field */}
-          <div className="form-group password-box">
-            <label>Password {editData && "(Enter new password)"}</label>
-
-            <div className="pass-wrapper">
+          <div>
+            <label className="block font-medium mb-1">Password {editData && "(Enter new password)"}</label>
+            <div className="relative">
               <input
                 type={showPass ? "text" : "password"}
+                className="w-full border border-gray-300 rounded px-3 py-2 pr-10"
                 placeholder={editData ? "New password" : "Create password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register("password", { required: "Password is required", validate: validatePassword })}
               />
-
               <span
-                className="pass-eye"
+                className="absolute right-3 top-2 cursor-pointer select-none"
                 onClick={() => setShowPass(!showPass)}
               >
                 {showPass ? "👁️" : "🙈"}
               </span>
             </div>
+            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
           </div>
 
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading
-              ? editData
-                ? "Updating..."
-                : "Creating..."
-              : editData
-              ? "Update Password"
-              : "Create Worker"}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+            disabled={creating || updating}
+          >
+            {creating || updating ? (editData ? "Updating..." : "Creating...") : (editData ? "Update Password" : "Create Worker")}
           </button>
         </form>
+      </div>
       {latestWorker && (
   <div className="worker-created-preview">
     <h3>🎉 Worker Created Preview</h3>
@@ -206,6 +170,7 @@ dispatch(updatePasswordById({ id: editData._id, newPassword: password }));
     </p>
   </div>
 )}
+
     </div>
   );
 };

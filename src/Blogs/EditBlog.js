@@ -1,396 +1,310 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { updateBlog } from "../Redux/Slices/BlogSlice";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import TagInput from "./TagInput";
-import Sidebar from "../Components/Sidebar/sidebar";
-import { BASE_URL } from "../Components/Helper/axiosinstance";
+import { ArrowLeft, Save, Upload } from "lucide-react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useUpdateBlogMutation } from "../Redux/Slices/BlogSlice";
+import { getImageUrl } from "../utils/getImageUrl";
+import TagInput from "./TagInput";
 
 const EditBlog = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { state } = useLocation();
   const { id } = useParams();
+  const [updateBlog, { isLoading: isUpdating }] = useUpdateBlogMutation();
 
-  const url = state.thumbnail.secure_url.replace(/\\/g, "/").replace(/^\/+/, '');
-  const Imageurl = `${BASE_URL}/${url}`;
+  const imageUrl = state?.thumbnail?.secure_url ? getImageUrl(state.thumbnail.secure_url) : null;
+  const [previewImage, setPreviewImage] = useState(imageUrl);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
 
-
-  const [blogData, setBlogData] = useState({
-    blog_id: id,
-    author: state.author,
-    blogTitle: state.blog_title,
-    blogContent: state.blog_content,
-    blogStatus: state.blog_status,
-    blogPublished: state.blog_published,
-    blogSlug: state.blog_slug,
-    thumbnail: null,
-    seo: {
-      pageTitle: state.seo.page_title,
-      metaKeywords: state.seo.meta_keywords,
-      metaDescription: state.seo.meta_description,
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      author: state?.author || "",
+      blogTitle: state?.blog_title || "",
+      blogContent: state?.blog_content || "",
+      blogStatus: state?.blog_status || "Draft",
+      blogPublished: state?.blog_published || "",
+      seo: {
+        pageTitle: state?.seo?.page_title || "",
+        metaDescription: state?.seo?.meta_description || "",
+        metaKeywords: state?.seo?.meta_keywords || [],
+      },
     },
   });
-
-  const [previewImage, setPreviewImage] = useState(Imageurl); // Preview image state
-
-  const handleChange = (event) => {
-    // Check if event.target is valid
-    if (event && event.target) {
-      const { name, value } = event.target;
-
-      // Handle SEO fields separately
-      if (name === "pageTitle" || name === "metaDescription") {
-        setBlogData((prevData) => ({
-          ...prevData,
-          seo: {
-            ...prevData.seo,
-            [name]: value, // Update specific seo field
-          },
-        }));
-      } else {
-        // Handle other fields (like blogTitle, blogContent, etc.)
-        setBlogData((prevData) => ({
-          ...prevData,
-          [name]: value,
-        }));
-      }
-    } else {
-      console.error("Event target is undefined or null");
-    }
-  };
-
-  // Function to update metaKeywords when tags change
-  const handleMetaKeywordsChange = (newTags) => {
-    setBlogData((prevData) => ({
-      ...prevData,
-      seo: {
-        ...prevData.seo,
-        metaKeywords: newTags, // Ensure it's an array
-      },
-    }));
-  };
 
   // Handle image upload and preview
   const handleImageUpload = (e) => {
     const uploadedImage = e.target.files[0];
-    if (!uploadedImage) {
-      alert("Thumbnail is required.");
-      return;
-    }
+    if (!uploadedImage) return;
 
     const validTypes = ["image/jpeg", "image/png", "image/jpg"];
     if (!validTypes.includes(uploadedImage.type)) {
-      alert("Invalid file type. Please upload a JPG or PNG image.");
+      toast.error("Invalid file type. Please upload a JPG or PNG image.");
       return;
     }
+
     if (uploadedImage.size > 25 * 1024 * 1024) {
-      alert("File size exceeds 25MB. Please upload a smaller image.");
+      toast.error("File size exceeds 25MB. Please upload a smaller image.");
       return;
     }
 
-    // Set image preview
     setPreviewImage(URL.createObjectURL(uploadedImage));
-
-    // Store the uploaded image in the state
-    setBlogData((prevData) => ({
-      ...prevData,
-      thumbnail: uploadedImage,
-    }));
+    setThumbnailFile(uploadedImage);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Handle form submission
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
 
-    const seoData = {
-      page_title: blogData.seo.pageTitle,
-      meta_keywords: blogData.seo.metaKeywords,
-      meta_description: blogData.seo.metaDescription,
-    };
+      // Append text fields
+      formData.append("author", data.author);
+      formData.append("blog_title", data.blogTitle);
+      formData.append("blog_content", data.blogContent);
+      formData.append("blog_status", data.blogStatus);
+      formData.append("blog_published", data.blogPublished);
 
-    const blogDataToSubmit = {
-      blog_id: id,
-      author: blogData.author,
-      blogTitle: blogData.blogTitle,
-      blogContent: blogData.blogContent,
-      blogStatus: blogData.blogStatus,
-      blogPublished: blogData.blogPublished,
-      blogSlug: blogData.blogSlug,
-      thumbnail: blogData.thumbnail,
-      seo: seoData,
-    };
+      // ✅ SEO AS JSON STRING (MATCH POSTMAN)
+      formData.append(
+        "seo",
+        JSON.stringify({
+          meta_title: data.seo.pageTitle,
+          meta_description: data.seo.metaDescription,
+          keywords: data.seo.metaKeywords,
+        })
+      );
 
-    const response = await dispatch(updateBlog(blogDataToSubmit));
+      // ✅ File
+      console.log("thumbnail", thumbnailFile)
+      if (thumbnailFile) {
+        formData.append("thumbnail", thumbnailFile);
+      }
 
-    if (response.meta.requestStatus === "fulfilled") {
+      await updateBlog(id, formData).unwrap();
+      toast.success("Blog updated successfully!");
       navigate("/blogs");
+    } catch (err) {
+      console.error("Failed to update blog:", err);
+      toast.error(err?.data?.message || "Failed to update blog");
     }
   };
+
+
 
   return (
-    <>
-    <div>
-      <Sidebar/>
-      <div className="min-h-screen bg-gray-50 mb-8" style={{marginLeft:"270px"}}>
-          <main className="container mx-auto px-4 py-6">
-            <form onSubmit={handleSubmit} method="post">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div className="md:col-span-2">
-                  <div className="space-y-6">
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6">
-                        <div
-                          className="flex justify-center mt-4"
-                          style={{ listStyle: "none" }}
-                        >
-                        <h1 className="text-black text-xl font-bold px-6 py-3">
-                          Update Blog
-                        </h1>
-                        </div>
-                      </div>
-
-                      <div className="p-6 pt-0">
-                        <div className="space-y-4">
-                          <div>
-                            <label
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              htmlFor="blogTitle"
-                            >
-                              Title
-                            </label>
-                            <input
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              id="blogTitle"
-                              name="blogTitle"
-                              placeholder="Enter title"
-                              value={blogData.blogTitle}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-                          <ReactQuill
-                            value={blogData.blogContent}
-                            onChange={(value) =>
-                              setBlogData((prevData) => ({
-                                ...prevData,
-                                blogContent: value,
-                              }))
-                            }
-                            className="bg-white border rounded-md mb-4"
-                            theme="snow"
-                            placeholder="Write your content here..."
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6">
-                        <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                          Author
-                        </h3>
-                      </div>
-                      <div className="p-6 pt-0">
-                        <input
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          placeholder="Author name"
-                          name="author"
-                          value={blogData.author}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                      <div
-                        className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                        data-v0-t="card"
-                      >
-                        <div className="flex flex-col space-y-1.5 p-6">
-                          <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                            SEO
-                          </h3>
-                        </div>
-                        <div className="p-6 pt-0 space-y-4">
-                          <div>
-                            <label
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              htmlFor="pageTitle"
-                            >
-                              Page Title
-                            </label>
-                            <input
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              id="pageTitle"
-                              name="pageTitle"
-                              placeholder="Enter Meta Tilte"
-                              value={blogData.seo.pageTitle}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-                          <div>
-                            <TagInput
-                              tags={blogData.seo.metaKeywords}
-                              setTags={handleMetaKeywordsChange}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              htmlFor="metaDescription"
-                            >
-                              Meta Description
-                            </label>
-                            <input
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              id="metaKeywords"
-                              name="metaDescription"
-                              placeholder="Enter meta description"
-                              value={blogData.seo.metaDescription}
-                              onChange={handleChange}
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-                  </div>
-                </div>
-                <div className="md:col-span-1">
-                  <div className="space-y-6">
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6 cursor-pointer">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                            Publish
-                          </h3>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-chevron-up h-4 w-4"
-                          >
-                            <path d="m18 15-6-6-6 6"></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="p-6 pt-0 space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Status
-                          </label>
-                          <select
-                            name="blogStatus"
-                            value={blogData.blogStatus}
-                            onChange={handleChange}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value="Published">Published</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Archived">Archived</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Published on
-                          </label>
-                          <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            type="date"
-                            name="blogPublished"
-                            value={blogData.blogPublished}
-                            onChange={handleChange}
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 text-white bg-blue-500 hover:bg-blue-600 xt-primary-foreground h-10 px-4 py-2 w-full"
-                        >
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                    <div
-                      className="rounded-lg border bg-card text-card-foreground shadow-sm"
-                      data-v0-t="card"
-                    >
-                      <div className="flex flex-col space-y-1.5 p-6 cursor-pointer">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-2xl font-semibold leading-none tracking-tight">
-                            Upload Thumbnail
-                          </h3>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="lucide lucide-chevron-up h-4 w-4"
-                          >
-                            <path d="m18 15-6-6-6 6"></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="p-6 pt-0">
-                        <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                          <input
-                            className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 hidden"
-                            type="file"
-                            id="featured-image"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                          />
-                          <label
-                            className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-sm text-gray-600"
-                            htmlFor="featured-image"
-                          >
-                            Choose File
-                          </label>
-                          <p className="text-xs text-gray-400 mt-1">
-                            No file chosen
-                          </p>
-                          {/* Display image preview if uploaded */}
-                          {previewImage && (
-                            <div className="mt-4">
-                              <img
-                                src={previewImage}
-                                alt="Thumbnail Preview"
-                                className="w-32 h-32 object-cover rounded-md mx-auto"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </main>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">Update Blog</h1>
+          </div>
         </div>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Main Content */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Title
+            </label>
+            <input
+              type="text"
+              {...register("blogTitle", { required: "Title is required" })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter blog title"
+            />
+            {errors.blogTitle && (
+              <p className="mt-1 text-sm text-red-600">{errors.blogTitle.message}</p>
+            )}
+          </div>
+
+          {/* Content */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Content
+            </label>
+            <Controller
+              name="blogContent"
+              control={control}
+              rules={{ required: "Content is required" }}
+              render={({ field }) => (
+                <ReactQuill
+                  {...field}
+                  theme="snow"
+                  className="bg-white rounded-lg"
+                  placeholder="Write your blog content..."
+                />
+              )}
+            />
+            {errors.blogContent && (
+              <p className="mt-1 text-sm text-red-600">{errors.blogContent.message}</p>
+            )}
+          </div>
+
+          {/* Author */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Author
+            </label>
+            <input
+              type="text"
+              {...register("author", { required: "Author is required" })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter author name"
+            />
+            {errors.author && (
+              <p className="mt-1 text-sm text-red-600">{errors.author.message}</p>
+            )}
+          </div>
+        </div>
+
+        {/* SEO Section */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <h2 className="text-lg font-semibold text-gray-900">SEO</h2>
+
+          {/* Page Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Page Title
+            </label>
+            <input
+              type="text"
+              {...register("seo.pageTitle")}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter SEO page title"
+            />
+          </div>
+
+          {/* Meta Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Meta Description
+            </label>
+            <textarea
+              {...register("seo.metaDescription")}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter meta description"
+            />
+          </div>
+
+          {/* Meta Keywords */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Meta Keywords
+            </label>
+            <Controller
+              name="seo.metaKeywords"
+              control={control}
+              render={({ field }) => (
+                <TagInput
+                  tags={field.value}
+                  setTags={field.onChange}
+                />
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Publish Settings */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <h2 className="text-lg font-semibold text-gray-900">Publish</h2>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select
+              {...register("blogStatus")}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="Published">Published</option>
+              <option value="Draft">Draft</option>
+              <option value="Archived">Archived</option>
+            </select>
+          </div>
+
+          {/* Published Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Published on
+            </label>
+            <input
+              type="date"
+              {...register("blogPublished")}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Thumbnail */}
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Thumbnail</h2>
+
+          <div className="flex items-center space-x-4">
+            <label>
+              <div className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors">
+
+                <Upload className="w-4 h-4" />
+                <span>Choose File</span>
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/jpg"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
+            <span className="text-sm text-gray-500">
+              {thumbnailFile ? thumbnailFile.name : "No new file chosen"}
+            </span>
+          </div>
+
+          {/* Image Preview */}
+          {previewImage && (
+            <div className="mt-4">
+              <div className="relative w-full h-64  bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={previewImage}
+                  alt="Blog thumbnail preview"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <button
+            disabled={isUpdating}
+            className={`flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <Save className="w-5 h-5" />
+            <span>{isUpdating ? "Updating..." : "Update Blog"}</span>
+          </button>
+        </div>
+      </form>
     </div>
-    </>
   );
 };
 

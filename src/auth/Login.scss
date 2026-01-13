@@ -1,0 +1,175 @@
+// Login.scss
+.login-page {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-image: url("../../public/assets/Ethnic.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    // Background image layer
+    &__background {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    // Dark overlay
+    &__overlay {
+        position: absolute;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    // Main container
+    &__container {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 28rem;
+        margin: 0 auto;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    // Form section
+    &__form-container {
+        width: 100%;
+    }
+
+    &__form-card {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 2.5rem;
+        border-radius: 1.25rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    &__form-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    // Form
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    &__input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    &__label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+    }
+
+    &__input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    &__input-icon {
+        position: absolute;
+        left: 0.75rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        color: rgba(255, 255, 255, 0.6);
+        pointer-events: none;
+    }
+
+    &__input {
+        width: 100%;
+        padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        color: #ffffff;
+        outline: none;
+        transition: all 0.2s;
+
+        &:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        &::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        &--error {
+            border-color: rgba(239, 68, 68, 0.6);
+
+            &:focus {
+                border-color: rgba(239, 68, 68, 0.8);
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+            }
+        }
+    }
+
+    &__error {
+        font-size: 0.75rem;
+        color: #fca5a5;
+        margin: 0;
+    }
+
+    // Submit button
+    &__button {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(59, 130, 246, 0.8);
+        backdrop-filter: blur(8px);
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+
+        &:hover:not(:disabled) {
+            background: rgba(37, 99, 235, 0.9);
+            border-color: rgba(37, 99, 235, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        &:disabled {
+            background: rgba(156, 163, 175, 0.5);
+            border-color: rgba(156, 163, 175, 0.3);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+    }
+
+    &__button-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+}

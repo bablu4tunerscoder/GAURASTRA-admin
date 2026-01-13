@@ -1,71 +1,75 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { BASE_URL } from "../../offline-admin/axiosinstance";
+import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import baseQueryOffline from "./api/baseQueryOffline";
 
-export const createOfflineProduct = createAsyncThunk(
-  "offlineProducts/create",
-  async (productData, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.post(
-        `${BASE_URL}/api/offline/products/create`,
-        productData
-      );
-      return data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Error creating product");
-    }
-  }
-);
+export const offlineProductApi = createApi({
+  reducerPath: "offlineProductApi",
+  baseQuery: baseQueryOffline,
+  tagTypes: ["OfflineProduct"],
+  endpoints: (builder) => ({
+    // =========================
+    // CREATE PRODUCT
+    // =========================
+    createOfflineProduct: builder.mutation({
+      query: (productData) => ({
+        url: "/api/offline/products/create",
+        method: "POST",
+        body: productData,
+      }),
+      invalidatesTags: ["OfflineProduct"],
+    }),
 
-export const fetchOfflineProducts = createAsyncThunk(
-  "offlineProducts/getAll",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.get(`${BASE_URL}/api/offline/products`);
-      return data.data; // 👈 DIRECT ARRAY RETURN
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Error fetching products");
-    }
-  }
-);
+    // =========================
+    // GET ALL PRODUCTS
+    // =========================
+    fetchOfflineProducts: builder.query({
+      query: () => "/api/offline/products",
+      transformResponse: (response) => response.data, // 👈 direct array
+      providesTags: ["OfflineProduct"],
+    }),
 
+    // =========================
+    // GET SINGLE PRODUCT
+    // =========================
+    fetchOfflineProductById: builder.query({
+      query: (id) => `/api/offline/products/${id}`,
+      providesTags: (id) => [{ type: "OfflineProduct", id }],
+    }),
 
-// ================================
-// GET SINGLE PRODUCT
-// ================================
-export const fetchOfflineProductById = createAsyncThunk(
-  "offlineProducts/getOne",
-  async (id, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.get(
-        `${BASE_URL}/api/offline/products/${id}`
-      );
-      return data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Error fetching product");
-    }
-  }
-);
+    // =========================
+    // UPDATE PRODUCT
+    // =========================
+    updateOfflineProduct: builder.mutation({
+      query: ({ unique_id, updateData }) => ({
+        url: `/api/offline/products/update/${unique_id}`,
+        method: "PUT",
+        body: updateData,
+      }),
+      invalidatesTags: ["OfflineProduct"],
+    }),
 
-// ================================
-// UPDATE PRODUCT
-// ================================
-export const updateOfflineProduct = createAsyncThunk(
-  "offlineProducts/update",
-  async ({ unique_id, updateData }, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.put(
-        `${BASE_URL}/api/offline/products/update/${unique_id}`,
-        updateData
-      );
-      return data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Error updating product");
-    }
-  }
-);
+    // =========================
+    // DELETE PRODUCT
+    // =========================
+    deleteOfflineProduct: builder.mutation({
+      query: (id) => ({
+        url: `/api/offline/products/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["OfflineProduct"],
+    }),
+  }),
+});
 
+export const {
+  useCreateOfflineProductMutation,
+  useFetchOfflineProductsQuery,
+  useFetchOfflineProductByIdQuery,
+  useUpdateOfflineProductMutation,
+  useDeleteOfflineProductMutation,
+} = offlineProductApi;
 
+<<<<<<< HEAD
 export const deleteOfflineProduct = createAsyncThunk(
   "offlineProducts/delete",
   async (id, { rejectWithValue }) => {
@@ -100,90 +104,83 @@ export const uploadOfflineImage = createAsyncThunk(
     }
   }
 );
+=======
+>>>>>>> 7406ecfdb1b496bf8f9af7b0d29d04cb3b66a3a6
 
 const offlineProductSlice = createSlice({
   name: "offlineProducts",
   initialState: {
-    products: [],
-    singleProduct: null,
     loading: false,
     error: null,
     successMessage: null,
   },
   reducers: {
     clearMessages: (state) => {
-      state.successMessage = null;
       state.error = null;
+      state.successMessage = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // CREATE
-      .addCase(createOfflineProduct.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(createOfflineProduct.fulfilled, (state, action) => {
-        state.loading = false;
-        state.products.push(action.payload.product);
-        state.successMessage = "Product created successfully!";
-      })
-      .addCase(createOfflineProduct.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
 
-      // GET ALL
-      .addCase(fetchOfflineProducts.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchOfflineProducts.fulfilled, (state, action) => {
-        state.loading = false;
-        state.products = action.payload;
-      })
-      .addCase(fetchOfflineProducts.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      // =========================
+      // LOADING MATCHER
+      // =========================
+      .addMatcher(
+        isAnyOf(
+          offlineProductApi.endpoints.createOfflineProduct.matchPending,
+          offlineProductApi.endpoints.updateOfflineProduct.matchPending,
+          offlineProductApi.endpoints.deleteOfflineProduct.matchPending
+        ),
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
 
-      // GET ONE
-      .addCase(fetchOfflineProductById.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchOfflineProductById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.singleProduct = action.payload.product;
-      })
-      .addCase(fetchOfflineProductById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      // =========================
+      // SUCCESS MATCHER
+      // =========================
+      .addMatcher(
+        isAnyOf(
+          offlineProductApi.endpoints.createOfflineProduct.matchFulfilled,
+          offlineProductApi.endpoints.updateOfflineProduct.matchFulfilled,
+          offlineProductApi.endpoints.deleteOfflineProduct.matchFulfilled
+        ),
+        (state, action) => {
+          state.loading = false;
 
-      // UPDATE
-      .addCase(updateOfflineProduct.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(updateOfflineProduct.fulfilled, (state, action) => {
-        state.loading = false;
-        state.successMessage = "Product updated successfully!";
-      })
-      .addCase(updateOfflineProduct.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+          if (action.type.includes("create")) {
+            state.successMessage = "Product created successfully!";
+          }
 
-      // DELETE
-      .addCase(deleteOfflineProduct.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(deleteOfflineProduct.fulfilled, (state, action) => {
-        state.loading = false;
-        state.products = state.products.filter((p) => p._id !== action.payload.id);
-        state.successMessage = "Product deleted successfully!";
-      })
-      .addCase(deleteOfflineProduct.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+          if (action.type.includes("update")) {
+            state.successMessage = "Product updated successfully!";
+          }
+
+          if (action.type.includes("delete")) {
+            state.successMessage = "Product deleted successfully!";
+          }
+        }
+      )
+
+      // =========================
+      // ERROR MATCHER
+      // =========================
+      .addMatcher(
+        isAnyOf(
+          offlineProductApi.endpoints.createOfflineProduct.matchRejected,
+          offlineProductApi.endpoints.updateOfflineProduct.matchRejected,
+          offlineProductApi.endpoints.deleteOfflineProduct.matchRejected
+        ),
+        (state, action) => {
+          state.loading = false;
+          state.error =
+            action.error?.data ||
+            action.error?.message ||
+            "Something went wrong";
+        }
+      );
   },
 });
 

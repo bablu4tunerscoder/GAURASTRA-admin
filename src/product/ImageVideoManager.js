@@ -1,399 +1,259 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Controller, useWatch } from "react-hook-form";
 import {
-  saveImages,
-  uploadMedia,
-  reorderMedia,
   removeMedia,
-  deleteMedia,
+  reorderMedia,
   setInitialImages,
 } from "../Redux/Slices/mediaSlice";
-import { updateNewProduct, editProduct } from "../Redux/Slices/productSlice";
-import { FaTimes, FaArrowsAlt, FaUpload } from "react-icons/fa";
-import "./ImageVideoManager.scss";
+import {
+  useDeleteMediaMutation,
+  useUploadMediaMutation,
+} from "../Redux/Slices/mediaSlice";
+import { FaArrowsAlt, FaTimes, FaUpload } from "react-icons/fa";
 import coverimg from "../assets/coverimg.png";
 import placeimg from "../assets/placehold.png";
 import { BASE_URL } from "../Components/Helper/axiosinstance";
+import { getImageUrl } from "../utils/getImageUrl";
+import "./ImageVideoManager.scss";
 
-const ImageVideoManager = () => {
+const ImageVideoManager = ({ control, errors, setValue }) => {
   const dispatch = useDispatch();
-  const {
-    uploadedUrls,
-    coverImage,
-    otherImages,
-    loading,
-    saving,
-    updating,
-    error,
-  } = useSelector((state) => state.media);
 
-  const isEditMode = useSelector((state) => state.product.isEditMode);
-  const product = useSelector((state) =>
-    isEditMode ? state.product.updateProduct : state.product.currentProduct
+  /* =======================
+     Redux State
+  ======================== */
+  const { uploadedUrls, loading, error } = useSelector(
+    (state) => state.media
   );
 
+  const isEditMode = useSelector((state) => state.product.isEditMode);
+
+  /* =======================
+     Watch form value for images
+  ======================== */
+  const formImages = useWatch({
+    control,
+    name: "images",
+    defaultValue: []
+  });
+
+  /* =======================
+     RTK Query Hooks
+  ======================== */
+  const [uploadMedia] = useUploadMediaMutation();
+  const [deleteMedia] = useDeleteMediaMutation();
+
+  /* =======================
+     Local State
+  ======================== */
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [initialImagesLoaded, setInitialImagesLoaded] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // Get images from product or default empty array
-  const images = product?.images || [];
-  // Initialize images when component mounts or product changes
+  /* =======================
+     Initialize images from form value when in edit mode
+  ======================== */
   useEffect(() => {
-    if (isEditMode && images.length > 0 && !initialImagesLoaded) {
-      // Sort: put is_primary image first
-      const sortedImages = [
-        ...images.filter((img) => img.is_primary),
-        ...images.filter((img) => !img.is_primary),
-      ];
-
-      const initialImages = sortedImages.map((img) => ({
-        url: img.image_url,
-        type: "image",
+    if (isEditMode && formImages && formImages.length > 0 && !initialized && uploadedUrls.length === 0) {
+      const mappedImages = formImages.map((img) => ({
         id: img.image_id,
+        url: img.image_url.startsWith('http') ? img.image_url : `${BASE_URL}${img.image_url}`,
+        type: "image",
         isCover: img.is_primary,
       }));
-
-      dispatch(setInitialImages(initialImages));
-      setInitialImagesLoaded(true);
+      dispatch(setInitialImages(mappedImages));
+      setInitialized(true);
     }
-  }, [images, isEditMode, dispatch, initialImagesLoaded]);
+  }, [isEditMode, formImages, initialized, dispatch, uploadedUrls.length]);
 
-  // Helper function to get complete image URL
-const getMediaUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http") || url.startsWith("blob:")) {
-    return url;
-  }
-  return `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
-};
-
-  // Combine uploaded URLs with existing images
-  const displayImages = React.useMemo(() => {
-    // If we have uploaded URLs, use them (including reordered ones)
-    if (uploadedUrls?.length > 0) {
-      return uploadedUrls.map((item) => ({
-        ...item,
-        url: getMediaUrl(item?.url),
-        isCover: false,
+  /* =======================
+     Sync Redux uploadedUrls to form
+  ======================== */
+  useEffect(() => {
+    if (uploadedUrls.length > 0) {
+      const imagesPayload = uploadedUrls.map((img, index) => ({
+        image_url: img.url.replace(BASE_URL, ""),
+        image_id: img.id || null,
+        is_primary: index === 0,
       }));
+
+      // Only update if different from current form value
+      const currentPayload = JSON.stringify(imagesPayload);
+      const formPayload = JSON.stringify(formImages);
+
+      if (currentPayload !== formPayload) {
+        setValue("images", imagesPayload, { shouldValidate: true });
+      }
     }
+  }, [uploadedUrls, setValue, formImages]);
 
-    // Otherwise use the existing images from the product
-    if (images?.length > 0) {
-      const coverImage = images.find((img) => img.is_primary);
-      const otherImages = images.filter((img) => !img.is_primary);
+  /* =======================
+     Display Images (Single Source)
+  ======================== */
+  const displayImages = useMemo(() => {
+    return uploadedUrls.map((item) => ({
+      ...item,
+      url: getImageUrl(item.url),
+    }));
+  }, [uploadedUrls]);
 
-      return [
-        ...(coverImage
-          ? [
-              {
-                url: getMediaUrl(coverImage.image_url),
-                type: "image",
-                id: coverImage.image_id,
-                isCover: true,
-              },
-            ]
-          : []),
-        ...otherImages.map((img) => ({
-          url: getMediaUrl(img.image_url),
-          type: "image",
-          id: img.image_id,
-          isCover: false,
-        })),
-      ].filter((img) => img.url);
-    }
+  /* =======================
+     Drag & Drop
+  ======================== */
+  const handleDrop = (from, to) => {
+    if (from === null || to === null || from === to) return;
 
-    return [];
-  }, [uploadedUrls, images]);
+    const list = [...displayImages];
+    const moved = list.splice(from, 1)[0];
+    list.splice(to, 0, moved);
 
-  // Drag and drop handlers
-  const handleDragStart = (index) => {
-    setDraggingIndex(index);
+    dispatch(reorderMedia(list));
+
+    // Update React Hook Form value
+    const imagesPayload = list.map((img, index) => ({
+      image_url: img.url.replace(BASE_URL, ""),
+      image_id: img.id || null,
+      is_primary: index === 0,
+    }));
+    setValue("images", imagesPayload, { shouldValidate: true });
   };
-console.log("first",uploadedUrls)
-  // const handleDropOnMain = (index) => {
-  //   if (index === null || index === 0) return;
-  //   const newList = [...displayImages];
-  //   [newList[0], newList[index]] = [newList[index], newList[0]];
-  //   dispatch(reorderMedia(newList));
-  // };
 
-  const handleDrop = (fromIndex, toIndex) => {
-  if (fromIndex === null || toIndex === null || fromIndex === toIndex) return;
-
-  const newList = [...displayImages];
-  const movedItem = newList.splice(fromIndex, 1)[0]; // Remove dragged item
-  newList.splice(toIndex, 0, movedItem); // Insert at dropped position
-
-  dispatch(reorderMedia(newList));
-};
-
-
+  /* =======================
+     Media Actions
+  ======================== */
   const handleRemove = (index) => {
     dispatch(removeMedia(index));
+
+    // Update React Hook Form value
+    const updatedImages = displayImages.filter((_, i) => i !== index);
+    const imagesPayload = updatedImages.map((img, i) => ({
+      image_url: img.url.replace(BASE_URL, ""),
+      image_id: img.id || null,
+      is_primary: i === 0,
+    }));
+    setValue("images", imagesPayload, { shouldValidate: true });
   };
 
-  const handleDelete = (id, index) => {
-    dispatch(deleteMedia(id));
-    dispatch(removeMedia(index));
-  };
-
-  const handleFileUpload = (event) => {
-  const files = Array.from(event.target.files);
-  if (files.length === 0) return;
-
-  const totalFiles = displayImages.length + files.length;
-  if (totalFiles > 8) {
-    setErrorMessage("You can upload up to 8 media files only.");
-    return;
-  }
-
-  setErrorMessage("");
-  dispatch(uploadMedia(files));
-};
-
-
-  const handleSaveImages = async () => {
-    if (displayImages.length === 0) {
-      alert("No images uploaded!");
-      return;
-    }
-
+  const handleDelete = async (id, index) => {
     try {
-      const coverImage = displayImages[0]?.url || "";
-      const mediaUrls = displayImages
-        .slice(1)
-        .map((item) => item?.url)
-        .filter(Boolean);
+      await deleteMedia(id).unwrap();
+      dispatch(removeMedia(index));
 
-      dispatch(
-        updateNewProduct({
-          cover_image: coverImage,
-          mediaUrls: mediaUrls,
-        })
-      );
-
-      dispatch(
-        saveImages({
-          coverImage: coverImage,
-          otherImages: mediaUrls,
-        })
-      );
-
-      alert("Images saved successfully!");
-    } catch (error) {
-      console.error("Save error:", error);
-      alert("Failed to save images");
-    }
-  };
-
-  // Handle update for existing product
-  const handleUpdateImages = async () => {
-    if (displayImages.length === 0) {
-      alert("No images to update!");
-      return;
-    }
-
-    try {
-      // Prepare images data with their IDs and URLs
-      const imagesPayload = displayImages.map((img, index) => ({
+      // Update React Hook Form value
+      const updatedImages = displayImages.filter((_, i) => i !== index);
+      const imagesPayload = updatedImages.map((img, i) => ({
         image_url: img.url.replace(BASE_URL, ""),
-        image_id: img.id || null, // Keep existing ID or null for new images
-        is_primary: index === 0, // First image is cover
+        image_id: img.id || null,
+        is_primary: i === 0,
       }));
-
-      // Separate cover image and other images
-      const coverImage = imagesPayload[0].image_url;
-      const otherImages = imagesPayload.slice(1);
-
-      // Prepare the payload for backend
-      const payload = {
-        cover_image: coverImage,
-        mediaUrls: otherImages.map((img) => img.image_url),
-        images: imagesPayload, // Send full images data including IDs
-      };
-
-      // Dispatch to update product state
-      dispatch(editProduct(payload));
-
-      alert("Images updated successfully!");
-    } catch (error) {
-      console.error("Update error:", error);
-      alert("Failed to update images");
+      setValue("images", imagesPayload, { shouldValidate: true });
+    } catch (err) {
+      setErrorMessage(err?.data?.message || "Delete failed");
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    if (displayImages.length + files.length > 8) {
+      setErrorMessage("You can upload up to 8 media files only.");
+      return;
+    }
+
+    setErrorMessage("");
+
+    try {
+      // Upload media - Redux will update automatically via the mutation
+      await uploadMedia(files).unwrap();
+      // The useEffect above will sync the uploadedUrls to form automatically
+    } catch (err) {
+      console.error("Upload error:", err);
+      setErrorMessage(err?.data?.message || err?.message || "Upload failed");
+    }
+  };
+
+  /* =======================
+     UI
+  ======================== */
   return (
-    <div className="image-video-manager">
-      <h2 className="title">Images and Videos</h2>
-      {error && <p className="error-message">{error}</p>}
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
-      {loading && <p className="loading-message">Uploading files...</p>}
-      {saving && <p className="loading-message">Saving images...</p>}
+    <div className="w-full bg-white rounded-xl shadow p-6">
+      <h2 className="text-xl font-semibold mb-4">Images and Videos</h2>
 
-      <div className="media-wrapper">
-        {/* <div
-          className="main-image"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => handleDropOnMain(draggingIndex)}
-        >
-          {displayImages?.[0]?.url ? (
+      {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+      {errorMessage && <p className="text-red-500 text-sm mb-2">{errorMessage}</p>}
+      {errors?.images && <p className="text-red-500 text-sm mb-2">{errors.images.message}</p>}
+      {loading && <p className="text-blue-500 text-sm mb-2">Uploading files...</p>}
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Cover Image */}
+        <div className="w-full lg:w-1/3">
+          <div className="aspect-square border rounded-lg overflow-hidden">
             <img
-              src={displayImages[0].url}
-              alt="Main"
-              className="media-content"
-              onError={(e) => {
-                e.target.src = coverimg;
-              }}
+              src={displayImages[0]?.url || coverimg}
+              alt="Cover"
+              className="w-full h-full object-cover"
+              onError={(e) => (e.target.src = coverimg)}
             />
-          ) : (
-            <img src={coverimg} alt="Placeholder" className="media-content" />
-          )}
-        </div> */}
-        <div className="main-image">
-  {displayImages?.[0]?.url ? (
-    <img
-      src={displayImages[0].url}
-      alt="Main"
-      className="media-content"
-      onError={(e) => {
-        e.target.src = coverimg;
-      }}
-    />
-  ) : (
-    <img src={coverimg} alt="Placeholder" className="media-content" />
-  )}
-</div>
-
-
-        <div className="media-container">
-          
-{/* {displayImages?.length > 1 ? (
-  displayImages.slice(1).map((media, index) => (
-    <div
-      key={media.id || index}
-      className="media-item"
-      draggable
-      onDragStart={() => handleDragStart(index + 1)}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={() => handleDropOnMain(index + 1)}
-    >
-      {media.type === "video" ? (
-        <video className="media-content" controls>
-          <source src={media.url} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      ) : (
-        <img
-          src={media.url}
-          alt="uploaded"
-          className="media-content"
-          onError={(e) => {
-            e.target.src = placeimg;
-          }}
-        />
-      )}
-      <div className="overlay">
-        <FaArrowsAlt className="drag-icon" />
-        <FaTimes
-          className="remove-icon"
-          onClick={() => {
-            if (isEditMode && media.id) {
-              handleDelete(media.id, index + 1);
-            } else {
-              handleRemove(index + 1);
-            }
-          }}
-        />
-      </div>
-    </div>
-  ))
-) : (
-  <div className="media-item">
-    <img src={placeimg} alt="Placeholder" className="media-content" />
-  </div>
-)} */}
-{displayImages.map((media, index) => (
-  <div
-    key={media.id || index}
-    className="media-item"
-    draggable
-    onDragStart={() => handleDragStart(index)}
-    onDragOver={(e) => e.preventDefault()}
-    onDrop={() => handleDrop(draggingIndex, index)}
-  >
-    {media.type === "video" ? (
-      <video className="media-content" controls>
-        <source src={media.url} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-    ) : (
-      <img
-        src={media.url}
-        alt="uploaded"
-        className="media-content"
-        onError={(e) => {
-          e.target.src = placeimg;
-        }}
-      />
-    )}
-    <div className="overlay">
-      <FaArrowsAlt className="drag-icon" />
-      <FaTimes
-        className="remove-icon"
-        onClick={() => {
-          if (isEditMode && media.id) {
-            handleDelete(media.id, index);
-          } else {
-            handleRemove(index);
-          }
-        }}
-      />
-    </div>
-  </div>
-))}
-
-          {displayImages?.length < 8 && (
-            <div className="upload-box">
-              <input
-                type="file"
-                id="fileInput"
-                // accept="image/*"
-                  accept="image/*,video/*"
-                multiple
-                onChange={handleFileUpload}
-                style={{ display: "none" }}
-                disabled={loading || saving}
-              />
-              <label htmlFor="fileInput" className="upload-btn">
-                <FaUpload className="upload-icon" />
-                <span>Upload</span>
-              </label>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
 
-      <div className="save-images-container">
-        <p>Cover Image</p>
-        <button
-          onClick={isEditMode ? handleUpdateImages : handleSaveImages}
-          className="save-images-btn"
-          disabled={
-            loading ||
-            (isEditMode ? updating : saving) ||
-            displayImages.length === 0
-          }
-        >
-          {isEditMode
-            ? updating
-              ? "Updating..."
-              : "Update Images"
-            : saving
-            ? "Saving..."
-            : "Save Images"}
-        </button>
+        {/* Image Grid */}
+        <div className="w-full lg:w-2/3">
+          <div className="flex flex-wrap gap-4">
+            {displayImages.map((media, index) => (
+              <div
+                key={media.id || index}
+                className="relative w-24 h-24 border rounded-lg overflow-hidden cursor-move group"
+                draggable
+                onDragStart={() => setDraggingIndex(index)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(draggingIndex, index)}
+              >
+                <img
+                  src={media.url}
+                  alt="media"
+                  className="w-full h-full object-cover"
+                  onError={(e) => (e.target.src = placeimg)}
+                />
+
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition">
+                  <FaArrowsAlt className="text-white text-lg" />
+                  <FaTimes
+                    className="text-white text-lg cursor-pointer"
+                    onClick={() =>
+                      isEditMode && media.id
+                        ? handleDelete(media.id, index)
+                        : handleRemove(index)
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* Upload Button */}
+            {displayImages.length < 8 && (
+              <div className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center">
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept="image/*,video/*"
+                  multiple
+                  hidden
+                  onChange={handleFileUpload}
+                />
+                <label
+                  htmlFor="fileInput"
+                  className="flex flex-col items-center text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                >
+                  <FaUpload className="text-lg" />
+                  <span>Upload</span>
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
